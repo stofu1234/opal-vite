@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Opal + Vite - HMR Test</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      max-width: 900px;
+      margin: 50px auto;
+      padding: 20px;
+      line-height: 1.6;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+    }
+
+    .container {
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+
+    h1 {
+      color: #CC342D;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      color: #666;
+      font-size: 18px;
+      margin-bottom: 30px;
+    }
+
+    .card {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 25px;
+      margin: 20px 0;
+      border-left: 4px solid #CC342D;
+    }
+
+    .hmr-display {
+      background: #1e1e1e;
+      color: #d4d4d4;
+      padding: 30px;
+      border-radius: 8px;
+      text-align: center;
+      margin: 20px 0;
+      font-size: 28px;
+      font-weight: bold;
+      min-height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .counter-section {
+      text-align: center;
+      padding: 20px;
+      background: #e3f2fd;
+      border-radius: 8px;
+      margin: 20px 0;
+    }
+
+    .counter-value {
+      font-size: 72px;
+      font-weight: bold;
+      color: #1976d2;
+      margin: 20px 0;
+      font-family: 'Courier New', monospace;
+    }
+
+    button {
+      background: #CC342D;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      margin: 5px;
+      transition: all 0.3s ease;
+    }
+
+    button:hover {
+      background: #a02822;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(204, 52, 45, 0.4);
+    }
+
+    .instructions {
+      background: #fff3cd;
+      border: 2px solid #ffc107;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+
+    .instructions h3 {
+      margin-top: 0;
+      color: #856404;
+    }
+
+    .instructions ol {
+      margin: 10px 0;
+      padding-left: 20px;
+    }
+
+    .instructions code {
+      background: #f8f9fa;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+      color: #e83e8c;
+    }
+
+    #output {
+      background: #1e1e1e;
+      color: #d4d4d4;
+      padding: 15px;
+      border-radius: 5px;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      max-height: 300px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+
+    .success {
+      color: #4CAF50;
+    }
+
+    .fire {
+      animation: fire 1s ease-in-out infinite alternate;
+    }
+
+    @keyframes fire {
+      from { transform: scale(1) rotate(-2deg); }
+      to { transform: scale(1.1) rotate(2deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔥 Hot Module Replacement (HMR) Test</h1>
+    <p class="subtitle">Phase 3: Real-time code updates without page reload</p>
+
+    <div class="instructions">
+      <h3>🎯 Try This:</h3>
+      <ol>
+        <li>Open <code>src/hmr_test.rb</code> in your editor</li>
+        <li>Find line 28: <code>MESSAGE = "Hello from Opal! 👋"</code></li>
+        <li>Change the message to anything you want</li>
+        <li>Save the file and watch the display update instantly! ✨</li>
+        <li>Try changing the <code>COLOR</code> on line 31 too!</li>
+      </ol>
+    </div>
+
+    <div class="card">
+      <h3>Dynamic Message Display</h3>
+      <div class="hmr-display" id="hmr-message">
+        Loading...
+      </div>
+      <p style="text-align: center; color: #666; font-size: 14px;">
+        This message is rendered from Ruby code. Edit it and save!
+      </p>
+    </div>
+
+    <div class="counter-section">
+      <h3>Interactive Counter</h3>
+      <div class="counter-value" id="counter-display">0</div>
+      <button id="hmr-increment">➕ Increment</button>
+      <button id="hmr-reset">🔄 Reset</button>
+      <p style="margin-top: 15px; color: #666; font-size: 14px;">
+        Counter state persists across HMR updates!
+      </p>
+    </div>
+
+    <div class="card">
+      <h3>Console Output:</h3>
+      <div id="output">Waiting for Ruby initialization...</div>
+    </div>
+
+    <div class="card" style="border-left-color: #4CAF50;">
+      <h3 class="success">✅ HMR Features</h3>
+      <ul>
+        <li>⚡️ Instant updates on file save</li>
+        <li>🔄 State preservation during updates</li>
+        <li>🎯 Dependency tracking and cascading updates</li>
+        <li>🐛 Error overlay for compilation failures</li>
+        <li>📝 Detailed logging in console</li>
+      </ul>
+    </div>
+  </div>
+
+  <script type="module">
+    // Capture console.log for display
+    const output = document.getElementById('output');
+    output.textContent = '';
+
+    const originalLog = console.log;
+    console.log = function(...args) {
+      originalLog.apply(console, args);
+      const message = args.map(arg =>
+        typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+      ).join(' ');
+      output.textContent += message + '\n';
+      output.scrollTop = output.scrollHeight;
+    };
+
+    // Log HMR events
+    if (import.meta.hot) {
+      import.meta.hot.on('vite:beforeUpdate', () => {
+        console.log('🔥 HMR: Update incoming...');
+      });
+
+      import.meta.hot.on('vite:afterUpdate', () => {
+        console.log('✅ HMR: Update complete!');
+      });
+
+      import.meta.hot.on('vite:error', (err) => {
+        console.error('❌ HMR Error:', err);
+      });
+    }
+  </script>
+  <script type="module" src="/src/hmr_test_loader.js"></script>
+</body>
+</html>

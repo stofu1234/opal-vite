@@ -1,0 +1,20 @@
+source "https://rubygems.org"
+
+# Rails
+gem "rails", "~> 7.1.0"
+
+# Database
+gem "sqlite3", "~> 1.4"
+
+# Server
+gem "puma", "~> 6.0"
+
+# Vite integration
+gem "vite_rails", "~> 3.0"
+
+# Opal
+gem "opal", "~> 1.8"
+
+# Opal-Vite integration (local paths for development)
+gem "opal-vite", path: "../../gems/opal-vite"
+gem "opal-vite-rails", path: "../../gems/opal-vite-rails"

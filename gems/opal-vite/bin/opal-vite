@@ -1,0 +1,17 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require 'bundler/setup'
+require 'opal-vite'
+require 'opal/vite/cli'
+
+begin
+  cli = Opal::Vite::CLI.new(ARGV)
+  cli.run
+rescue Interrupt
+  puts "\nInterrupted"
+  exit 1
+rescue => e
+  puts "Error: #{e.message}"
+  exit 1
+end

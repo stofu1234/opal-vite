@@ -1,0 +1,22 @@
+import { defineConfig } from 'vite'
+import RubyPlugin from 'vite_ruby/plugins/ruby'
+import opal from 'vite-plugin-opal'
+
+export default defineConfig({
+  plugins: [
+    RubyPlugin(),
+    opal({
+      loadPaths: ['./app/opal'],
+      sourceMap: true,
+      debug: process.env.NODE_ENV === 'development'
+    })
+  ],
+  build: {
+    manifest: true,
+    rollupOptions: {
+      input: {
+        'application': './app/opal/application_loader.js'
+      }
+    }
+  }
+})

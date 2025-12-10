@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Opal-Vite Diagnostics</title>
+  <style>
+    body { font-family: monospace; padding: 20px; max-width: 1000px; margin: 0 auto; }
+    .section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+    .pass { background: #d4edda; border-color: #c3e6cb; }
+    .fail { background: #f8d7da; border-color: #f5c6cb; }
+    .info { background: #d1ecf1; border-color: #bee5eb; }
+    pre { background: #f8f9fa; padding: 10px; overflow-x: auto; }
+    h2 { margin-top: 0; }
+  </style>
+</head>
+<body>
+  <h1>🔍 Opal-Vite Diagnostics</h1>
+
+  <div id="results"></div>
+
+  <script type="module">
+    const results = document.getElementById('results');
+
+    function addResult(title, status, details) {
+      const div = document.createElement('div');
+      div.className = `section ${status}`;
+      div.innerHTML = `
+        <h2>${status === 'pass' ? '✅' : status === 'fail' ? '❌' : 'ℹ️'} ${title}</h2>
+        <pre>${details}</pre>
+      `;
+      results.appendChild(div);
+    }
+
+    // Test 1: Check if page loaded
+    addResult('Page Loaded', 'pass', 'HTML and JavaScript are working');
+
+    // Test 2: Check Vite
+    addResult('Vite Module System',
+      typeof import.meta !== 'undefined' ? 'pass' : 'fail',
+      `import.meta available: ${typeof import.meta !== 'undefined'}\nimport.meta.hot: ${typeof import.meta.hot !== 'undefined'}`
+    );
+
+    // Test 3: Try to load a .rb file
+    try {
+      const rbModule = await import('/src/simple_test.rb');
+      addResult('.rb File Loading', 'pass',
+        `Module loaded successfully\nModule type: ${typeof rbModule}\nKeys: ${Object.keys(rbModule).join(', ')}`
+      );
+    } catch (e) {
+      addResult('.rb File Loading', 'fail',
+        `Error loading .rb file:\n${e.message}\n${e.stack}`
+      );
+    }
+
+    // Test 4: Check Opal runtime
+    setTimeout(() => {
+      addResult('Opal Runtime',
+        typeof Opal !== 'undefined' ? 'pass' : 'fail',
+        `Opal defined: ${typeof Opal !== 'undefined'}\n` +
+        `Opal version: ${typeof Opal !== 'undefined' ? Opal.version || 'unknown' : 'N/A'}`
+      );
+
+      // Test 5: Check if Opal modules loaded
+      if (typeof Opal !== 'undefined' && Opal.modules) {
+        const modules = Object.keys(Opal.modules);
+        addResult('Opal Modules',
+          modules.length > 0 ? 'pass' : 'fail',
+          `Loaded modules (${modules.length}):\n${modules.slice(0, 10).join('\n')}${modules.length > 10 ? '\n...' : ''}`
+        );
+      }
+    }, 1000);
+
+    // Test 6: Check network requests
+    addResult('Network Info', 'info',
+      `Current URL: ${window.location.href}\n` +
+      `Base URL: ${window.location.origin}\n` +
+      `Expected runtime: ${window.location.origin}/@opal-runtime`
+    );
+
+  </script>
+</body>
+</html>

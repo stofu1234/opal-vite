@@ -1,0 +1,35 @@
+{
+  "name": "opal-vite",
+  "version": "0.1.0",
+  "description": "Integrate Opal with Vite - Compile Ruby to JavaScript with Vite's fast development experience",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "pnpm -r build",
+    "dev": "pnpm -r dev",
+    "test": "pnpm -r test",
+    "clean": "pnpm -r clean"
+  },
+  "keywords": [
+    "opal",
+    "vite",
+    "ruby",
+    "javascript",
+    "compiler"
+  ],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/opal-vite"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  }
+}

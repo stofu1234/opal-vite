@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Opal Simple Test</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+    }
+    .status {
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 8px;
+      background: #f0f0f0;
+    }
+    button {
+      padding: 15px 30px;
+      font-size: 18px;
+      background: #CC342D;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #a02822;
+    }
+    #console {
+      background: #1e1e1e;
+      color: #d4d4d4;
+      padding: 15px;
+      border-radius: 5px;
+      font-family: monospace;
+      white-space: pre-wrap;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>🧪 Opal Simple Test</h1>
+
+  <div class="status">
+    <h2>Test Button</h2>
+    <button id="test-button">Click Me!</button>
+    <p>If this button shows an alert, Opal is working correctly.</p>
+  </div>
+
+  <div class="status">
+    <h2>Console Output:</h2>
+    <div id="console">Waiting for Opal to load...</div>
+  </div>
+
+  <div class="status">
+    <h2>Debug Info:</h2>
+    <div id="debug"></div>
+  </div>
+
+  <script type="module">
+    // Capture all console output
+    const consoleDiv = document.getElementById('console');
+    const debugDiv = document.getElementById('debug');
+    consoleDiv.textContent = '';
+
+    const originalLog = console.log;
+    const originalError = console.error;
+    const originalWarn = console.warn;
+
+    console.log = function(...args) {
+      originalLog.apply(console, args);
+      consoleDiv.textContent += args.join(' ') + '\n';
+      consoleDiv.scrollTop = consoleDiv.scrollHeight;
+    };
+
+    console.error = function(...args) {
+      originalError.apply(console, args);
+      consoleDiv.textContent += '❌ ERROR: ' + args.join(' ') + '\n';
+      consoleDiv.scrollTop = consoleDiv.scrollHeight;
+    };
+
+    console.warn = function(...args) {
+      originalWarn.apply(console, args);
+      consoleDiv.textContent += '⚠️  WARN: ' + args.join(' ') + '\n';
+      consoleDiv.scrollTop = consoleDiv.scrollHeight;
+    };
+
+    // Log page load
+    console.log('📄 HTML loaded');
+    console.log('🔍 Looking for test-button:', document.getElementById('test-button'));
+
+    // Check if Opal runtime is being loaded
+    window.addEventListener('load', function() {
+      console.log('✅ Window loaded');
+      debugDiv.innerHTML = `
+        <strong>Debug Info:</strong><br>
+        - Button exists: ${!!document.getElementById('test-button')}<br>
+        - Opal available: ${typeof Opal !== 'undefined'}<br>
+        - Current time: ${new Date().toLocaleTimeString()}
+      `;
+    });
+
+    // Error handler
+    window.addEventListener('error', function(e) {
+      console.error('Global error:', e.message);
+      console.error('File:', e.filename);
+      console.error('Line:', e.lineno);
+    });
+  </script>
+
+  <script type="module" src="/src/simple_test_loader.js"></script>
+</body>
+</html>
