@@ -32,7 +32,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/stofu1234/opal-vite.git",
+    "url": "git+https://github.com/stofu1234/opal-vite.git",
     "directory": "packages/vite-plugin-opal"
   },
   "homepage": "https://github.com/stofu1234/opal-vite#readme",
