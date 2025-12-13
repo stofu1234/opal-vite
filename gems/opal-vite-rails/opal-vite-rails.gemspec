@@ -3,12 +3,12 @@ require_relative 'lib/opal/vite/rails/version'
 Gem::Specification.new do |spec|
   spec.name          = "opal-vite-rails"
   spec.version       = Opal::Vite::Rails::VERSION
-  spec.authors       = ["opal-vite contributors"]
+  spec.authors       = ["stofu1234"]
   spec.email         = [""]
 
   spec.summary       = "Rails integration for Opal with Vite"
   spec.description   = "Seamlessly integrate Opal (Ruby to JavaScript compiler) with Rails using Vite for fast development"
-  spec.homepage      = "https://github.com/yourusername/opal-vite"
+  spec.homepage      = "https://github.com/stofu1234/opal-vite"
   spec.license       = "MIT"
   spec.required_ruby_version = ">= 2.7.0"
 

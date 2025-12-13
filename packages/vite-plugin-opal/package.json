@@ -28,8 +28,17 @@
     "ruby",
     "javascript"
   ],
-  "author": "",
+  "author": "stofu1234",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/stofu1234/opal-vite.git",
+    "directory": "packages/vite-plugin-opal"
+  },
+  "homepage": "https://github.com/stofu1234/opal-vite#readme",
+  "bugs": {
+    "url": "https://github.com/stofu1234/opal-vite/issues"
+  },
   "peerDependencies": {
     "vite": "^5.0.0"
   },
