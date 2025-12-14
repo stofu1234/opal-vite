@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Page 2 - Turbo + Opal + Vite</title>
+    <link rel="stylesheet" href="/app/styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>⚡ Page 2</h1>
+        <p class="subtitle">Another page via Turbo Drive!</p>
+      </header>
+
+      <main>
+        <section class="card">
+          <h2>🚀 Turbo Navigation Works!</h2>
+          <p>This is the second test page for Turbo Drive navigation.</p>
+          <div class="demo">
+            <div class="demo-box">
+              <h3>Turbo Drive Benefits:</h3>
+              <ul style="padding-left: 1.5rem; margin-top: 0.5rem;">
+                <li>✅ Faster page loads (no full refresh)</li>
+                <li>✅ Persistent JavaScript state</li>
+                <li>✅ Progress bar during navigation</li>
+                <li>✅ Browser history works correctly</li>
+                <li>✅ Controlled from Ruby code!</li>
+              </ul>
+            </div>
+
+            <div class="button-group" data-controller="turbo-navigation">
+              <button
+                data-action="click->turbo-navigation#visit_page"
+                data-page="/"
+              >
+                ← Back to Home
+              </button>
+              <button
+                data-action="click->turbo-navigation#visit_page"
+                data-page="/app/pages/page1.html"
+              >
+                ← Go to Page 1
+              </button>
+              <button
+                class="secondary"
+                data-action="click->turbo-navigation#go_back"
+              >
+                Browser Back
+              </button>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script type="module" src="/app/javascript/application.js"></script>
+  </body>
+</html>

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Page 1 - Turbo + Opal + Vite</title>
+    <link rel="stylesheet" href="/app/styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>⚡ Page 1</h1>
+        <p class="subtitle">Loaded via Turbo Drive!</p>
+      </header>
+
+      <main>
+        <section class="card">
+          <h2>🎉 Success!</h2>
+          <p>This page was loaded using Turbo Drive navigation from Ruby code.</p>
+          <div class="demo">
+            <div class="demo-box">
+              <h3>Notice:</h3>
+              <ul style="padding-left: 1.5rem; margin-top: 0.5rem;">
+                <li>The page loaded without a full refresh</li>
+                <li>The browser's back button works</li>
+                <li>Check the console for Turbo events</li>
+              </ul>
+            </div>
+
+            <div class="button-group" data-controller="turbo-navigation">
+              <button
+                data-action="click->turbo-navigation#visit_page"
+                data-page="/"
+              >
+                ← Back to Home
+              </button>
+              <button
+                data-action="click->turbo-navigation#visit_page"
+                data-page="/app/pages/page2.html"
+              >
+                Go to Page 2 →
+              </button>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script type="module" src="/app/javascript/application.js"></script>
+  </body>
+</html>

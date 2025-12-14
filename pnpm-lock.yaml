@@ -72,6 +72,22 @@ importers:
         specifier: workspace:*
         version: link:../../packages/vite-plugin-opal
 
+  examples/turbo-app:
+    dependencies:
+      '@hotwired/stimulus':
+        specifier: ^3.2.2
+        version: 3.2.2
+      '@hotwired/turbo':
+        specifier: ^8.0.12
+        version: 8.0.20
+      vite:
+        specifier: ^5.0.0
+        version: 5.4.21(@types/node@20.19.26)
+    devDependencies:
+      vite-plugin-opal:
+        specifier: workspace:*
+        version: link:../../packages/vite-plugin-opal
+
   packages/vite-plugin-opal:
     dependencies:
       chokidar:
@@ -475,6 +491,10 @@ packages:
 
   '@hotwired/stimulus@3.2.2':
     resolution: {integrity: sha512-eGeIqNOQpXoPAIP7tC1+1Yc1yl1xnwYqg+3mzqxyrbE5pg5YFBZcA6YoTiByJB6DKAEsiWtl6tjTJS4IYtbB7A==}
+
+  '@hotwired/turbo@8.0.20':
+    resolution: {integrity: sha512-IilkH/+h92BRLeY/rMMR3MUh1gshIfdra/qZzp/Bl5FmiALD/6sQZK/ecxSbumeyOYiWr/JRI+Au1YQmkJGnoA==}
+    engines: {node: '>= 18'}
 
   '@jest/schemas@29.6.3':
     resolution: {integrity: sha512-mo5j5X+jIZmJQveBKeS/clAueipV7KgiX1vMgCxam1RNYiqE1w62n0/tJJnHtjW8ZHcQco5gY85jA3mi0L+nSA==}
@@ -1491,6 +1511,8 @@ snapshots:
     optional: true
 
   '@hotwired/stimulus@3.2.2': {}
+
+  '@hotwired/turbo@8.0.20': {}
 
   '@jest/schemas@29.6.3':
     dependencies:

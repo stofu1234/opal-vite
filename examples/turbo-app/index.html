@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Turbo + Opal + Vite Example</title>
+    <link rel="stylesheet" href="/app/styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>⚡ Turbo + Opal + Vite</h1>
+        <p class="subtitle">Control Turbo from Ruby with Stimulus!</p>
+      </header>
+
+      <main>
+        <!-- Turbo Drive Demo -->
+        <section class="card">
+          <h2>🚗 Turbo Drive</h2>
+          <p>Fast navigation using Turbo.visit() from Ruby</p>
+          <div class="demo">
+            <div class="demo-box">
+              <h3>Current Page: Home</h3>
+              <p>Turbo Drive intercepts navigation and uses fetch instead of full page loads.</p>
+            </div>
+
+            <div class="button-group" data-controller="turbo-navigation">
+              <button
+                data-action="click->turbo-navigation#visit_page"
+                data-page="/app/pages/page1.html"
+              >
+                Visit Page 1
+              </button>
+              <button
+                data-action="click->turbo-navigation#visit_page"
+                data-page="/app/pages/page2.html"
+              >
+                Visit Page 2
+              </button>
+              <button
+                class="secondary"
+                data-action="click->turbo-navigation#go_back"
+              >
+                ← Go Back
+              </button>
+            </div>
+
+            <p style="margin-top: 1rem; color: #666; font-size: 0.9rem;">
+              💡 Open DevTools Console to see Turbo events logged from Ruby!
+            </p>
+          </div>
+        </section>
+
+        <!-- Turbo Frames Demo -->
+        <section class="card">
+          <h2>🖼️ Turbo Frames</h2>
+          <p>Partial page updates with scoped navigation</p>
+          <div class="demo">
+            <turbo-frame id="dynamic-frame" data-turbo-frame-controller>
+              <div class="demo-box">
+                <h4>Frame Content</h4>
+                <p>This content is inside a Turbo Frame and can be updated independently.</p>
+              </div>
+            </turbo-frame>
+
+            <div class="button-group" data-controller="turbo-frame">
+              <button
+                data-action="click->turbo-frame#toggle_loading"
+                data-turbo-frame-target="frame"
+              >
+                Toggle Loading State
+              </button>
+              <button
+                data-action="click->turbo-frame#update_frame_content"
+                data-frame-id="dynamic-frame"
+              >
+                Update Frame Content
+              </button>
+            </div>
+
+            <p style="margin-top: 1rem; color: #666; font-size: 0.9rem;">
+              💡 Only the frame content updates, not the entire page!
+            </p>
+          </div>
+        </section>
+
+        <!-- Turbo Streams Demo -->
+        <section class="card">
+          <h2>📡 Turbo Streams</h2>
+          <p>Surgical DOM updates with 8 stream actions from Ruby</p>
+          <div class="demo" data-controller="turbo-stream">
+            <div class="demo-box">
+              <h3>Stream Container <span class="counter-badge" id="item-count">0</span> items</h3>
+              <div id="stream-container"></div>
+            </div>
+
+            <h4 style="margin-bottom: 0.5rem;">Basic Actions:</h4>
+            <div class="button-group">
+              <button data-action="click->turbo-stream#append_item">
+                ➕ Append
+              </button>
+              <button data-action="click->turbo-stream#prepend_item">
+                ⬆️ Prepend
+              </button>
+              <button
+                class="danger"
+                data-action="click->turbo-stream#remove_last_item"
+              >
+                🗑️ Remove Last
+              </button>
+              <button
+                class="secondary"
+                data-action="click->turbo-stream#clear_all"
+              >
+                Clear All
+              </button>
+            </div>
+
+            <h4 style="margin-top: 1.5rem; margin-bottom: 0.5rem;">Update vs Replace:</h4>
+            <div id="status-box" class="demo-box">
+              <p>Click "Update Status" to see UPDATE action</p>
+            </div>
+            <div id="content-box" class="demo-box">
+              <h4>Original Content Box</h4>
+              <p>Click "Replace Content" to see REPLACE action</p>
+            </div>
+            <div class="button-group">
+              <button data-action="click->turbo-stream#update_status">
+                🔄 Update Status
+              </button>
+              <button data-action="click->turbo-stream#replace_content">
+                🔁 Replace Content
+              </button>
+            </div>
+
+            <h4 style="margin-top: 1.5rem; margin-bottom: 0.5rem;">Before/After Actions:</h4>
+            <div id="insert-marker">⚡ INSERT MARKER ⚡</div>
+            <div class="button-group">
+              <button data-action="click->turbo-stream#insert_before">
+                ⬆️ Insert Before
+              </button>
+              <button data-action="click->turbo-stream#insert_after">
+                ⬇️ Insert After
+              </button>
+            </div>
+
+            <p style="margin-top: 1rem; color: #666; font-size: 0.9rem;">
+              💡 All Turbo Stream actions are controlled from Ruby code!
+            </p>
+          </div>
+        </section>
+      </main>
+
+      <footer>
+        <p>
+          Built with
+          <a href="https://turbo.hotwired.dev/" target="_blank">Turbo</a>,
+          <a href="https://stimulus.hotwired.dev/" target="_blank">Stimulus</a>,
+          <a href="https://opalrb.com/" target="_blank">Opal</a>, and
+          <a href="https://vitejs.dev/" target="_blank">Vite</a>
+        </p>
+      </footer>
+    </div>
+
+    <script type="module" src="/app/javascript/application.js"></script>
+  </body>
+</html>
