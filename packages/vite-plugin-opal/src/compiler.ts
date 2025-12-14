@@ -1,5 +1,6 @@
 import { spawn } from 'child_process'
 import * as fs from 'fs/promises'
+import { accessSync } from 'fs'
 import * as path from 'path'
 import type { OpalPluginOptions, CompileResult, CacheEntry } from './types'
 
@@ -7,6 +8,7 @@ export class OpalCompiler {
   private options: Required<OpalPluginOptions>
   private cache: Map<string, CacheEntry> = new Map()
   private runtimeCache: string | null = null
+  private useBundler: boolean
 
   constructor(options: OpalPluginOptions = {}) {
     this.options = {
@@ -15,7 +17,24 @@ export class OpalCompiler {
       loadPaths: options.loadPaths || ['./src'],
       arityCheck: options.arityCheck || false,
       freezing: options.freezing !== false,
-      debug: options.debug || false
+      debug: options.debug || false,
+      useBundler: options.useBundler !== undefined ? options.useBundler : this.detectGemfile()
+    }
+    this.useBundler = this.options.useBundler
+
+    if (this.options.debug) {
+      console.log(`[vite-plugin-opal] Using bundler: ${this.useBundler}`)
+      console.log(`[vite-plugin-opal] Working directory: ${process.cwd()}`)
+    }
+  }
+
+  private detectGemfile(): boolean {
+    try {
+      const gemfilePath = path.join(process.cwd(), 'Gemfile')
+      accessSync(gemfilePath)
+      return true
+    } catch {
+      return false
     }
   }
 
@@ -80,16 +99,32 @@ export class OpalCompiler {
 
   private async compileViaRuby(filePath: string): Promise<CompileResult> {
     return new Promise((resolve, reject) => {
-      const args = [
-        '-I', this.resolveGemLibPath(),
-        '-r', 'opal-vite',
-        '-e', this.getCompilerScript(),
-        filePath
-      ]
+      let command: string
+      let args: string[]
 
-      this.log(`Spawning Ruby: ruby ${args.join(' ')}`)
+      if (this.useBundler) {
+        command = 'bundle'
+        args = [
+          'exec', 'ruby',
+          '-r', 'opal-vite',
+          '-e', this.getCompilerScript(),
+          filePath
+        ]
+      } else {
+        command = 'ruby'
+        args = [
+          '-I', this.resolveGemLibPath(),
+          '-r', 'opal-vite',
+          '-e', this.getCompilerScript(),
+          filePath
+        ]
+      }
 
-      const ruby = spawn('ruby', args)
+      this.log(`Spawning Ruby: ${command} ${args.join(' ')}`)
+
+      const ruby = spawn(command, args, {
+        cwd: process.cwd()
+      })
 
       let stdout = ''
       let stderr = ''
@@ -124,13 +159,28 @@ export class OpalCompiler {
 
   private async getRuntimeViaRuby(): Promise<string> {
     return new Promise((resolve, reject) => {
-      const args = [
-        '-I', this.resolveGemLibPath(),
-        '-r', 'opal-vite',
-        '-e', 'puts Opal::Vite::Compiler.runtime_code'
-      ]
+      let command: string
+      let args: string[]
 
-      const ruby = spawn('ruby', args)
+      if (this.useBundler) {
+        command = 'bundle'
+        args = [
+          'exec', 'ruby',
+          '-r', 'opal-vite',
+          '-e', 'puts Opal::Vite::Compiler.runtime_code'
+        ]
+      } else {
+        command = 'ruby'
+        args = [
+          '-I', this.resolveGemLibPath(),
+          '-r', 'opal-vite',
+          '-e', 'puts Opal::Vite::Compiler.runtime_code'
+        ]
+      }
+
+      const ruby = spawn(command, args, {
+        cwd: process.cwd()
+      })
 
       let stdout = ''
       let stderr = ''

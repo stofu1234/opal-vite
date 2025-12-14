@@ -34,6 +34,12 @@ export interface OpalPluginOptions {
    * @default false
    */
   debug?: boolean
+
+  /**
+   * Use bundle exec to run Ruby
+   * @default auto-detect (true if Gemfile exists)
+   */
+  useBundler?: boolean
 }
 
 export interface CompileResult {

@@ -27,6 +27,9 @@ module Opal
           parent_dir = File.dirname(file_dir)
           builder.append_paths(parent_dir)
 
+          # Add gem paths from $LOAD_PATH so Opal can find gems
+          add_gem_paths(builder)
+
           builder.build_str(source, file_path)
 
           result = {
@@ -71,6 +74,41 @@ module Opal
       end
 
       private
+
+      def add_gem_paths(builder)
+        # Add gem directories from $LOAD_PATH to Opal's load paths
+        # This allows Opal to find and compile gems like inesita
+
+        # First collect all gem paths
+        gem_lib_paths = []
+        gem_opal_paths = []
+
+        $LOAD_PATH.each do |path|
+          # Only process gem directories
+          if path.include?('/gems/') && File.directory?(path)
+            gem_lib_paths << path
+
+            # Check if gem has an opal directory (for gems like inesita)
+            # Gems with opal-specific code often have an 'opal' directory sibling to 'lib'
+            gem_root = File.dirname(path)
+            opal_path = File.join(gem_root, 'opal')
+            if File.directory?(opal_path)
+              gem_opal_paths << opal_path
+            end
+          end
+        end
+
+        # Add opal directories FIRST so they take priority over lib directories
+        # This ensures that 'require "inesita"' finds opal/inesita.rb before lib/inesita.rb
+        gem_opal_paths.uniq.each do |path|
+          builder.append_paths(path) unless builder.path_reader.paths.include?(path)
+        end
+
+        # Then add regular lib directories
+        gem_lib_paths.uniq.each do |path|
+          builder.append_paths(path) unless builder.path_reader.paths.include?(path)
+        end
+      end
 
       def compiler_options
         @config.to_compiler_options
