@@ -7,6 +7,7 @@ require 'controllers/todo_controller'
 require 'controllers/form_controller'
 require 'controllers/modal_controller'
 require 'controllers/toast_controller'
+require 'controllers/theme_controller'
 
 puts "Practical App - Todo with Opal"
 puts "Ruby version: #{RUBY_VERSION}"

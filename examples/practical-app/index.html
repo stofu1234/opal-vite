@@ -11,6 +11,11 @@
       <header>
         <h1>📝 Todo App</h1>
         <p class="subtitle">Built with Ruby (Opal) + Stimulus + Vite</p>
+        <div data-controller="theme" style="margin-top: 1rem;">
+          <button data-action="click->theme#toggle" class="theme-toggle">
+            🌙 Dark Mode
+          </button>
+        </div>
       </header>
 
       <main>
@@ -29,6 +34,12 @@
 
           <div class="todo-stats" data-todo-target="count">
             0 active, 0 completed
+          </div>
+
+          <div class="filter-bar">
+            <button class="filter-btn active" data-filter="all" data-action="click->todo#set_filter">All</button>
+            <button class="filter-btn" data-filter="active" data-action="click->todo#set_filter">Active</button>
+            <button class="filter-btn" data-filter="completed" data-action="click->todo#set_filter">Completed</button>
           </div>
 
           <ul class="todo-list" data-todo-target="list"></ul>

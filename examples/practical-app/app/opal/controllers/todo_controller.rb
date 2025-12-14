@@ -3,11 +3,12 @@
 # Main Todo controller with CRUD operations and LocalStorage persistence
 class TodoController < StimulusController
   self.targets = ["list", "input", "template", "count", "emptyState"]
-  self.values = { storage_key: :string }
+  self.values = { storage_key: :string, filter: :string }
 
   def initialize
     super
     @storage_key_value = "opal_todos"
+    @filter_value = "all"
   end
 
   def connect
@@ -120,6 +121,33 @@ class TodoController < StimulusController
           ctrl.emptyStateTarget.style.display = 'none';
         }
       };
+
+      this.renderTodos = function() {
+        // Clear current display
+        ctrl.listTarget.innerHTML = '';
+
+        const todos = ctrl.getTodos();
+        const filter = ctrl.filterValue || 'all';
+
+        // Filter todos based on current filter
+        let filteredTodos = todos;
+        if (filter === 'active') {
+          filteredTodos = todos.filter(t => !t.completed);
+        } else if (filter === 'completed') {
+          filteredTodos = todos.filter(t => t.completed);
+        }
+
+        // Render filtered todos
+        filteredTodos.forEach(todo => ctrl.addTodoToDOM(todo));
+
+        if (filteredTodos.length === 0) {
+          ctrl.showEmptyState();
+        } else {
+          ctrl.hideEmptyState();
+        }
+
+        ctrl.updateCount();
+      };
     `
 
     load_todos
@@ -153,19 +181,17 @@ class TodoController < StimulusController
       todos.push(todo);
       this.saveTodos(todos);
 
-      // Add to DOM with animation
-      this.addTodoToDOM(todo);
-
       // Clear input
       input.value = '';
+
+      // Re-render with current filter
+      this.renderTodos();
 
       // Show success toast
       const successEvent = new CustomEvent('show-toast', {
         detail: { message: 'Todo added!', type: 'success' }
       });
       window.dispatchEvent(successEvent);
-
-      this.updateCount();
     `
   end
 
@@ -182,11 +208,8 @@ class TodoController < StimulusController
         todo.completed = !todo.completed;
         this.saveTodos(todos);
 
-        // Update DOM
-        const todoEl = checkbox.closest('.todo-item');
-        todoEl.classList.toggle('completed');
-
-        this.updateCount();
+        // Re-render with current filter
+        this.renderTodos();
       }
     `
   end
@@ -200,20 +223,14 @@ class TodoController < StimulusController
 
       this.saveTodos(filteredTodos);
 
-      // Remove from DOM with animation
-      const todoEl = event.currentTarget.closest('.todo-item');
-      todoEl.style.animation = 'slideOut 0.3s ease-out';
+      // Re-render with current filter
+      this.renderTodos();
 
-      setTimeout(() => {
-        todoEl.remove();
-        this.updateCount();
-
-        // Show toast
-        const event = new CustomEvent('show-toast', {
-          detail: { message: 'Todo deleted', type: 'info' }
-        });
-        window.dispatchEvent(event);
-      }, 300);
+      // Show toast
+      const toastEvent = new CustomEvent('show-toast', {
+        detail: { message: 'Todo deleted', type: 'info' }
+      });
+      window.dispatchEvent(toastEvent);
     `
   end
 
@@ -242,14 +259,9 @@ class TodoController < StimulusController
   def clear_completed
     `
       const todos = this.getTodos();
-      const activeTodos = todos.filter(t => !t.completed);
+      const completedCount = todos.filter(t => t.completed).length;
 
-      this.saveTodos(activeTodos);
-
-      // Remove completed items from DOM
-      const completedItems = this.listTarget.querySelectorAll('.todo-item.completed');
-
-      if (completedItems.length === 0) {
+      if (completedCount === 0) {
         const event = new CustomEvent('show-toast', {
           detail: { message: 'No completed todos to clear', type: 'info' }
         });
@@ -257,19 +269,33 @@ class TodoController < StimulusController
         return;
       }
 
-      completedItems.forEach(item => {
-        item.style.animation = 'slideOut 0.3s ease-out';
-        setTimeout(() => item.remove(), 300);
+      const activeTodos = todos.filter(t => !t.completed);
+      this.saveTodos(activeTodos);
+
+      // Re-render with current filter
+      this.renderTodos();
+
+      // Show toast
+      const event = new CustomEvent('show-toast', {
+        detail: { message: 'Completed todos cleared', type: 'success' }
       });
+      window.dispatchEvent(event);
+    `
+  end
 
-      setTimeout(() => {
-        this.updateCount();
+  # Set filter and update display
+  def set_filter
+    `
+      const filter = event.currentTarget.getAttribute('data-filter');
+      this.filterValue = filter;
 
-        const event = new CustomEvent('show-toast', {
-          detail: { message: 'Completed todos cleared', type: 'success' }
-        });
-        window.dispatchEvent(event);
-      }, 300);
+      // Update active button
+      const filterButtons = this.element.querySelectorAll('[data-filter]');
+      filterButtons.forEach(btn => btn.classList.remove('active'));
+      event.currentTarget.classList.add('active');
+
+      // Re-render todos with filter
+      this.renderTodos();
     `
   end
 
@@ -286,14 +312,7 @@ class TodoController < StimulusController
 
   def load_todos
     `
-      const todos = this.getTodos();
-      todos.forEach(todo => this.addTodoToDOM(todo));
-
-      if (todos.length === 0) {
-        this.showEmptyState();
-      } else {
-        this.hideEmptyState();
-      }
+      this.renderTodos();
     `
   end
 

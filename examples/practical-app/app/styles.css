@@ -1,3 +1,31 @@
+:root {
+  --bg-gradient-start: #667eea;
+  --bg-gradient-end: #764ba2;
+  --card-bg: #ffffff;
+  --text-primary: #333333;
+  --text-secondary: #666666;
+  --border-color: #e0e0e0;
+  --input-bg: #ffffff;
+  --button-bg: #667eea;
+  --button-hover: #5568d3;
+  --secondary-bg: #f8f9fa;
+  --secondary-hover: #e9ecef;
+}
+
+[data-theme="dark"] {
+  --bg-gradient-start: #1a1a2e;
+  --bg-gradient-end: #16213e;
+  --card-bg: #0f3460;
+  --text-primary: #eaeaea;
+  --text-secondary: #b0b0b0;
+  --border-color: #1f4068;
+  --input-bg: #16213e;
+  --button-bg: #e94560;
+  --button-hover: #d63447;
+  --secondary-bg: #1f4068;
+  --secondary-hover: #2a5280;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -6,10 +34,11 @@
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
   min-height: 100vh;
   padding: 2rem;
-  color: #333;
+  color: var(--text-primary);
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
 .container {
@@ -33,13 +62,26 @@ header .subtitle {
   opacity: 0.9;
 }
 
+.theme-toggle {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  color: white;
+}
+
+.theme-toggle:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
 /* Todo App Styles */
 .todo-card {
-  background: white;
+  background: var(--card-bg);
   border-radius: 12px;
   padding: 2rem;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
   margin-bottom: 2rem;
+  transition: background 0.3s ease;
 }
 
 .todo-input-group {
@@ -51,15 +93,17 @@ header .subtitle {
 .todo-input {
   flex: 1;
   padding: 0.75rem 1rem;
-  border: 2px solid #e0e0e0;
+  border: 2px solid var(--border-color);
   border-radius: 8px;
   font-size: 1rem;
-  transition: border-color 0.2s;
+  background: var(--input-bg);
+  color: var(--text-primary);
+  transition: border-color 0.2s, background 0.3s, color 0.3s;
 }
 
 .todo-input:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: var(--button-bg);
 }
 
 .todo-input.error {
@@ -68,7 +112,7 @@ header .subtitle {
 
 button {
   padding: 0.75rem 1.5rem;
-  background: #667eea;
+  background: var(--button-bg);
   color: white;
   border: none;
   border-radius: 8px;
@@ -79,7 +123,7 @@ button {
 }
 
 button:hover {
-  background: #5568d3;
+  background: var(--button-hover);
   transform: translateY(-1px);
 }
 
@@ -119,12 +163,43 @@ button.icon-btn:hover {
 
 .todo-stats {
   text-align: center;
-  color: #666;
+  color: var(--text-secondary);
   font-size: 0.9rem;
   margin-bottom: 1rem;
   padding: 0.5rem;
-  background: #f8f9fa;
+  background: var(--secondary-bg);
   border-radius: 6px;
+  transition: background 0.3s, color 0.3s;
+}
+
+.filter-bar {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.filter-btn {
+  padding: 0.5rem 1rem;
+  background: var(--secondary-bg);
+  color: var(--text-secondary);
+  border: 2px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filter-btn:hover {
+  background: var(--secondary-hover);
+  border-color: var(--text-secondary);
+  transform: none;
+}
+
+.filter-btn.active {
+  background: var(--button-bg);
+  color: white;
+  border-color: var(--button-bg);
 }
 
 .todo-list {
@@ -249,7 +324,7 @@ button.icon-btn:hover {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%) scale(0.9);
-  background: white;
+  background: var(--card-bg);
   border-radius: 12px;
   padding: 2rem;
   max-width: 500px;
@@ -391,21 +466,24 @@ button.icon-btn:hover {
 
 /* Demo Card */
 .demo-card {
-  background: white;
+  background: var(--card-bg);
   border-radius: 12px;
   padding: 2rem;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
   margin-bottom: 2rem;
+  transition: background 0.3s;
 }
 
 .demo-card h2 {
-  color: #667eea;
+  color: var(--button-bg);
   margin-bottom: 1rem;
+  transition: color 0.3s;
 }
 
 .demo-card p {
-  color: #666;
+  color: var(--text-secondary);
   margin-bottom: 1.5rem;
+  transition: color 0.3s;
 }
 
 footer {
