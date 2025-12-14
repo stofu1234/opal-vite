@@ -1,0 +1,6 @@
+source 'https://rubygems.org'
+
+gem 'opal', '~> 1.8'
+gem 'opal-vite', path: '../../gems/opal-vite'
+gem 'inesita', '~> 0.9.2'
+gem 'inesita-router', '~> 0.3.0'
