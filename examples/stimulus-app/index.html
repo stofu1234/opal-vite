@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Stimulus + Opal + Vite Example</title>
+    <link rel="stylesheet" href="/app/styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>🚀 Stimulus + Opal + Vite</h1>
+        <p class="subtitle">Write Stimulus controllers in Ruby!</p>
+      </header>
+
+      <main>
+        <!-- Hello Controller -->
+        <section class="card" data-controller="hello">
+          <h2>👋 Hello Controller</h2>
+          <p>Basic Stimulus controller with targets and actions</p>
+          <div class="demo">
+            <input
+              type="text"
+              data-hello-target="name"
+              placeholder="Enter your name"
+              value="World"
+            />
+            <button data-action="click->hello#greet">Greet</button>
+            <div class="output" data-hello-target="output"></div>
+          </div>
+        </section>
+
+        <!-- Counter Controller -->
+        <section class="card" data-controller="counter">
+          <h2>🔢 Counter Controller</h2>
+          <p>Demonstrates Stimulus Values API with typed data</p>
+          <div class="demo">
+            <div class="counter-display">
+              <span class="counter-value" data-counter-target="display">0</span>
+            </div>
+            <div class="button-group">
+              <button data-action="click->counter#decrement">−</button>
+              <button data-action="click->counter#reset">Reset</button>
+              <button data-action="click->counter#increment">+</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Clipboard Controller -->
+        <section class="card" data-controller="clipboard" data-clipboard-supported-class="clipboard-supported">
+          <h2>📋 Clipboard Controller</h2>
+          <p>Copy text to clipboard with CSS classes</p>
+          <div class="demo">
+            <input
+              type="text"
+              data-clipboard-target="source"
+              value="Hello from Stimulus + Opal!"
+              readonly
+            />
+            <button
+              data-clipboard-target="button"
+              data-action="click->clipboard#copy"
+            >
+              Copy to Clipboard
+            </button>
+          </div>
+        </section>
+
+        <!-- Slideshow Controller -->
+        <section class="card" data-controller="slideshow" data-slideshow-active-class="slide-active">
+          <h2>🎞️ Slideshow Controller</h2>
+          <p>Navigate slides with state management</p>
+          <div class="demo">
+            <div class="slideshow">
+              <div class="slide" data-slideshow-target="slide">
+                <div class="slide-content">
+                  <h3>Slide 1</h3>
+                  <p>Write Stimulus controllers in Ruby</p>
+                </div>
+              </div>
+              <div class="slide" data-slideshow-target="slide">
+                <div class="slide-content">
+                  <h3>Slide 2</h3>
+                  <p>Compile to JavaScript with Opal</p>
+                </div>
+              </div>
+              <div class="slide" data-slideshow-target="slide">
+                <div class="slide-content">
+                  <h3>Slide 3</h3>
+                  <p>Build with Vite for HMR</p>
+                </div>
+              </div>
+            </div>
+            <div class="button-group">
+              <button data-action="click->slideshow#previous">← Previous</button>
+              <button data-action="click->slideshow#next">Next →</button>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer>
+        <p>
+          Built with
+          <a href="https://stimulus.hotwired.dev/" target="_blank">Stimulus</a>,
+          <a href="https://opalrb.com/" target="_blank">Opal</a>, and
+          <a href="https://vitejs.dev/" target="_blank">Vite</a>
+        </p>
+      </footer>
+    </div>
+
+    <script type="module" src="/app/javascript/application.js"></script>
+  </body>
+</html>

@@ -59,6 +59,19 @@ importers:
         specifier: file:../../packages/vite-plugin-opal
         version: link:../../packages/vite-plugin-opal
 
+  examples/stimulus-app:
+    dependencies:
+      '@hotwired/stimulus':
+        specifier: ^3.2.2
+        version: 3.2.2
+      vite:
+        specifier: ^5.0.0
+        version: 5.4.21(@types/node@20.19.26)
+    devDependencies:
+      vite-plugin-opal:
+        specifier: workspace:*
+        version: link:../../packages/vite-plugin-opal
+
   packages/vite-plugin-opal:
     dependencies:
       chokidar:
@@ -459,6 +472,9 @@ packages:
     engines: {node: '>=18'}
     cpu: [x64]
     os: [win32]
+
+  '@hotwired/stimulus@3.2.2':
+    resolution: {integrity: sha512-eGeIqNOQpXoPAIP7tC1+1Yc1yl1xnwYqg+3mzqxyrbE5pg5YFBZcA6YoTiByJB6DKAEsiWtl6tjTJS4IYtbB7A==}
 
   '@jest/schemas@29.6.3':
     resolution: {integrity: sha512-mo5j5X+jIZmJQveBKeS/clAueipV7KgiX1vMgCxam1RNYiqE1w62n0/tJJnHtjW8ZHcQco5gY85jA3mi0L+nSA==}
@@ -1473,6 +1489,8 @@ snapshots:
 
   '@esbuild/win32-x64@0.27.1':
     optional: true
+
+  '@hotwired/stimulus@3.2.2': {}
 
   '@jest/schemas@29.6.3':
     dependencies:
