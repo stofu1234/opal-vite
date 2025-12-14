@@ -22,6 +22,22 @@ importers:
         specifier: workspace:*
         version: link:../../packages/vite-plugin-opal
 
+  examples/practical-app:
+    dependencies:
+      '@hotwired/stimulus':
+        specifier: ^3.2.2
+        version: 3.2.2
+      '@hotwired/turbo':
+        specifier: ^8.0.12
+        version: 8.0.20
+      vite:
+        specifier: ^5.0.0
+        version: 5.4.21(@types/node@20.19.26)
+    devDependencies:
+      vite-plugin-opal:
+        specifier: workspace:*
+        version: link:../../packages/vite-plugin-opal
+
   examples/rails-app:
     dependencies:
       vite:
