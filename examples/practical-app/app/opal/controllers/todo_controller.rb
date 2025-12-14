@@ -11,8 +11,6 @@ class TodoController < StimulusController
   end
 
   def connect
-    puts "Todo controller connected!"
-
     # Set up helper methods on the controller instance
     `
       const ctrl = this;
@@ -76,9 +74,6 @@ class TodoController < StimulusController
         if (checkbox) {
           checkbox.setAttribute('data-todo-id', todo.id);
           checkbox.checked = todo.completed;
-          console.log('Set checkbox data-todo-id:', todo.id, 'on checkbox:', checkbox);
-        } else {
-          console.error('Could not find checkbox in template!');
         }
 
         const text = todoItem.querySelector('.todo-text');
@@ -98,11 +93,6 @@ class TodoController < StimulusController
 
         ctrl.listTarget.appendChild(clone);
         ctrl.hideEmptyState();
-
-        // Verify after appending
-        console.log('After append, checking checkbox in DOM...');
-        const addedCheckbox = ctrl.listTarget.querySelector('[data-todo-id="' + todo.id + '"].todo-checkbox');
-        console.log('Found checkbox in DOM:', addedCheckbox, 'data-todo-id:', addedCheckbox ? addedCheckbox.getAttribute('data-todo-id') : 'NOT FOUND');
       };
 
       this.updateCount = function() {
@@ -182,57 +172,21 @@ class TodoController < StimulusController
   # Toggle todo completion
   def toggle_todo
     `
-      console.log('=== toggle_todo called ===');
-      console.log('Event type:', event.type);
-      console.log('Event target:', event.target);
-      console.log('Event currentTarget:', event.currentTarget);
-
       const checkbox = event.currentTarget;
-      const todoIdAttr = checkbox.getAttribute('data-todo-id');
-      console.log('Checkbox data-todo-id attribute:', todoIdAttr);
-      console.log('Checkbox element:', checkbox);
-      console.log('Checkbox checked state:', checkbox.checked);
-
-      if (!todoIdAttr) {
-        console.error('No data-todo-id attribute on checkbox!');
-        return;
-      }
-
-      const todoId = parseInt(todoIdAttr);
-      console.log('Parsed Todo ID:', todoId);
+      const todoId = parseInt(checkbox.getAttribute('data-todo-id'));
 
       const todos = this.getTodos();
-      console.log('All todos from localStorage:', todos);
-
       const todo = todos.find(t => t.id === todoId);
-      console.log('Found todo object:', todo);
 
       if (todo) {
-        const oldCompleted = todo.completed;
         todo.completed = !todo.completed;
-        console.log('Toggled completed from', oldCompleted, 'to', todo.completed);
-
         this.saveTodos(todos);
-        console.log('Saved todos back to localStorage');
-
-        // Verify it was saved
-        const verifyTodos = this.getTodos();
-        const verifyTodo = verifyTodos.find(t => t.id === todoId);
-        console.log('Verification - todo after save:', verifyTodo);
 
         // Update DOM
         const todoEl = checkbox.closest('.todo-item');
-        if (todoEl) {
-          todoEl.classList.toggle('completed');
-          console.log('Toggled completed class on todo item');
-        } else {
-          console.error('Could not find .todo-item parent');
-        }
+        todoEl.classList.toggle('completed');
 
         this.updateCount();
-      } else {
-        console.error('Todo not found with ID:', todoId);
-        console.error('Available IDs:', todos.map(t => t.id));
       }
     `
   end
@@ -287,21 +241,13 @@ class TodoController < StimulusController
   # Clear completed todos
   def clear_completed
     `
-      console.log('clear_completed called');
-
       const todos = this.getTodos();
-      console.log('Total todos:', todos.length);
-
-      const completedCount = todos.filter(t => t.completed).length;
-      console.log('Completed todos:', completedCount);
-
       const activeTodos = todos.filter(t => !t.completed);
 
       this.saveTodos(activeTodos);
 
       // Remove completed items from DOM
       const completedItems = this.listTarget.querySelectorAll('.todo-item.completed');
-      console.log('Completed items in DOM:', completedItems.length);
 
       if (completedItems.length === 0) {
         const event = new CustomEvent('show-toast', {

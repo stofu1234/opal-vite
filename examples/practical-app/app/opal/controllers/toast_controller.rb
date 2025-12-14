@@ -5,8 +5,6 @@ class ToastController < StimulusController
   self.targets = ["container"]
 
   def connect
-    puts "Toast controller connected!"
-
     # Listen for show-toast event
     `
       window.addEventListener('show-toast', (e) => {

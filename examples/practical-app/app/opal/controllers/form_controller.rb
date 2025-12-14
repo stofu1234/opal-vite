@@ -5,7 +5,6 @@ class FormController < StimulusController
   self.targets = ["input", "error"]
 
   def connect
-    puts "Form controller connected!"
   end
 
   # Validate on input
@@ -88,10 +87,7 @@ class FormController < StimulusController
         return;
       }
 
-      // Form is valid, proceed with submission
-      console.log('Form is valid, submitting...');
-
-      // Show success toast
+      // Form is valid, show success toast
       const successEvent = new CustomEvent('show-toast', {
         detail: { message: 'Form submitted successfully!', type: 'success' }
       });

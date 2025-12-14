@@ -5,8 +5,6 @@ class ModalController < StimulusController
   self.targets = ["overlay", "content", "title", "body", "input"]
 
   def connect
-    puts "Modal controller connected!"
-
     # Listen for open-modal event
     `
       const ctrl = this;

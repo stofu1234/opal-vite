@@ -8,6 +8,29 @@ import * as path from 'path'
 const VIRTUAL_RUNTIME_ID = '/@opal-runtime'
 const VIRTUAL_RUNTIME_PREFIX = '\0' + VIRTUAL_RUNTIME_ID
 
+/**
+ * Vite plugin for compiling Ruby files to JavaScript using Opal.
+ *
+ * @param options - Plugin configuration options
+ * @returns Vite plugin instance
+ *
+ * @example
+ * ```ts
+ * import { defineConfig } from 'vite'
+ * import opal from 'vite-plugin-opal'
+ *
+ * export default defineConfig({
+ *   plugins: [
+ *     opal({
+ *       loadPaths: ['./app/opal'],
+ *       sourceMap: true
+ *     })
+ *   ]
+ * })
+ * ```
+ *
+ * @see {@link OpalPluginOptions} for all available options
+ */
 export default function opalPlugin(options: OpalPluginOptions = {}): Plugin {
   const compiler = new OpalCompiler(options)
   const resolver = new OpalResolver(options)
