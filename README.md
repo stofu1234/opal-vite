@@ -19,9 +19,37 @@ This is a monorepo containing:
 - **gems/opal-vite**: Ruby gem for Opal-Vite integration
 - **gems/opal-vite-rails**: Rails integration gem
 - **examples/standalone**: Standalone SPA example
-- **examples/rails-app**: Rails integration example
+- **examples/stimulus-app**: Stimulus + Opal integration example
+- **examples/turbo-app**: Turbo + Opal integration example
+- **examples/practical-app**: Full-featured Todo app with real-world patterns
+- **examples/rails-app**: Rails integration example (coming soon)
 
 ## Quick Start
+
+### Try the Practical App Example (Recommended)
+
+The fastest way to see Opal + Vite in action:
+
+```bash
+# Clone the repository
+git clone https://github.com/your-org/opal-vite.git
+cd opal-vite
+
+# Install root dependencies
+pnpm install
+
+# Navigate to practical-app example
+cd examples/practical-app
+
+# Install dependencies
+bundle install
+pnpm install
+
+# Run development server
+pnpm dev
+```
+
+Open `http://localhost:3002` to see a full-featured Todo app built with Ruby!
 
 ### Standalone Project
 
@@ -35,7 +63,7 @@ pnpm install
 pnpm dev
 ```
 
-### Rails Project
+### Rails Project (Coming Soon)
 
 ```bash
 # Add to Gemfile
@@ -124,15 +152,53 @@ greeter.greet
 
 ### Examples
 
-- **[Standalone Example](./examples/standalone)** - Basic Vite + Opal setup
-  - Simple compilation
-  - Multi-file dependencies
-  - HMR demonstrations
+Explore our examples to learn different integration patterns:
 
-- **[Rails Example](./examples/rails-app)** - Full Rails integration
-  - Rails setup
-  - View integration
-  - Production build
+| Example | Description | Tech Stack | Features | Port |
+|---------|-------------|------------|----------|------|
+| **[standalone](./examples/standalone)** | Basic Vite + Opal setup | Opal + Vite | Simple compilation, Multi-file deps, HMR | 3000 |
+| **[stimulus-app](./examples/stimulus-app)** | Stimulus integration | Opal + Stimulus + Vite | Stimulus controllers in Ruby, Counter demo | 3001 |
+| **[turbo-app](./examples/turbo-app)** | Turbo integration | Opal + Turbo + Vite | Turbo Frames, Turbo Streams in Ruby | 3002 |
+| **[practical-app](./examples/practical-app)** | Real-world Todo app | Opal + Stimulus + Vite | CRUD, LocalStorage, Modals, Toasts, Animations | 3002 |
+| **[rails-app](./examples/rails-app)** | Rails integration | Rails + Opal + Vite | View helpers, Asset pipeline | 3000 |
+
+#### Standalone Example
+Basic Vite + Opal setup demonstrating:
+- Simple compilation
+- Multi-file dependencies
+- HMR demonstrations
+
+#### Stimulus App Example
+Integration with [Stimulus](https://stimulus.hotwired.dev/) framework:
+- Write Stimulus controllers in Ruby using `opal_stimulus` gem
+- Counter application with increment/decrement
+- Shows Ruby → JavaScript controller compilation
+
+#### Turbo App Example
+Integration with [Turbo](https://turbo.hotwired.dev/) for dynamic updates:
+- Turbo Frames for partial page updates
+- Turbo Streams for real-time updates
+- Counter with server-less dynamic updates
+- All in Ruby without writing JavaScript
+
+#### Practical App Example ⭐ **Recommended**
+Full-featured Todo application demonstrating real-world patterns:
+- **CRUD Operations**: Create, read, update, delete todos
+- **LocalStorage**: Data persistence across page reloads
+- **Form Validation**: Real-time validation with visual feedback
+- **Modal Dialogs**: Edit todos in animated modal
+- **Toast Notifications**: Success/error messages
+- **Animations**: Smooth transitions throughout
+- **Cross-controller Communication**: CustomEvent pattern
+- **Template Cloning**: Dynamic content generation
+
+[→ View detailed documentation](./examples/practical-app/README.md)
+
+#### Rails App Example (Coming Soon)
+Full Rails integration:
+- Rails setup
+- View integration
+- Production build
 
 ## How It Works
 
