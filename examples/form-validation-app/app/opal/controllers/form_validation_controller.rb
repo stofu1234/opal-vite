@@ -221,8 +221,8 @@ class FormValidationController < StimulusController
   def clear_field_error(field)
     `
       const ctrl = this;
-      const field = arguments[0];
-      const formGroup = field.closest('.form-group');
+      const targetField = arguments[0];
+      const formGroup = targetField.closest('.form-group');
 
       if (formGroup) {
         formGroup.classList.remove('error', 'info');
@@ -237,17 +237,17 @@ class FormValidationController < StimulusController
   def show_field_error(field, message, type = 'error')
     `
       const ctrl = this;
-      const field = arguments[0];
-      const message = arguments[1];
-      const type = arguments[2] || 'error';
-      const formGroup = field.closest('.form-group');
+      const targetField = arguments[0];
+      const errorMsg = arguments[1];
+      const errorType = arguments[2] || 'error';
+      const formGroup = targetField.closest('.form-group');
 
       if (formGroup) {
         formGroup.classList.remove('error', 'info');
-        formGroup.classList.add(type);
+        formGroup.classList.add(errorType);
         const errorSpan = formGroup.querySelector('.error-message');
         if (errorSpan) {
-          errorSpan.textContent = message;
+          errorSpan.textContent = errorMsg;
         }
       }
     `
@@ -359,12 +359,12 @@ class FormValidationController < StimulusController
   def show_status(message, type)
     `
       const ctrl = this;
-      const message = arguments[0];
-      const type = arguments[1];
+      const statusMsg = arguments[0];
+      const statusType = arguments[1];
 
       if (ctrl.hasStatusTarget) {
-        ctrl.statusTarget.textContent = message;
-        ctrl.statusTarget.className = 'form-status ' + type;
+        ctrl.statusTarget.textContent = statusMsg;
+        ctrl.statusTarget.className = 'form-status ' + statusType;
       }
     `
   end
