@@ -1,11 +1,13 @@
 # backtick_javascript: true
 
 # Main Todo controller with CRUD operations and LocalStorage persistence
+# Uses StimulusHelpers DSL macros to reduce JavaScript backticks
 class TodoController < StimulusController
   include JsProxyEx
   include Toastable
   include DomHelpers
   include Storable
+  include StimulusHelpers
 
   self.targets = ["list", "input", "template", "count", "emptyState"]
   self.values = { storage_key: :string, filter: :string }
@@ -22,9 +24,9 @@ class TodoController < StimulusController
     render_todos
   end
 
-  # Add new todo
+  # Add new todo - uses DSL helpers for target access
   def add_todo
-    text = `this.hasInputTarget ? this.inputTarget.value.trim() : ''`
+    text = target_value(:input)&.strip || ''
 
     if text.empty?
       show_error('Please enter a todo item')
@@ -32,17 +34,17 @@ class TodoController < StimulusController
     end
 
     todo = {
-      id: `Date.now()`,
+      id: generate_id,          # DSL helper instead of `Date.now()`
       text: text,
       completed: false,
-      createdAt: `new Date().toISOString()`
+      createdAt: js_iso_date    # DSL helper instead of `new Date().toISOString()`
     }
 
     todos = get_todos
     todos << todo
     save_todos(todos)
 
-    `if (this.hasInputTarget) this.inputTarget.value = ''`
+    target_clear(:input)        # DSL helper instead of backtick
     render_todos
     show_success('Todo added!')
   end
@@ -180,7 +182,7 @@ class TodoController < StimulusController
   end
 
   def render_todos
-    `if (this.hasListTarget) this.listTarget.innerHTML = ''`
+    target_clear_html(:list)    # DSL helper
 
     todos = get_todos
     filtered_todos = filter_todos(todos)
@@ -208,7 +210,7 @@ class TodoController < StimulusController
   end
 
   def add_todo_to_dom(todo)
-    return unless `this.hasTemplateTarget && this.hasListTarget`
+    return unless has_target?(:template) && has_target?(:list)  # DSL helpers
 
     todo_id = todo[:id]
     todo_text = todo[:text]
@@ -262,7 +264,7 @@ class TodoController < StimulusController
     completed = todos.count { |t| t[:completed] }
 
     count_text = "#{active} active, #{completed} completed"
-    `if (this.hasCountTarget) this.countTarget.innerHTML = #{count_text}`
+    target_set_html(:count, count_text)  # DSL helper
 
     show_empty_state if todos.empty?
   end
