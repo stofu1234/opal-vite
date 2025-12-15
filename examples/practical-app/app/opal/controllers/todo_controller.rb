@@ -2,323 +2,284 @@
 
 # Main Todo controller with CRUD operations and LocalStorage persistence
 class TodoController < StimulusController
+  include JsProxyEx
+  include Toastable
+  include DomHelpers
+  include Storable
+
   self.targets = ["list", "input", "template", "count", "emptyState"]
   self.values = { storage_key: :string, filter: :string }
 
+  STORAGE_KEY = 'opal_todos'
+
   def initialize
     super
-    @storage_key_value = "opal_todos"
-    @filter_value = "all"
+    @filter = 'all'
   end
 
   def connect
-    # Set up helper methods on the controller instance
-    `
-      const ctrl = this;
-
-      // Listen for update-todo event from modal
-      window.addEventListener('update-todo', (e) => {
-        const todoId = parseInt(e.detail.todoId);
-        const newText = e.detail.text;
-
-        const todos = ctrl.getTodos();
-        const todo = todos.find(t => t.id === todoId);
-
-        if (todo) {
-          todo.text = newText;
-          ctrl.saveTodos(todos);
-
-          // Update DOM
-          const todoEl = document.querySelector('[data-todo-id="' + todoId + '"]');
-          if (todoEl) {
-            const textEl = todoEl.querySelector('.todo-text');
-            if (textEl) {
-              textEl.textContent = newText;
-            }
-          }
-
-          // Show toast
-          const toastEvent = new CustomEvent('show-toast', {
-            detail: { message: 'Todo updated!', type: 'success' }
-          });
-          window.dispatchEvent(toastEvent);
-        }
-      });
-
-      this.getTodos = function() {
-        const stored = localStorage.getItem(ctrl.storageKeyValue || 'opal_todos');
-        return stored ? JSON.parse(stored) : [];
-      };
-
-      this.saveTodos = function(todos) {
-        localStorage.setItem(ctrl.storageKeyValue || 'opal_todos', JSON.stringify(todos));
-      };
-
-      this.addTodoToDOM = function(todo) {
-        const template = ctrl.templateTarget;
-        const clone = template.content.cloneNode(true);
-
-        // Get the first element child (the <li> element)
-        const todoItem = clone.firstElementChild;
-
-        if (!todoItem) {
-          console.error('Template is empty or invalid');
-          return;
-        }
-
-        todoItem.setAttribute('data-todo-id', todo.id);
-        if (todo.completed) {
-          todoItem.classList.add('completed');
-        }
-
-        const checkbox = todoItem.querySelector('.todo-checkbox');
-        if (checkbox) {
-          checkbox.setAttribute('data-todo-id', todo.id);
-          checkbox.checked = todo.completed;
-        }
-
-        const text = todoItem.querySelector('.todo-text');
-        if (text) {
-          text.textContent = todo.text;
-        }
-
-        const editBtn = todoItem.querySelector('.edit-btn');
-        if (editBtn) {
-          editBtn.setAttribute('data-todo-id', todo.id);
-        }
-
-        const deleteBtn = todoItem.querySelector('.delete-btn');
-        if (deleteBtn) {
-          deleteBtn.setAttribute('data-todo-id', todo.id);
-        }
-
-        ctrl.listTarget.appendChild(clone);
-        ctrl.hideEmptyState();
-      };
-
-      this.updateCount = function() {
-        const todos = ctrl.getTodos();
-        const active = todos.filter(t => !t.completed).length;
-        const completed = todos.filter(t => t.completed).length;
-
-        if (ctrl.hasCountTarget) {
-          ctrl.countTarget.innerHTML = active + ' active, ' + completed + ' completed';
-        }
-
-        if (todos.length === 0) {
-          ctrl.showEmptyState();
-        }
-      };
-
-      this.showEmptyState = function() {
-        if (ctrl.hasEmptyStateTarget) {
-          ctrl.emptyStateTarget.style.display = 'block';
-        }
-      };
-
-      this.hideEmptyState = function() {
-        if (ctrl.hasEmptyStateTarget) {
-          ctrl.emptyStateTarget.style.display = 'none';
-        }
-      };
-
-      this.renderTodos = function() {
-        // Clear current display
-        ctrl.listTarget.innerHTML = '';
-
-        const todos = ctrl.getTodos();
-        const filter = ctrl.filterValue || 'all';
-
-        // Filter todos based on current filter
-        let filteredTodos = todos;
-        if (filter === 'active') {
-          filteredTodos = todos.filter(t => !t.completed);
-        } else if (filter === 'completed') {
-          filteredTodos = todos.filter(t => t.completed);
-        }
-
-        // Render filtered todos
-        filteredTodos.forEach(todo => ctrl.addTodoToDOM(todo));
-
-        if (filteredTodos.length === 0) {
-          ctrl.showEmptyState();
-        } else {
-          ctrl.hideEmptyState();
-        }
-
-        ctrl.updateCount();
-      };
-    `
-
-    load_todos
-    update_count
+    setup_update_listener
+    render_todos
   end
 
   # Add new todo
   def add_todo
-    `
-      const input = this.inputTarget;
-      const text = input.value.trim();
+    text = `this.hasInputTarget ? this.inputTarget.value.trim() : ''`
 
-      if (text === '') {
-        // Show validation error via toast
-        const event = new CustomEvent('show-toast', {
-          detail: { message: 'Please enter a todo item', type: 'error' }
-        });
-        window.dispatchEvent(event);
-        return;
-      }
+    if text.empty?
+      show_error('Please enter a todo item')
+      return
+    end
 
-      const todo = {
-        id: Date.now(),
-        text: text,
-        completed: false,
-        createdAt: new Date().toISOString()
-      };
+    todo = {
+      id: `Date.now()`,
+      text: text,
+      completed: false,
+      createdAt: `new Date().toISOString()`
+    }
 
-      // Add to list
-      const todos = this.getTodos();
-      todos.push(todo);
-      this.saveTodos(todos);
+    todos = get_todos
+    todos << todo
+    save_todos(todos)
 
-      // Clear input
-      input.value = '';
-
-      // Re-render with current filter
-      this.renderTodos();
-
-      // Show success toast
-      const successEvent = new CustomEvent('show-toast', {
-        detail: { message: 'Todo added!', type: 'success' }
-      });
-      window.dispatchEvent(successEvent);
-    `
+    `if (this.hasInputTarget) this.inputTarget.value = ''`
+    render_todos
+    show_success('Todo added!')
   end
 
   # Toggle todo completion
-  def toggle_todo
-    `
-      const checkbox = event.currentTarget;
-      const todoId = parseInt(checkbox.getAttribute('data-todo-id'));
+  def toggle_todo(event)
+    todo_id = event.current_target.get_attribute('data-todo-id').to_i
 
-      const todos = this.getTodos();
-      const todo = todos.find(t => t.id === todoId);
+    todos = get_todos
+    todo = todos.find { |t| t[:id] == todo_id }
 
-      if (todo) {
-        todo.completed = !todo.completed;
-        this.saveTodos(todos);
-
-        // Re-render with current filter
-        this.renderTodos();
-      }
-    `
+    if todo
+      todo[:completed] = !todo[:completed]
+      save_todos(todos)
+      render_todos
+    end
   end
 
   # Delete todo
-  def delete_todo
-    `
-      const todoId = parseInt(event.currentTarget.getAttribute('data-todo-id'));
-      const todos = this.getTodos();
-      const filteredTodos = todos.filter(t => t.id !== todoId);
+  def delete_todo(event)
+    todo_id = event.current_target.get_attribute('data-todo-id').to_i
 
-      this.saveTodos(filteredTodos);
-
-      // Re-render with current filter
-      this.renderTodos();
-
-      // Show toast
-      const toastEvent = new CustomEvent('show-toast', {
-        detail: { message: 'Todo deleted', type: 'info' }
-      });
-      window.dispatchEvent(toastEvent);
-    `
+    todos = get_todos.reject { |t| t[:id] == todo_id }
+    save_todos(todos)
+    render_todos
+    show_info('Todo deleted')
   end
 
   # Edit todo (show modal)
-  def edit_todo
-    `
-      const todoId = parseInt(event.currentTarget.getAttribute('data-todo-id'));
-      const todos = this.getTodos();
-      const todo = todos.find(t => t.id === todoId);
+  def edit_todo(event)
+    todo_id = event.current_target.get_attribute('data-todo-id').to_i
+    todos = get_todos
+    todo = todos.find { |t| t[:id] == todo_id }
 
-      if (todo) {
-        // Dispatch event to open modal
-        const modalEvent = new CustomEvent('open-modal', {
-          detail: {
-            title: 'Edit Todo',
-            todoId: todoId,
-            todoText: todo.text
-          }
-        });
-        window.dispatchEvent(modalEvent);
-      }
-    `
+    if todo
+      dispatch_custom_event('open-modal', {
+        title: 'Edit Todo',
+        todoId: todo_id,
+        todoText: todo[:text]
+      })
+    end
   end
 
   # Clear completed todos
   def clear_completed
-    `
-      const todos = this.getTodos();
-      const completedCount = todos.filter(t => t.completed).length;
+    todos = get_todos
+    completed_count = todos.count { |t| t[:completed] }
 
-      if (completedCount === 0) {
-        const event = new CustomEvent('show-toast', {
-          detail: { message: 'No completed todos to clear', type: 'info' }
-        });
-        window.dispatchEvent(event);
-        return;
-      }
+    if completed_count == 0
+      show_info('No completed todos to clear')
+      return
+    end
 
-      const activeTodos = todos.filter(t => !t.completed);
-      this.saveTodos(activeTodos);
-
-      // Re-render with current filter
-      this.renderTodos();
-
-      // Show toast
-      const event = new CustomEvent('show-toast', {
-        detail: { message: 'Completed todos cleared', type: 'success' }
-      });
-      window.dispatchEvent(event);
-    `
+    active_todos = todos.reject { |t| t[:completed] }
+    save_todos(active_todos)
+    render_todos
+    show_success('Completed todos cleared')
   end
 
   # Set filter and update display
-  def set_filter
-    `
-      const filter = event.currentTarget.getAttribute('data-filter');
-      this.filterValue = filter;
+  def set_filter(event)
+    @filter = event.current_target.get_attribute('data-filter')
 
-      // Update active button
-      const filterButtons = this.element.querySelectorAll('[data-filter]');
-      filterButtons.forEach(btn => btn.classList.remove('active'));
-      event.currentTarget.classList.add('active');
+    # Update active button
+    filter_buttons = query_all('[data-filter]')
+    filter_buttons.each { |btn| remove_class(btn, 'active') }
+    add_class(event.current_target, 'active')
 
-      // Re-render todos with filter
-      this.renderTodos();
-    `
-  end
-
-  # Private helper methods (JavaScript)
-  def get_todos
-    `this.getTodos()`
-  end
-
-  def save_todos
-    # This is a placeholder - actual implementation in JS
+    render_todos
   end
 
   private
 
-  def load_todos
+  def setup_update_listener
     `
-      this.renderTodos();
+      const ctrl = this;
+      window.addEventListener('update-todo', function(e) {
+        const todoId = parseInt(e.detail.todoId);
+        const newText = e.detail.text;
+        ctrl.$handle_update_todo(todoId, newText);
+      });
     `
   end
 
-  def update_count
+  def handle_update_todo(todo_id, new_text)
+    todos = get_todos
+    todo = todos.find { |t| t[:id] == todo_id }
+
+    if todo
+      todo[:text] = new_text
+      save_todos(todos)
+
+      # Update DOM
+      todo_el = document.query_selector("[data-todo-id=\"#{todo_id}\"]")
+      if element_exists?(todo_el)
+        text_el = todo_el.query_selector('.todo-text')
+        text_el.text_content = new_text if element_exists?(text_el)
+      end
+
+      show_success('Todo updated!')
+    end
+  end
+
+  def get_todos
+    js_data = storage_get(STORAGE_KEY)
+    return [] unless js_data
+
+    # Convert JS array to Ruby array of hashes
+    result = []
+    length = `#{js_data}.length`
+    length.times do |i|
+      item = `#{js_data}[#{i}]`
+      result << {
+        id: `#{item}.id`,
+        text: `#{item}.text`,
+        completed: `#{item}.completed`,
+        createdAt: `#{item}.createdAt`
+      }
+    end
+    result
+  end
+
+  def save_todos(todos)
+    # Convert Ruby array to JS array for storage
+    js_array = `[]`
+    todos.each do |todo|
+      `#{js_array}.push({
+        id: #{todo[:id]},
+        text: #{todo[:text]},
+        completed: #{todo[:completed]},
+        createdAt: #{todo[:createdAt]}
+      })`
+    end
+    storage_set(STORAGE_KEY, `#{js_array}`)
+  end
+
+  def render_todos
+    `if (this.hasListTarget) this.listTarget.innerHTML = ''`
+
+    todos = get_todos
+    filtered_todos = filter_todos(todos)
+
+    filtered_todos.each { |todo| add_todo_to_dom(todo) }
+
+    if filtered_todos.empty?
+      show_empty_state
+    else
+      hide_empty_state
+    end
+
+    update_count
+  end
+
+  def filter_todos(todos)
+    case @filter
+    when 'active'
+      todos.reject { |t| t[:completed] }
+    when 'completed'
+      todos.select { |t| t[:completed] }
+    else
+      todos
+    end
+  end
+
+  def add_todo_to_dom(todo)
+    return unless `this.hasTemplateTarget && this.hasListTarget`
+
+    todo_id = todo[:id]
+    todo_text = todo[:text]
+    todo_completed = todo[:completed]
+
     `
-      this.updateCount();
+      const template = this.templateTarget;
+      const clone = template.content.cloneNode(true);
+      const todoItem = clone.firstElementChild;
+
+      if (!todoItem) return;
+
+      todoItem.setAttribute('data-todo-id', #{todo_id});
+      if (#{todo_completed}) {
+        todoItem.classList.add('completed');
+      }
+
+      // Set checkbox
+      const checkbox = todoItem.querySelector('.todo-checkbox');
+      if (checkbox) {
+        checkbox.setAttribute('data-todo-id', #{todo_id});
+        checkbox.checked = #{todo_completed};
+      }
+
+      // Set text
+      const textEl = todoItem.querySelector('.todo-text');
+      if (textEl) {
+        textEl.textContent = #{todo_text};
+      }
+
+      // Set edit button
+      const editBtn = todoItem.querySelector('.edit-btn');
+      if (editBtn) {
+        editBtn.setAttribute('data-todo-id', #{todo_id});
+      }
+
+      // Set delete button
+      const deleteBtn = todoItem.querySelector('.delete-btn');
+      if (deleteBtn) {
+        deleteBtn.setAttribute('data-todo-id', #{todo_id});
+      }
+
+      this.listTarget.appendChild(clone);
+    `
+    hide_empty_state
+  end
+
+  def update_count
+    todos = get_todos
+    active = todos.count { |t| !t[:completed] }
+    completed = todos.count { |t| t[:completed] }
+
+    count_text = "#{active} active, #{completed} completed"
+    `if (this.hasCountTarget) this.countTarget.innerHTML = #{count_text}`
+
+    show_empty_state if todos.empty?
+  end
+
+  def show_empty_state
+    `
+      if (this.hasEmptyStateTarget) {
+        this.emptyStateTarget.style.display = 'block';
+      }
+    `
+  end
+
+  def hide_empty_state
+    `
+      if (this.hasEmptyStateTarget) {
+        this.emptyStateTarget.style.display = 'none';
+      }
     `
   end
 end

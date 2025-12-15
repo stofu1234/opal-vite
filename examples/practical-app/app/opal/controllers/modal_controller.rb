@@ -2,79 +2,60 @@
 
 # Modal dialog controller with animations
 class ModalController < StimulusController
+  include JsProxyEx
+  include Toastable
+  include DomHelpers
+
   self.targets = ["overlay", "content", "title", "body", "input"]
 
   def connect
+    setup_event_listeners
+  end
+
+  def open
+    activate_modal
+    focus_input_delayed
+    prevent_body_scroll
+  end
+
+  def close
+    deactivate_modal
+    restore_body_scroll
+    reset_input
+  end
+
+  def close_on_overlay(event)
+    `
+      if (this.hasOverlayTarget && event.target === this.overlayTarget) {
+        #{close}
+      }
+    `
+  end
+
+  def close_on_escape(event)
+    close if event.key == 'Escape'
+  end
+
+  def save
+    text = `this.hasInputTarget ? this.inputTarget.value.trim() : ''`
+
+    if text.empty?
+      show_error('Please enter todo text')
+      return
+    end
+
+    todo_id = `this.hasInputTarget ? this.inputTarget.getAttribute('data-todo-id') : null`
+
+    # Dispatch save event
+    dispatch_custom_event('modal-save', { todoId: todo_id.to_i, text: text }, element)
+  end
+
+  private
+
+  def setup_event_listeners
+    # Listen for open-modal event
     `
       const ctrl = this;
-
-      // Stimulus action methods
-      this.open = function() {
-        ctrl.element.classList.add('active');
-        ctrl.overlayTarget.classList.add('active');
-        ctrl.contentTarget.classList.add('active');
-
-        // Focus input if exists
-        if (ctrl.hasInputTarget) {
-          setTimeout(() => ctrl.inputTarget.focus(), 100);
-        }
-
-        // Prevent body scroll
-        document.body.style.overflow = 'hidden';
-      };
-
-      this.close = function() {
-        ctrl.element.classList.remove('active');
-        ctrl.overlayTarget.classList.remove('active');
-        ctrl.contentTarget.classList.remove('active');
-
-        // Restore body scroll
-        document.body.style.overflow = '';
-
-        // Reset form if exists
-        if (ctrl.hasInputTarget) {
-          ctrl.inputTarget.value = '';
-          ctrl.inputTarget.removeAttribute('data-todo-id');
-        }
-      };
-
-      this.closeOnOverlay = function(event) {
-        if (event.target === ctrl.overlayTarget) {
-          this.close();
-        }
-      };
-
-      this.closeOnEscape = function(event) {
-        if (event.key === 'Escape') {
-          this.close();
-        }
-      };
-
-      this.save = function() {
-        const input = ctrl.inputTarget;
-        const text = input.value.trim();
-
-        if (text === '') {
-          const event = new CustomEvent('show-toast', {
-            detail: { message: 'Please enter todo text', type: 'error' }
-          });
-          window.dispatchEvent(event);
-          return;
-        }
-
-        const todoId = input.getAttribute('data-todo-id');
-
-        // Dispatch save event
-        const saveEvent = new CustomEvent('modal-save', {
-          detail: {
-            todoId: parseInt(todoId),
-            text: text
-          }
-        });
-        ctrl.element.dispatchEvent(saveEvent);
-      };
-
-      // Listen for open-modal event
       window.addEventListener('open-modal', function(e) {
         const data = e.detail;
 
@@ -87,39 +68,59 @@ class ModalController < StimulusController
           ctrl.inputTarget.setAttribute('data-todo-id', data.todoId);
         }
 
-        // Open modal
-        ctrl.element.classList.add('active');
-        ctrl.overlayTarget.classList.add('active');
-        ctrl.contentTarget.classList.add('active');
-
-        // Focus input if exists
-        if (ctrl.hasInputTarget) {
-          setTimeout(() => ctrl.inputTarget.focus(), 100);
-        }
-
-        // Prevent body scroll
-        document.body.style.overflow = 'hidden';
+        ctrl.$open();
       });
 
-      // Listen for update-todo event from modal
+      // Listen for modal-save event to dispatch update-todo
       ctrl.element.addEventListener('modal-save', function(e) {
         const updateEvent = new CustomEvent('update-todo', {
           detail: e.detail
         });
         window.dispatchEvent(updateEvent);
-
-        // Close modal
-        ctrl.element.classList.remove('active');
-        ctrl.overlayTarget.classList.remove('active');
-        ctrl.contentTarget.classList.remove('active');
-        document.body.style.overflow = '';
-
-        // Reset form if exists
-        if (ctrl.hasInputTarget) {
-          ctrl.inputTarget.value = '';
-          ctrl.inputTarget.removeAttribute('data-todo-id');
-        }
+        ctrl.$close();
       });
+    `
+  end
+
+  def activate_modal
+    `
+      this.element.classList.add('active');
+      if (this.hasOverlayTarget) this.overlayTarget.classList.add('active');
+      if (this.hasContentTarget) this.contentTarget.classList.add('active');
+    `
+  end
+
+  def deactivate_modal
+    `
+      this.element.classList.remove('active');
+      if (this.hasOverlayTarget) this.overlayTarget.classList.remove('active');
+      if (this.hasContentTarget) this.contentTarget.classList.remove('active');
+    `
+  end
+
+  def focus_input_delayed
+    `
+      const ctrl = this;
+      if (this.hasInputTarget) {
+        setTimeout(function() { ctrl.inputTarget.focus(); }, 100);
+      }
+    `
+  end
+
+  def prevent_body_scroll
+    `document.body.style.overflow = 'hidden'`
+  end
+
+  def restore_body_scroll
+    `document.body.style.overflow = ''`
+  end
+
+  def reset_input
+    `
+      if (this.hasInputTarget) {
+        this.inputTarget.value = '';
+        this.inputTarget.removeAttribute('data-todo-id');
+      }
     `
   end
 end
