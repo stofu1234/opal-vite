@@ -59,7 +59,7 @@ class UserModalController < StimulusController
 
   private
 
-  def display_user(user, posts)
+  def display_user
     `
       const user = arguments[0];
       const posts = arguments[1];
