@@ -18,31 +18,6 @@ class ChartController < StimulusController
         return;
       }
 
-      // Get chart type from value or default to 'line'
-      const chartType = ctrl.typeValue || 'line';
-
-      // Parse data and options from values
-      let chartData;
-      let chartOptions;
-
-      try {
-        chartData = ctrl.dataValue ? JSON.parse(ctrl.dataValue) : ctrl.getDefaultData(chartType);
-        chartOptions = ctrl.optionsValue ? JSON.parse(ctrl.optionsValue) : ctrl.getDefaultOptions(chartType);
-      } catch (error) {
-        console.error('Error parsing chart data or options:', error);
-        chartData = ctrl.getDefaultData(chartType);
-        chartOptions = ctrl.getDefaultOptions(chartType);
-      }
-
-      // Create chart
-      const ctx = ctrl.canvasTarget.getContext('2d');
-
-      ctrl.chart = new Chart(ctx, {
-        type: chartType,
-        data: chartData,
-        options: chartOptions
-      });
-
       // Helper function to get default data for each chart type
       ctrl.getDefaultData = function(type) {
         const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
@@ -154,6 +129,32 @@ class ChartController < StimulusController
 
         ctrl.chart.update();
       };
+
+      // Now initialize the chart after all helper functions are defined
+      // Get chart type from value or default to 'line'
+      const chartType = ctrl.typeValue || 'line';
+
+      // Parse data and options from values
+      let chartData;
+      let chartOptions;
+
+      try {
+        chartData = ctrl.dataValue ? JSON.parse(ctrl.dataValue) : ctrl.getDefaultData(chartType);
+        chartOptions = ctrl.optionsValue ? JSON.parse(ctrl.optionsValue) : ctrl.getDefaultOptions(chartType);
+      } catch (error) {
+        console.error('Error parsing chart data or options:', error);
+        chartData = ctrl.getDefaultData(chartType);
+        chartOptions = ctrl.getDefaultOptions(chartType);
+      }
+
+      // Create chart
+      const ctx = ctrl.canvasTarget.getContext('2d');
+
+      ctrl.chart = new Chart(ctx, {
+        type: chartType,
+        data: chartData,
+        options: chartOptions
+      });
     `
   end
 
