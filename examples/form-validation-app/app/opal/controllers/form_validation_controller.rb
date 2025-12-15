@@ -2,6 +2,10 @@
 require 'opal_stimulus/stimulus_controller'
 
 class FormValidationController < StimulusController
+  include JsProxyEx
+  include Toastable
+  include DomHelpers
+
   self.targets = %w[
     field
     error
@@ -14,293 +18,299 @@ class FormValidationController < StimulusController
   ]
   self.values = { submit_url: :string }
 
+  VALIDATION_RULES = {
+    required: ->(value) {
+      return value if value.is_a?(TrueClass) || value.is_a?(FalseClass)
+      value && !value.strip.empty?
+    },
+    minLength: ->(value, min) {
+      !value || value.length >= min.to_i
+    },
+    maxLength: ->(value, max) {
+      !value || value.length <= max.to_i
+    },
+    email: ->(value) {
+      return true unless value
+      !!(value =~ /^[^\s@]+@[^\s@]+\.[^\s@]+$/)
+    },
+    alphanumeric: ->(value) {
+      return true unless value
+      !!(value =~ /^[a-zA-Z0-9]+$/)
+    },
+    numeric: ->(value) {
+      return true unless value
+      !!(value =~ /^\d+(\.\d+)?$/)
+    },
+    min: ->(value, min_val) {
+      return true unless value
+      value.to_f >= min_val.to_f
+    },
+    max: ->(value, max_val) {
+      return true unless value
+      value.to_f <= max_val.to_f
+    },
+    password: ->(value) {
+      return true unless value
+      !!(value =~ /[A-Z]/) && !!(value =~ /[a-z]/) && !!(value =~ /[0-9]/)
+    },
+    phone: ->(value) {
+      return true unless value
+      !!(value =~ /^[\d\s\-\+\(\)]+$/) && value.gsub(/\D/, '').length >= 10
+    },
+    url: ->(value) {
+      return true unless value
+      begin
+        `new URL(#{value})`
+        true
+      rescue
+        false
+      end
+    }
+  }.freeze
+
+  ERROR_MESSAGES = {
+    required: 'This field is required',
+    minLength: 'Must be at least {0} characters',
+    maxLength: 'Must be no more than {0} characters',
+    email: 'Please enter a valid email address',
+    alphanumeric: 'Only letters and numbers are allowed',
+    numeric: 'Please enter a valid number',
+    min: 'Value must be at least {0}',
+    max: 'Value must be no more than {0}',
+    password: 'Must contain uppercase, lowercase, and number',
+    phone: 'Please enter a valid phone number',
+    url: 'Please enter a valid URL',
+    matches: 'This field must match {0}',
+    asyncEmailCheck: 'This email is already taken'
+  }.freeze
+
+  def initialize
+    super
+    @validation_state = {}
+    @async_validation_in_progress = false
+  end
+
   def connect
-    # All logic defined as JavaScript methods on the controller instance
-    `
-      console.log('=== CONNECT METHOD STARTED ===');
-      const ctrl = this;
-      ctrl.validationState = new Map();
-      ctrl.asyncValidationInProgress = false;
-      console.log('Initialized validationState and asyncValidationInProgress');
+    puts '=== FormValidationController connected ==='
+    initialize_field_states
+    update_stats
+  end
 
-      // Define validation rules
-      ctrl.validationRules = {
-        required: function(value) {
-          if (typeof value === 'boolean') return value;
-          return value && value.trim().length > 0;
-        },
-        minLength: function(value, min) {
-          return !value || value.length >= parseInt(min);
-        },
-        maxLength: function(value, max) {
-          return !value || value.length <= parseInt(max);
-        },
-        email: function(value) {
-          if (!value) return true;
-          return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-        },
-        alphanumeric: function(value) {
-          if (!value) return true;
-          return /^[a-zA-Z0-9]+$/.test(value);
-        },
-        numeric: function(value) {
-          if (!value) return true;
-          return !isNaN(value) && !isNaN(parseFloat(value));
-        },
-        min: function(value, minVal) {
-          if (!value) return true;
-          return parseFloat(value) >= parseFloat(minVal);
-        },
-        max: function(value, maxVal) {
-          if (!value) return true;
-          return parseFloat(value) <= parseFloat(maxVal);
-        },
-        password: function(value) {
-          if (!value) return true;
-          return /[A-Z]/.test(value) && /[a-z]/.test(value) && /[0-9]/.test(value);
-        },
-        phone: function(value) {
-          if (!value) return true;
-          return /^[\d\s\-\+\(\)]+$/.test(value) && value.replace(/\D/g, '').length >= 10;
-        },
-        url: function(value) {
-          if (!value) return true;
-          try { new URL(value); return true; } catch { return false; }
-        },
-        matches: function(value, targetFieldName) {
-          const target = ctrl.element.querySelector('[name="' + targetFieldName + '"]');
-          return !target || value === target.value;
-        }
-      };
+  # Stimulus action: validate field on input/blur
+  def validate_field(event)
+    field = event.current_target
+    rules = wrap_js(field.dataset)[:rules]
 
-      ctrl.errorMessages = {
-        required: 'This field is required',
-        minLength: 'Must be at least {0} characters',
-        maxLength: 'Must be no more than {0} characters',
-        email: 'Please enter a valid email address',
-        alphanumeric: 'Only letters and numbers are allowed',
-        numeric: 'Please enter a valid number',
-        min: 'Value must be at least {0}',
-        max: 'Value must be no more than {0}',
-        password: 'Must contain uppercase, lowercase, and number',
-        phone: 'Please enter a valid phone number',
-        url: 'Please enter a valid URL',
-        matches: 'This field must match {0}',
-        asyncEmailCheck: 'This email is already taken'
-      };
+    unless rules
+      clear_field_error(field)
+      @validation_state[field_key(field)] = true
+      update_stats
+      return
+    end
 
-      // Store method references for Stimulus actions
-      this.validate_field = function(event) {
-        const field = event.target;
-        const rules = field.dataset.rules;
+    rules_list = rules.split('|')
+    is_valid = true
+    error_message = ''
 
-        if (!rules) {
-          ctrl.clearFieldError(field);
-          ctrl.validationState.set(field, true);
-          ctrl.updateStats();
-          return;
-        }
+    rules_list.each do |rule_str|
+      rule_name, rule_param = rule_str.split(':')
 
-        const rulesList = rules.split('|');
-        let isValid = true;
-        let errorMessage = '';
+      if rule_name == 'asyncEmailCheck'
+        validate_email_async(field)
+        return
+      end
 
-        for (let i = 0; i < rulesList.length; i++) {
-          const [ruleName, ruleParam] = rulesList[i].split(':');
+      if rule_name == 'matches'
+        target = element.query_selector("[name=\"#{rule_param}\"]")
+        if target.to_n
+          is_valid = field.value == target.value
+          unless is_valid
+            error_message = ERROR_MESSAGES[:matches].gsub('{0}', rule_param)
+          end
+        end
+        next unless is_valid
+      end
 
-          if (ruleName === 'asyncEmailCheck') {
-            ctrl.validateEmailAsync(field);
-            return;
-          }
+      validator = VALIDATION_RULES[rule_name.to_sym]
+      next unless validator
 
-          const validator = ctrl.validationRules[ruleName];
-          if (!validator) continue;
+      value = field.type == 'checkbox' ? field.checked : field.value
 
-          const value = field.type === 'checkbox' ? field.checked : field.value;
+      unless validator.call(value, rule_param)
+        is_valid = false
+        error_message = ERROR_MESSAGES[rule_name.to_sym] || 'Invalid'
+        error_message = error_message.gsub('{0}', rule_param.to_s) if rule_param
+        break
+      end
+    end
 
-          if (!validator(value, ruleParam)) {
-            isValid = false;
-            errorMessage = ctrl.errorMessages[ruleName];
-            if (ruleParam) {
-              errorMessage = errorMessage.replace('{0}', ruleParam);
-            }
-            break;
-          }
-        }
+    if is_valid
+      clear_field_error(field)
+      @validation_state[field_key(field)] = true
+    else
+      show_field_error(field, error_message)
+      @validation_state[field_key(field)] = false
+    end
 
-        if (isValid) {
-          ctrl.clearFieldError(field);
-          ctrl.validationState.set(field, true);
-        } else {
-          ctrl.showFieldError(field, errorMessage);
-          ctrl.validationState.set(field, false);
-        }
+    update_stats
+  end
 
-        ctrl.updateStats();
-      };
+  # Stimulus action: clear error on focus
+  def clear_error(event)
+    field = event.current_target
+    if @validation_state[field_key(field)] == false
+      clear_field_error(field)
+      @validation_state[field_key(field)] = nil
+      update_stats
+    end
+  end
 
-      this.clear_error = function(event) {
-        const field = event.target;
-        if (ctrl.validationState.get(field) === false) {
-          ctrl.clearFieldError(field);
-          ctrl.validationState.set(field, null);
-          ctrl.updateStats();
-        }
-      };
+  # Stimulus action: handle form submit
+  def handle_submit(event)
+    event.prevent_default
 
-      this.handle_submit = function(event) {
-        event.preventDefault();
+    # Validate all fields
+    field_targets.each do |field|
+      validate_field_directly(field)
+    end
 
-        // Validate all fields
-        ctrl.fieldTargets.forEach(function(field) {
-          ctrl.validate_field({ target: field });
-        });
+    is_valid = @validation_state.values.all? { |s| s == true }
 
-        const isValid = Array.from(ctrl.validationState.values()).every(s => s === true);
+    unless is_valid
+      show_status('Please fix all errors before submitting', 'error')
+      return
+    end
 
-        if (!isValid) {
-          ctrl.showStatus('Please fix all errors before submitting', 'error');
-          return;
-        }
+    form = element.query_selector('form')
+    show_status('Submitting form...', 'info')
+    submit_btn_target.disabled = true
 
-        const form = ctrl.element.querySelector('form');
-        const formData = new FormData(form);
-        const data = Object.fromEntries(formData.entries());
+    # Simulate API call
+    set_timeout(1500) do
+      puts 'Form submitted successfully'
+      show_status('Registration successful! Welcome aboard.', 'success')
 
-        ctrl.showStatus('Submitting form...', 'info');
-        ctrl.submitBtnTarget.disabled = true;
+      set_timeout(2000) { reset_form }
+    end
+  end
 
-        setTimeout(function() {
-          console.log('Form submitted:', data);
-          ctrl.showStatus('Registration successful! Welcome aboard.', 'success');
+  # Stimulus action: reset form
+  def reset_form
+    form = element.query_selector('form')
+    form.reset if form.to_n
 
-          setTimeout(function() { ctrl.reset_form(); }, 2000);
-        }, 1500);
-      };
+    @validation_state.clear
 
-      this.reset_form = function() {
-        const form = ctrl.element.querySelector('form');
-        if (form) form.reset();
-        ctrl.validationState.clear();
+    field_targets.each do |field|
+      wrapped_field = wrap_js(field)
+      clear_field_error(wrapped_field)
+      rules = wrapped_field.dataset[:rules]
+      @validation_state[field_key(wrapped_field)] = rules ? nil : true
+    end
 
-        ctrl.fieldTargets.forEach(function(field) {
-          ctrl.clearFieldError(field);
-          // Re-initialize: fields without rules are valid, others are null
-          if (!field.dataset.rules) {
-            ctrl.validationState.set(field, true);
-          } else {
-            ctrl.validationState.set(field, null);
-          }
-        });
+    set_target_text(:status, '')
+    set_target_class(:status, 'form-status')
 
-        if (ctrl.hasStatusTarget) {
-          ctrl.statusTarget.textContent = '';
-          ctrl.statusTarget.className = 'form-status';
-        }
+    update_stats
+  end
 
-        ctrl.updateStats();
-      };
+  private
 
-      ctrl.clearFieldError = function(field) {
-        const formGroup = field.closest('.form-group');
-        if (formGroup) {
-          formGroup.classList.remove('error', 'info');
-          const errorSpan = formGroup.querySelector('.error-message');
-          if (errorSpan) errorSpan.textContent = '';
-        }
-      };
+  def field_key(field)
+    field.name || field.id || `#{field.to_n}.toString()`
+  end
 
-      ctrl.showFieldError = function(field, message, type) {
-        type = type || 'error';
-        const formGroup = field.closest('.form-group');
-        if (formGroup) {
-          formGroup.classList.remove('error', 'info');
-          formGroup.classList.add(type);
-          const errorSpan = formGroup.querySelector('.error-message');
-          if (errorSpan) errorSpan.textContent = message;
-        }
-      };
+  def initialize_field_states
+    targets = field_targets
+    len = `#{targets.to_n}.length` rescue 0
 
-      ctrl.updateStats = function() {
-        const total = ctrl.fieldTargets.length;
-        let valid = 0, invalid = 0;
+    len.to_i.times do |i|
+      field = `#{targets.to_n}[#{i}]`
+      wrapped_field = JsProxyEx::JsObject.new(field)
+      dataset = wrapped_field.dataset
+      rules = dataset[:rules] rescue nil
+      key = wrapped_field.name || wrapped_field.id || "field_#{i}"
+      @validation_state[key] = rules ? nil : true
+    end
+  end
 
-        ctrl.validationState.forEach(function(state) {
-          if (state === true) valid++;
-          if (state === false) invalid++;
-        });
+  def validate_field_directly(field)
+    # Wrap field as JsObject if needed
+    wrapped_field = field.is_a?(JsProxyEx::JsObject) ? field : wrap_js(field)
+    return unless wrapped_field
 
-        console.log('updateStats - total:', total, 'valid:', valid, 'invalid:', invalid);
-        console.log('hasTotalFieldsTarget:', ctrl.hasTotalFieldsTarget);
-        console.log('totalFieldsTarget:', ctrl.totalFieldsTarget);
+    # Create a mock event object
+    mock_event = Object.new
+    mock_event.define_singleton_method(:current_target) { wrapped_field }
+    validate_field(mock_event)
+  end
 
-        if (ctrl.hasTotalFieldsTarget) ctrl.totalFieldsTarget.textContent = total;
-        if (ctrl.hasValidFieldsTarget) ctrl.validFieldsTarget.textContent = valid;
-        if (ctrl.hasInvalidFieldsTarget) ctrl.invalidFieldsTarget.textContent = invalid;
+  def clear_field_error(field)
+    form_group = field.closest('.form-group')
+    return unless `#{form_group.to_n} != null`
 
-        const allValidated = ctrl.fieldTargets.every(f => ctrl.validationState.get(f) !== null);
-        const formIsValid = allValidated && invalid === 0 && valid === total;
+    remove_class(form_group, 'error')
+    remove_class(form_group, 'info')
 
-        if (ctrl.hasFormValidTarget) {
-          ctrl.formValidTarget.textContent = formIsValid ? 'Yes' : 'No';
-          ctrl.formValidTarget.className = formIsValid ? 'stat-value valid' : 'stat-value invalid';
-        }
+    error_span = form_group.query_selector('.error-message')
+    `#{error_span.to_n} && (#{error_span.to_n}.textContent = '')`
+  end
 
-        if (ctrl.hasSubmitBtnTarget) {
-          ctrl.submitBtnTarget.disabled = !formIsValid || ctrl.asyncValidationInProgress;
-        }
-      };
+  def show_field_error(field, message, type = 'error')
+    form_group = field.closest('.form-group')
+    return unless `#{form_group.to_n} != null`
 
-      ctrl.showStatus = function(message, type) {
-        if (ctrl.hasStatusTarget) {
-          ctrl.statusTarget.textContent = message;
-          ctrl.statusTarget.className = 'form-status ' + type;
-        }
-      };
+    remove_class(form_group, 'error')
+    remove_class(form_group, 'info')
+    add_class(form_group, type)
 
-      ctrl.validateEmailAsync = function(field) {
-        const email = field.value;
-        if (!email || !ctrl.validationRules.email(email)) return;
+    error_span = form_group.query_selector('.error-message')
+    `#{error_span.to_n} && (#{error_span.to_n}.textContent = #{message})`
+  end
 
-        ctrl.asyncValidationInProgress = true;
-        ctrl.showFieldError(field, 'Checking email availability...', 'info');
+  def update_stats
+    targets = field_targets
+    total = `#{targets.to_n}.length`
+    valid = @validation_state.values.count { |s| s == true }
+    invalid = @validation_state.values.count { |s| s == false }
 
-        setTimeout(function() {
-          const isTaken = email.toLowerCase() === 'test@example.com';
+    all_validated = field_targets.all? { |f| !@validation_state[field_key(f)].nil? }
+    form_is_valid = all_validated && invalid == 0 && valid == total
 
-          if (isTaken) {
-            ctrl.showFieldError(field, ctrl.errorMessages.asyncEmailCheck);
-            ctrl.validationState.set(field, false);
-          } else {
-            ctrl.clearFieldError(field);
-            ctrl.validationState.set(field, true);
-          }
+    # Use JsProxyEx helpers for Ruby-like target access
+    set_target_text(:total_fields, total.to_s)
+    set_target_text(:valid_fields, valid.to_s)
+    set_target_text(:invalid_fields, invalid.to_s)
+    set_target_text(:form_valid, form_is_valid ? 'Yes' : 'No')
+    set_target_class(:form_valid, form_is_valid ? 'stat-value valid' : 'stat-value invalid')
+    set_target_disabled(:submit_btn, !form_is_valid || @async_validation_in_progress)
+  end
 
-          ctrl.asyncValidationInProgress = false;
-          ctrl.updateStats();
-        }, 1000);
-      };
+  def show_status(message, type)
+    set_target_text(:status, message)
+    set_target_class(:status, "form-status #{type}")
+  end
 
-      // Initialize
-      console.log('fieldTargets:', ctrl.fieldTargets);
-      console.log('fieldTargets.length:', ctrl.fieldTargets.length);
+  def validate_email_async(field)
+    email = field.value
+    return unless email && VALIDATION_RULES[:email].call(email)
 
-      try {
-        console.log('Before forEach...');
-        ctrl.fieldTargets.forEach(function(f) {
-          // Fields without rules are automatically valid
-          if (!f.dataset.rules) {
-            ctrl.validationState.set(f, true);
-          } else {
-            ctrl.validationState.set(f, null);
-          }
-        });
-        console.log('After forEach, before updateStats...');
-        ctrl.updateStats();
-        console.log('After updateStats');
-      } catch (error) {
-        console.error('Error in initialization:', error);
-      }
-    `
+    @async_validation_in_progress = true
+    show_field_error(field, 'Checking email availability...', 'info')
+
+    set_timeout(1000) do
+      is_taken = email.downcase == 'test@example.com'
+
+      if is_taken
+        show_field_error(field, ERROR_MESSAGES[:asyncEmailCheck])
+        @validation_state[field_key(field)] = false
+      else
+        clear_field_error(field)
+        @validation_state[field_key(field)] = true
+      end
+
+      @async_validation_in_progress = false
+      update_stats
+    end
   end
 end
