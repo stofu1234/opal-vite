@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>API Example - Opal + Vite</title>
+    <link rel="stylesheet" href="/app/styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>🌐 API Integration Example</h1>
+        <p class="subtitle">Fetch API with Ruby (Opal) + Stimulus + Vite</p>
+      </header>
+
+      <main>
+        <!-- Users List -->
+        <div class="users-section" data-controller="users">
+          <div class="section-header">
+            <h2>Users from JSONPlaceholder API</h2>
+            <button data-action="click->users#reload" class="reload-btn">
+              🔄 Reload
+            </button>
+          </div>
+
+          <!-- Loading State -->
+          <div class="loading" data-users-target="loading">
+            <div class="spinner"></div>
+            <p>Loading users...</p>
+          </div>
+
+          <!-- Error State -->
+          <div class="error-message" data-users-target="error" style="display: none;">
+            Failed to load users
+          </div>
+
+          <!-- Users Grid -->
+          <div class="users-grid" data-users-target="list"></div>
+        </div>
+
+        <!-- Info Card -->
+        <div class="info-card">
+          <h3>💡 About This Example</h3>
+          <p>This example demonstrates:</p>
+          <ul>
+            <li><strong>API Integration:</strong> Fetching data from JSONPlaceholder API using fetch()</li>
+            <li><strong>Loading States:</strong> Visual feedback while data loads</li>
+            <li><strong>Error Handling:</strong> Graceful error messages on failure</li>
+            <li><strong>Dynamic Rendering:</strong> Creating DOM elements from API data</li>
+            <li><strong>Nested Data:</strong> Fetching user details and posts on click</li>
+          </ul>
+          <p class="api-info">
+            <strong>API:</strong> <a href="https://jsonplaceholder.typicode.com" target="_blank">JSONPlaceholder</a>
+            - Free fake API for testing and prototyping
+          </p>
+        </div>
+      </main>
+
+      <footer>
+        <p>
+          Built with
+          <a href="https://opalrb.com/" target="_blank">Opal</a>,
+          <a href="https://stimulus.hotwired.dev/" target="_blank">Stimulus</a>, and
+          <a href="https://vitejs.dev/" target="_blank">Vite</a>
+        </p>
+      </footer>
+    </div>
+
+    <!-- User Details Modal -->
+    <div
+      class="modal"
+      data-controller="user-modal"
+      data-action="keydown.esc@window->user-modal#close_on_escape"
+    >
+      <div
+        class="modal-overlay"
+        data-user-modal-target="overlay"
+        data-action="click->user-modal#close_on_overlay"
+      ></div>
+      <div class="modal-content" data-user-modal-target="content">
+        <div class="modal-header">
+          <h3 data-user-modal-target="userName">User Details</h3>
+          <button class="modal-close" data-action="click->user-modal#close">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="user-modal-info">
+            <div class="info-row">
+              <span class="info-label">Email:</span>
+              <span data-user-modal-target="userEmail">-</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Company:</span>
+              <span data-user-modal-target="userCompany">-</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Address:</span>
+              <span data-user-modal-target="userAddress">-</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Phone:</span>
+              <span data-user-modal-target="userPhone">-</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Website:</span>
+              <span data-user-modal-target="userWebsite">-</span>
+            </div>
+          </div>
+
+          <h4 style="margin-top: 1.5rem; margin-bottom: 1rem;">Recent Posts</h4>
+          <div class="posts-list" data-user-modal-target="postsList"></div>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="/app/javascript/application.js"></script>
+  </body>
+</html>

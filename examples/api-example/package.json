@@ -1,0 +1,17 @@
+{
+  "name": "api-example",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "@hotwired/stimulus": "^3.2.2",
+    "vite": "^5.0.0"
+  },
+  "devDependencies": {
+    "vite-plugin-opal": "workspace:*"
+  }
+}

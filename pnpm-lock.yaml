@@ -12,6 +12,19 @@ importers:
         specifier: ^5.3.3
         version: 5.9.3
 
+  examples/api-example:
+    dependencies:
+      '@hotwired/stimulus':
+        specifier: ^3.2.2
+        version: 3.2.2
+      vite:
+        specifier: ^5.0.0
+        version: 5.4.21(@types/node@20.19.26)
+    devDependencies:
+      vite-plugin-opal:
+        specifier: workspace:*
+        version: link:../../packages/vite-plugin-opal
+
   examples/inesita-app:
     dependencies:
       vite:
