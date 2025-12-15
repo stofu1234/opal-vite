@@ -1,11 +1,13 @@
 # backtick_javascript: true
-require 'opal'
 require 'native'
 require 'opal_stimulus/stimulus_controller'
+
+# Load controllers
 require 'controllers/i18n_controller'
 
-# Get the Stimulus application from the global scope
-StimulusApplication = Native(`window.StimulusApplication`)
+puts "i18n Example - Opal + Stimulus"
+puts "Ruby version: #{RUBY_VERSION}"
 
 # Register all controllers
-StimulusApplication.register('i18n', I18nController)
+StimulusController.register_all!
+puts "All controllers registered!"

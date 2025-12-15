@@ -1,13 +1,14 @@
 # backtick_javascript: true
-require 'opal'
 require 'native'
 require 'opal_stimulus/stimulus_controller'
+
+# Load controllers
 require 'controllers/pwa_controller'
 require 'controllers/offline_detector_controller'
 
-# Get the Stimulus application from the global scope
-StimulusApplication = Native(`window.StimulusApplication`)
+puts "PWA Example - Opal + Stimulus"
+puts "Ruby version: #{RUBY_VERSION}"
 
 # Register all controllers
-StimulusApplication.register('pwa', PwaController)
-StimulusApplication.register('offline-detector', OfflineDetectorController)
+StimulusController.register_all!
+puts "All controllers registered!"
