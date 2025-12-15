@@ -135,7 +135,8 @@ puts Helper.greet
       const result = await compiler.compile(testFile)
 
       expect(result.code).toBeTruthy()
-      expect(result.dependencies).toContain('helper')
+      // Dependencies now include file paths, not just module names
+      expect(result.dependencies.some(dep => dep.includes('helper'))).toBe(true)
     })
   })
 
