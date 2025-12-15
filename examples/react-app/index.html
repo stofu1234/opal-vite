@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Opal + Vite + React.rb Example</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 800px;
+      width: 100%;
+    }
+
+    .header {
+      background: white;
+      padding: 40px;
+      border-radius: 12px 12px 0 0;
+      text-align: center;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .header h1 {
+      color: #2d3748;
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+    }
+
+    .header p {
+      color: #718096;
+      font-size: 1.1rem;
+    }
+
+    #root {
+      background: white;
+      border-radius: 0 0 12px 12px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin: 0 4px;
+    }
+
+    .badge-ruby {
+      background: #CC342D;
+      color: white;
+    }
+
+    .badge-react {
+      background: #61DAFB;
+      color: #282c34;
+    }
+
+    .badge-vite {
+      background: #646CFF;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>
+        <span class="badge badge-ruby">Ruby</span>
+        +
+        <span class="badge badge-react">React</span>
+        +
+        <span class="badge badge-vite">Vite</span>
+      </h1>
+      <p>Write React components in Ruby with Opal</p>
+    </div>
+    <div id="root"></div>
+  </div>
+
+  <script type="module" src="/src/main_loader.js"></script>
+</body>
+</html>

@@ -1,0 +1,278 @@
+.app {
+  padding: 0;
+}
+
+.components-grid {
+  display: grid;
+  gap: 20px;
+  padding: 30px;
+}
+
+@media (min-width: 768px) {
+  .components-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.counter-container,
+.greeting-container,
+.todo-container {
+  background: white;
+}
+
+.counter-card,
+.greeting-card,
+.todo-card {
+  padding: 25px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.todo-container {
+  grid-column: 1 / -1;
+}
+
+h2 {
+  color: #2d3748;
+  font-size: 1.5rem;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #667eea;
+}
+
+/* Counter Styles */
+.counter-display {
+  text-align: center;
+  margin: 30px 0;
+}
+
+.count-value {
+  font-size: 4rem;
+  font-weight: bold;
+  color: #667eea;
+}
+
+.counter-controls {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 6px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-increment {
+  background: #48bb78;
+  color: white;
+}
+
+.btn-decrement {
+  background: #f56565;
+  color: white;
+}
+
+.btn-reset {
+  background: #718096;
+  color: white;
+}
+
+.counter-info {
+  text-align: center;
+  color: #4a5568;
+}
+
+.counter-info p {
+  margin: 8px 0;
+}
+
+.status {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.positive {
+  color: #48bb78;
+}
+.negative {
+  color: #f56565;
+}
+.zero {
+  color: #718096;
+}
+
+/* Greeting Styles */
+.input-group {
+  margin-bottom: 20px;
+}
+
+.input-group label {
+  display: block;
+  margin-bottom: 8px;
+  color: #4a5568;
+  font-weight: 500;
+}
+
+.name-input {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.name-input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.greeting-message {
+  text-align: center;
+  padding: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 8px;
+  color: white;
+}
+
+.greeting-message h3 {
+  font-size: 2rem;
+  margin-bottom: 10px;
+}
+
+.greeting-placeholder {
+  text-align: center;
+  padding: 40px;
+  color: #a0aec0;
+}
+
+/* Todo Styles */
+.todo-input-group {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.todo-input {
+  flex: 1;
+  padding: 12px;
+  border: 2px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.todo-input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.btn-add {
+  background: #667eea;
+  color: white;
+  padding: 12px 24px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px;
+  color: #a0aec0;
+  font-size: 1.1rem;
+}
+
+.todo-list {
+  list-style: none;
+  margin-bottom: 20px;
+}
+
+.todo-item {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  border-bottom: 1px solid #e2e8f0;
+  transition: background 0.2s;
+}
+
+.todo-item:hover {
+  background: #f7fafc;
+}
+
+.todo-item.completed .todo-text {
+  text-decoration: line-through;
+  color: #a0aec0;
+}
+
+.todo-checkbox {
+  margin-right: 12px;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+
+.todo-text {
+  flex: 1;
+  cursor: pointer;
+  color: #2d3748;
+}
+
+.btn-remove {
+  background: #f56565;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.btn-remove:hover {
+  background: #e53e3e;
+  transform: scale(1.1);
+}
+
+.todo-stats {
+  text-align: center;
+  padding: 12px;
+  background: #f7fafc;
+  border-radius: 6px;
+  color: #4a5568;
+  font-weight: 500;
+}
+
+/* Footer */
+.app-footer {
+  text-align: center;
+  padding: 30px;
+  background: #f7fafc;
+  border-top: 1px solid #e2e8f0;
+  color: #4a5568;
+}
+
+.app-footer p {
+  margin: 8px 0;
+}
+
+.app-footer strong {
+  color: #667eea;
+}
+
+.footer-note {
+  font-size: 0.9rem;
+  color: #718096;
+}

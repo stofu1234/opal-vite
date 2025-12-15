@@ -5,13 +5,15 @@
   "private": true,
   "scripts": {
     "dev": "vite",
-    "build": "vite build"
+    "build": "vite build",
+    "test": "node test-app.mjs"
   },
   "dependencies": {
     "@hotwired/stimulus": "^3.2.2",
     "vite": "^5.0.0"
   },
   "devDependencies": {
+    "playwright": "^1.57.0",
     "vite-plugin-opal": "workspace:*"
   }
 }

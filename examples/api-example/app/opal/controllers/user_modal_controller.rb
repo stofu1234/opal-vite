@@ -7,10 +7,58 @@ class UserModalController < StimulusController
   def connect
     puts "User modal controller connected!"
 
-    # Listen for show-user-modal event
+    # Set up helper methods
     `
       const ctrl = this;
 
+      // Define displayUser helper
+      this.displayUser = function(user, posts) {
+        // Update user info
+        if (ctrl.hasUserNameTarget) {
+          ctrl.userNameTarget.textContent = user.name;
+        }
+        if (ctrl.hasUserEmailTarget) {
+          ctrl.userEmailTarget.textContent = user.email;
+        }
+        if (ctrl.hasUserCompanyTarget) {
+          ctrl.userCompanyTarget.textContent = user.company.name;
+        }
+        if (ctrl.hasUserAddressTarget) {
+          ctrl.userAddressTarget.textContent = user.address.street + ', ' + user.address.city;
+        }
+        if (ctrl.hasUserPhoneTarget) {
+          ctrl.userPhoneTarget.textContent = user.phone;
+        }
+        if (ctrl.hasUserWebsiteTarget) {
+          ctrl.userWebsiteTarget.textContent = user.website;
+        }
+
+        // Display posts
+        if (ctrl.hasPostsListTarget) {
+          ctrl.postsListTarget.innerHTML = '';
+
+          if (posts.length === 0) {
+            ctrl.postsListTarget.innerHTML = '<p class="no-posts">No posts yet</p>';
+          } else {
+            posts.slice(0, 5).forEach(post => {
+              const postItem = document.createElement('div');
+              postItem.className = 'post-item';
+              postItem.innerHTML = '<h4>' + post.title + '</h4>' +
+                '<p>' + post.body + '</p>';
+              ctrl.postsListTarget.appendChild(postItem);
+            });
+
+            if (posts.length > 5) {
+              const more = document.createElement('p');
+              more.className = 'more-posts';
+              more.textContent = '+ ' + (posts.length - 5) + ' more posts';
+              ctrl.postsListTarget.appendChild(more);
+            }
+          }
+        }
+      };
+
+      // Listen for show-user-modal event
       window.addEventListener('show-user-modal', (e) => {
         const { user, posts } = e.detail;
         ctrl.displayUser(user, posts);
@@ -57,56 +105,4 @@ class UserModalController < StimulusController
     `
   end
 
-  private
-
-  def display_user
-    `
-      const user = arguments[0];
-      const posts = arguments[1];
-
-      // Update user info
-      if (this.hasUserNameTarget) {
-        this.userNameTarget.textContent = user.name;
-      }
-      if (this.hasUserEmailTarget) {
-        this.userEmailTarget.textContent = user.email;
-      }
-      if (this.hasUserCompanyTarget) {
-        this.userCompanyTarget.textContent = user.company.name;
-      }
-      if (this.hasUserAddressTarget) {
-        this.userAddressTarget.textContent = user.address.street + ', ' + user.address.city;
-      }
-      if (this.hasUserPhoneTarget) {
-        this.userPhoneTarget.textContent = user.phone;
-      }
-      if (this.hasUserWebsiteTarget) {
-        this.userWebsiteTarget.textContent = user.website;
-      }
-
-      // Display posts
-      if (this.hasPostsListTarget) {
-        this.postsListTarget.innerHTML = '';
-
-        if (posts.length === 0) {
-          this.postsListTarget.innerHTML = '<p class="no-posts">No posts yet</p>';
-        } else {
-          posts.slice(0, 5).forEach(post => {
-            const postItem = document.createElement('div');
-            postItem.className = 'post-item';
-            postItem.innerHTML = '<h4>' + post.title + '</h4>' +
-              '<p>' + post.body + '</p>';
-            this.postsListTarget.appendChild(postItem);
-          });
-
-          if (posts.length > 5) {
-            const more = document.createElement('p');
-            more.className = 'more-posts';
-            more.textContent = '+ ' + (posts.length - 5) + ' more posts';
-            this.postsListTarget.appendChild(more);
-          }
-        }
-      }
-    `
-  end
 end
