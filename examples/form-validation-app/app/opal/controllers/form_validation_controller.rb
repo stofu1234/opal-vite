@@ -117,7 +117,7 @@ class FormValidationController < StimulusController
         ctrl.validationState.set(field, null);
       });
 
-      ctrl.updateStats();
+      ctrl.$updateStats();
     `
   end
 
@@ -128,9 +128,9 @@ class FormValidationController < StimulusController
       const rules = field.dataset.rules;
 
       if (!rules) {
-        ctrl.clearFieldError(field);
+        ctrl.$clearFieldError(field);
         ctrl.validationState.set(field, true);
-        ctrl.updateStats();
+        ctrl.$updateStats();
         return;
       }
 
@@ -143,7 +143,7 @@ class FormValidationController < StimulusController
         const [ruleName, ruleParam] = rule.split(':');
 
         if (ruleName === 'asyncEmailCheck') {
-          ctrl.validateEmailAsync(field);
+          ctrl.$validateEmailAsync(field);
           return;
         }
 
@@ -163,14 +163,14 @@ class FormValidationController < StimulusController
       }
 
       if (isValid) {
-        ctrl.clearFieldError(field);
+        ctrl.$clearFieldError(field);
         ctrl.validationState.set(field, true);
       } else {
-        ctrl.showFieldError(field, errorMessage);
+        ctrl.$showFieldError(field, errorMessage);
         ctrl.validationState.set(field, false);
       }
 
-      ctrl.updateStats();
+      ctrl.$updateStats();
     `
   end
 
@@ -184,7 +184,7 @@ class FormValidationController < StimulusController
       }
 
       ctrl.asyncValidationInProgress = true;
-      ctrl.showFieldError(field, 'Checking email availability...', 'info');
+      ctrl.$showFieldError(field, 'Checking email availability...', 'info');
 
       // Simulate API call
       setTimeout(function() {
@@ -192,15 +192,15 @@ class FormValidationController < StimulusController
         const isTaken = email.toLowerCase() === 'test@example.com';
 
         if (isTaken) {
-          ctrl.showFieldError(field, ctrl.errorMessages.asyncEmailCheck);
+          ctrl.$showFieldError(field, ctrl.errorMessages.asyncEmailCheck);
           ctrl.validationState.set(field, false);
         } else {
-          ctrl.clearFieldError(field);
+          ctrl.$clearFieldError(field);
           ctrl.validationState.set(field, true);
         }
 
         ctrl.asyncValidationInProgress = false;
-        ctrl.updateStats();
+        ctrl.$updateStats();
       }, 1000);
     `
   end
@@ -211,9 +211,9 @@ class FormValidationController < StimulusController
       const field = event.target;
 
       if (ctrl.validationState.get(field) === false) {
-        ctrl.clearFieldError(field);
+        ctrl.$clearFieldError(field);
         ctrl.validationState.set(field, null);
-        ctrl.updateStats();
+        ctrl.$updateStats();
       }
     `
   end
@@ -303,7 +303,7 @@ class FormValidationController < StimulusController
       // Validate all fields
       ctrl.fieldTargets.forEach(function(field) {
         const fakeEvent = { target: field };
-        ctrl.validateField(fakeEvent);
+        ctrl.$validateField(fakeEvent);
       });
 
       // Check if form is valid
@@ -312,7 +312,7 @@ class FormValidationController < StimulusController
       });
 
       if (!isValid) {
-        ctrl.showStatus('Please fix all errors before submitting', 'error');
+        ctrl.$showStatus('Please fix all errors before submitting', 'error');
         return;
       }
 
@@ -320,17 +320,17 @@ class FormValidationController < StimulusController
       const formData = new FormData(ctrl.element);
       const data = Object.fromEntries(formData.entries());
 
-      ctrl.showStatus('Submitting form...', 'info');
+      ctrl.$showStatus('Submitting form...', 'info');
       ctrl.submitBtnTarget.disabled = true;
 
       // Simulate API call
       setTimeout(function() {
         console.log('Form submitted:', data);
-        ctrl.showStatus('Registration successful! Welcome aboard.', 'success');
+        ctrl.$showStatus('Registration successful! Welcome aboard.', 'success');
 
         // Reset form after 2 seconds
         setTimeout(function() {
-          ctrl.resetForm();
+          ctrl.$resetForm();
         }, 2000);
       }, 1500);
     `
@@ -343,7 +343,7 @@ class FormValidationController < StimulusController
       ctrl.validationState.clear();
 
       ctrl.fieldTargets.forEach(function(field) {
-        ctrl.clearFieldError(field);
+        ctrl.$clearFieldError(field);
         ctrl.validationState.set(field, null);
       });
 
@@ -352,7 +352,7 @@ class FormValidationController < StimulusController
         ctrl.statusTarget.className = 'form-status';
       }
 
-      ctrl.updateStats();
+      ctrl.$updateStats();
     `
   end
 
