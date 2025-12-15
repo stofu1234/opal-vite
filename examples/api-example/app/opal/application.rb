@@ -2,10 +2,10 @@
 require 'native'
 require 'opal_stimulus/stimulus_controller'
 
-# Load concerns
-require 'concerns/js_proxy_ex'
-require 'concerns/toastable'
-require 'concerns/dom_helpers'
+# Load concerns from opal-vite gem (automatically available when includeConcerns: true)
+require 'opal_vite/concerns/js_proxy_ex'
+require 'opal_vite/concerns/toastable'
+require 'opal_vite/concerns/dom_helpers'
 
 # Load controllers
 require 'controllers/users_controller'
