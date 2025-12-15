@@ -2,6 +2,9 @@
 require 'native'
 require 'opal_stimulus/stimulus_controller'
 
+# Load concerns
+require 'concerns/js_proxy_ex'
+
 # Load all controllers
 require 'controllers/hello_controller'
 require 'controllers/counter_controller'
