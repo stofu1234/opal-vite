@@ -1,4 +1,4 @@
-import { Application } from '@hotwired/stimulus';
+import { Application, Controller } from '@hotwired/stimulus';
 
 // Create Stimulus application
 const application = Application.start();
@@ -7,7 +7,8 @@ const application = Application.start();
 application.debug = false;
 window.Stimulus = application;
 
-// Make StimulusApplication globally available for Opal
+// Make Controller and StimulusApplication globally available for Opal
+window.Controller = Controller;
 window.StimulusApplication = application;
 
 // Load Opal application
