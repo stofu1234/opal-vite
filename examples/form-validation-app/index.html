@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="/app/styles.css" />
   </head>
   <body>
-    <div class="container">
+    <div class="container" data-controller="form-validation" data-form-validation-submit-url-value="/api/register">
       <!-- Header -->
       <header class="header">
         <h1>📋 Form Validation Example</h1>
@@ -17,11 +17,7 @@
       <!-- Registration Form -->
       <div class="form-card">
         <h2>User Registration</h2>
-        <form
-          data-controller="form-validation"
-          data-action="submit->form-validation#handle_submit"
-          data-form-validation-submit-url-value="/api/register"
-        >
+        <form data-action="submit->form-validation#handle_submit">
           <!-- Name Field -->
           <div class="form-group">
             <label for="name">Full Name *</label>

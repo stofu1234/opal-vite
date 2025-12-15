@@ -17,9 +17,11 @@ class FormValidationController < StimulusController
   def connect
     # All logic defined as JavaScript methods on the controller instance
     `
+      console.log('=== CONNECT METHOD STARTED ===');
       const ctrl = this;
       ctrl.validationState = new Map();
       ctrl.asyncValidationInProgress = false;
+      console.log('Initialized validationState and asyncValidationInProgress');
 
       // Define validation rules
       ctrl.validationRules = {
@@ -161,7 +163,8 @@ class FormValidationController < StimulusController
           return;
         }
 
-        const formData = new FormData(ctrl.element);
+        const form = ctrl.element.querySelector('form');
+        const formData = new FormData(form);
         const data = Object.fromEntries(formData.entries());
 
         ctrl.showStatus('Submitting form...', 'info');
@@ -176,12 +179,18 @@ class FormValidationController < StimulusController
       };
 
       this.reset_form = function() {
-        ctrl.element.reset();
+        const form = ctrl.element.querySelector('form');
+        if (form) form.reset();
         ctrl.validationState.clear();
 
         ctrl.fieldTargets.forEach(function(field) {
           ctrl.clearFieldError(field);
-          ctrl.validationState.set(field, null);
+          // Re-initialize: fields without rules are valid, others are null
+          if (!field.dataset.rules) {
+            ctrl.validationState.set(field, true);
+          } else {
+            ctrl.validationState.set(field, null);
+          }
         });
 
         if (ctrl.hasStatusTarget) {
@@ -220,6 +229,10 @@ class FormValidationController < StimulusController
           if (state === true) valid++;
           if (state === false) invalid++;
         });
+
+        console.log('updateStats - total:', total, 'valid:', valid, 'invalid:', invalid);
+        console.log('hasTotalFieldsTarget:', ctrl.hasTotalFieldsTarget);
+        console.log('totalFieldsTarget:', ctrl.totalFieldsTarget);
 
         if (ctrl.hasTotalFieldsTarget) ctrl.totalFieldsTarget.textContent = total;
         if (ctrl.hasValidFieldsTarget) ctrl.validFieldsTarget.textContent = valid;
@@ -269,8 +282,25 @@ class FormValidationController < StimulusController
       };
 
       // Initialize
-      ctrl.fieldTargets.forEach(f => ctrl.validationState.set(f, null));
-      ctrl.updateStats();
+      console.log('fieldTargets:', ctrl.fieldTargets);
+      console.log('fieldTargets.length:', ctrl.fieldTargets.length);
+
+      try {
+        console.log('Before forEach...');
+        ctrl.fieldTargets.forEach(function(f) {
+          // Fields without rules are automatically valid
+          if (!f.dataset.rules) {
+            ctrl.validationState.set(f, true);
+          } else {
+            ctrl.validationState.set(f, null);
+          }
+        });
+        console.log('After forEach, before updateStats...');
+        ctrl.updateStats();
+        console.log('After updateStats');
+      } catch (error) {
+        console.error('Error in initialization:', error);
+      }
     `
   end
 end
