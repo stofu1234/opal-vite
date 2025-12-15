@@ -2,6 +2,11 @@
 require 'native'
 require 'opal_stimulus/stimulus_controller'
 
+# Load concerns
+require 'concerns/js_proxy_ex'
+require 'concerns/toastable'
+require 'concerns/dom_helpers'
+
 # Load controllers
 require 'controllers/chart_controller'
 require 'controllers/dashboard_controller'
