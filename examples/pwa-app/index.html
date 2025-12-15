@@ -30,7 +30,7 @@
             <button class="btn btn-primary" data-action="click->pwa#install">
               Install
             </button>
-            <button class="btn btn-secondary" data-action="click->pwa#dismissInstallPrompt">
+            <button class="btn btn-secondary" data-action="click->pwa#dismiss_install_prompt">
               Later
             </button>
           </div>
@@ -67,7 +67,7 @@
           Create notes that work offline! Your notes are saved to localStorage and will sync when online.
         </p>
 
-        <form data-action="submit->pwa#addNote">
+        <form data-action="submit->pwa#add_note">
           <div class="form-group">
             <input
               type="text"
@@ -99,10 +99,10 @@
         </div>
 
         <div class="cache-actions">
-          <button class="btn btn-secondary" data-action="click->pwa#updateCache">
+          <button class="btn btn-secondary" data-action="click->pwa#update_cache">
             Update Cache
           </button>
-          <button class="btn btn-secondary" data-action="click->pwa#clearCache">
+          <button class="btn btn-secondary" data-action="click->pwa#clear_cache">
             Clear Cache
           </button>
         </div>
