@@ -1,0 +1,19 @@
+{
+  "name": "chat-app",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "server": "node server.mjs",
+    "client": "vite",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "@hotwired/stimulus": "^3.2.2",
+    "vite": "^5.0.0",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "vite-plugin-opal": "workspace:*"
+  }
+}
