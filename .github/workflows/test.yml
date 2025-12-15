@@ -25,6 +25,13 @@ jobs:
         with:
           version: 8
 
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+          working-directory: gems/opal-vite
+
       - name: Get pnpm store directory
         id: pnpm-cache
         shell: bash
@@ -38,6 +45,13 @@ jobs:
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
+
+      - name: Build and install opal-vite gem
+        run: |
+          cd gems/opal-vite
+          bundle install
+          gem build opal-vite.gemspec
+          gem install opal-vite-*.gem
 
       - name: Install dependencies
         run: pnpm install
@@ -86,7 +100,7 @@ jobs:
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: playwright-report-practical-app
           path: examples/practical-app/playwright-report/
@@ -133,7 +147,7 @@ jobs:
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: playwright-report-chart-app
           path: examples/chart-app/playwright-report/
@@ -189,7 +203,7 @@ jobs:
         working-directory: examples/${{ matrix.example }}
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: build-${{ matrix.example }}
           path: examples/${{ matrix.example }}/dist
