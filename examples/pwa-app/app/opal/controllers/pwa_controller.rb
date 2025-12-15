@@ -1,5 +1,5 @@
 # backtick_javascript: true
-require 'opal_stimulus'
+require 'opal_stimulus/stimulus_controller'
 
 class PwaController < StimulusController
   self.targets = %w[

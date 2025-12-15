@@ -1,5 +1,5 @@
 # backtick_javascript: true
-require 'opal_stimulus'
+require 'opal_stimulus/stimulus_controller'
 
 class I18nController < StimulusController
   self.targets = %w[
