@@ -4,7 +4,6 @@ require 'opal_stimulus/stimulus_controller'
 
 # Load controllers
 require 'controllers/chart_controller'
-require 'controllers/data_chart_controller'
 require 'controllers/dashboard_controller'
 
 puts "Chart App - Data Visualization Demo"

@@ -11,37 +11,6 @@ class DashboardController < StimulusController
     `
       const ctrl = this;
 
-      // Show loading
-      if (ctrl.hasLoadingTarget) {
-        ctrl.loadingTarget.style.display = 'flex';
-      }
-
-      // Fetch user data from JSONPlaceholder API
-      fetch('https://jsonplaceholder.typicode.com/users')
-        .then(response => response.json())
-        .then(users => {
-          // Hide loading
-          if (ctrl.hasLoadingTarget) {
-            ctrl.loadingTarget.style.display = 'none';
-          }
-
-          // Process user data
-          ctrl.processUserData(users);
-
-          // Update stats
-          if (ctrl.hasStatsTarget) {
-            ctrl.updateStats(users);
-          }
-        })
-        .catch(error => {
-          console.error('Error fetching data:', error);
-
-          // Hide loading
-          if (ctrl.hasLoadingTarget) {
-            ctrl.loadingTarget.style.display = 'none';
-          }
-        });
-
       // Process user data for charts
       ctrl.processUserData = function(users) {
         // Count users by company
@@ -111,6 +80,38 @@ class DashboardController < StimulusController
           '<div class="stat-label">Avg Latitude</div>' +
         '</div>';
       };
+
+      // Now fetch data after helper functions are defined
+      // Show loading
+      if (ctrl.hasLoadingTarget) {
+        ctrl.loadingTarget.style.display = 'flex';
+      }
+
+      // Fetch user data from JSONPlaceholder API
+      fetch('https://jsonplaceholder.typicode.com/users')
+        .then(response => response.json())
+        .then(users => {
+          // Hide loading
+          if (ctrl.hasLoadingTarget) {
+            ctrl.loadingTarget.style.display = 'none';
+          }
+
+          // Process user data
+          ctrl.processUserData(users);
+
+          // Update stats
+          if (ctrl.hasStatsTarget) {
+            ctrl.updateStats(users);
+          }
+        })
+        .catch(error => {
+          console.error('Error fetching data:', error);
+
+          // Hide loading
+          if (ctrl.hasLoadingTarget) {
+            ctrl.loadingTarget.style.display = 'none';
+          }
+        });
     `
   end
 

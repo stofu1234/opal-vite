@@ -3,7 +3,7 @@
 # Chart controller demonstrating Chart.js integration
 class ChartController < StimulusController
   self.targets = ["canvas"]
-  self.values = { type: :string, data: :string, options: :string }
+  self.values = { type: :string, data: :string, options: :string, event_name: :string }
 
   def connect
     puts "Chart controller connected!"
@@ -155,6 +155,33 @@ class ChartController < StimulusController
         data: chartData,
         options: chartOptions
       });
+
+      // If event_name value is provided, listen for custom events to update chart
+      if (ctrl.hasEventNameValue && ctrl.eventNameValue) {
+        const eventName = ctrl.eventNameValue;
+        console.log('Chart: Setting up event listener for', eventName);
+
+        window.addEventListener(eventName, (e) => {
+          const { labels, data } = e.detail;
+
+          if (!ctrl.chart) return;
+
+          // Update chart data
+          ctrl.chart.data.labels = labels;
+
+          if (ctrl.chart.config.type === 'pie' || ctrl.chart.config.type === 'doughnut') {
+            // For pie/doughnut charts, use single dataset
+            ctrl.chart.data.datasets[0].data = data;
+          } else {
+            // For other charts, update all datasets
+            ctrl.chart.data.datasets.forEach((dataset, index) => {
+              dataset.data = Array.isArray(data[0]) ? data[index] : data;
+            });
+          }
+
+          ctrl.chart.update('active');
+        });
+      }
     `
   end
 
