@@ -9,6 +9,7 @@ module Opal
       def initialize(options = {})
         @options = options
         @config = options[:config] || Opal::Vite.config
+        @include_concerns = options.fetch(:include_concerns, true)
       end
 
       # Compile Ruby source code to JavaScript
@@ -78,6 +79,14 @@ module Opal
       def add_gem_paths(builder)
         # Add gem directories from $LOAD_PATH to Opal's load paths
         # This allows Opal to find and compile gems like inesita
+
+        # Add opal-vite's built-in concerns if enabled
+        if @include_concerns
+          opal_vite_opal_path = Opal::Vite.opal_lib_path
+          if File.directory?(opal_vite_opal_path)
+            builder.append_paths(opal_vite_opal_path) unless builder.path_reader.paths.include?(opal_vite_opal_path)
+          end
+        end
 
         # First collect all gem paths
         gem_lib_paths = []
