@@ -15,6 +15,7 @@ class FormValidationController < StimulusController
   self.values = { submit_url: :string }
 
   def connect
+    # All logic defined as JavaScript methods on the controller instance
     `
       const ctrl = this;
       ctrl.validationState = new Map();
@@ -26,76 +27,50 @@ class FormValidationController < StimulusController
           if (typeof value === 'boolean') return value;
           return value && value.trim().length > 0;
         },
-
         minLength: function(value, min) {
           return !value || value.length >= parseInt(min);
         },
-
         maxLength: function(value, max) {
           return !value || value.length <= parseInt(max);
         },
-
         email: function(value) {
           if (!value) return true;
-          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-          return emailRegex.test(value);
+          return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
         },
-
         alphanumeric: function(value) {
           if (!value) return true;
-          const alphanumericRegex = /^[a-zA-Z0-9]+$/;
-          return alphanumericRegex.test(value);
+          return /^[a-zA-Z0-9]+$/.test(value);
         },
-
         numeric: function(value) {
           if (!value) return true;
           return !isNaN(value) && !isNaN(parseFloat(value));
         },
-
         min: function(value, minVal) {
           if (!value) return true;
           return parseFloat(value) >= parseFloat(minVal);
         },
-
         max: function(value, maxVal) {
           if (!value) return true;
           return parseFloat(value) <= parseFloat(maxVal);
         },
-
         password: function(value) {
           if (!value) return true;
-          // At least one uppercase, one lowercase, one number
-          const hasUppercase = /[A-Z]/.test(value);
-          const hasLowercase = /[a-z]/.test(value);
-          const hasNumber = /[0-9]/.test(value);
-          return hasUppercase && hasLowercase && hasNumber;
+          return /[A-Z]/.test(value) && /[a-z]/.test(value) && /[0-9]/.test(value);
         },
-
         phone: function(value) {
           if (!value) return true;
-          // Basic phone validation (flexible format)
-          const phoneRegex = /^[\d\s\-\+\(\)]+$/;
-          return phoneRegex.test(value) && value.replace(/\D/g, '').length >= 10;
+          return /^[\d\s\-\+\(\)]+$/.test(value) && value.replace(/\D/g, '').length >= 10;
         },
-
         url: function(value) {
           if (!value) return true;
-          try {
-            new URL(value);
-            return true;
-          } catch {
-            return false;
-          }
+          try { new URL(value); return true; } catch { return false; }
         },
-
         matches: function(value, targetFieldName) {
-          const targetField = ctrl.element.querySelector('[name="' + targetFieldName + '"]');
-          if (!targetField) return true;
-          return value === targetField.value;
+          const target = ctrl.element.querySelector('[name="' + targetFieldName + '"]');
+          return !target || value === target.value;
         }
       };
 
-      // Define error messages
       ctrl.errorMessages = {
         required: 'This field is required',
         minLength: 'Must be at least {0} characters',
@@ -112,266 +87,190 @@ class FormValidationController < StimulusController
         asyncEmailCheck: 'This email is already taken'
       };
 
-      // Initialize validation state
-      ctrl.fieldTargets.forEach(function(field) {
-        ctrl.validationState.set(field, null);
-      });
+      // Store method references for Stimulus actions
+      this.validate_field = function(event) {
+        const field = event.target;
+        const rules = field.dataset.rules;
 
-      ctrl.$update_stats();
-    `
-  end
-
-  def validate_field(event)
-    field = Native(event).target
-    rules = field.dataset.rules rescue nil
-
-    `
-      const ctrl = this;
-      const field = #{field};
-      const rules = #{rules};
-
-      if (!rules) {
-        ctrl.$clear_field_error(field);
-        ctrl.validationState.set(field, true);
-        ctrl.$update_stats();
-        return;
-      }
-
-      const rulesList = rules.split('|');
-      let isValid = true;
-      let errorMessage = '';
-
-      for (let i = 0; i < rulesList.length; i++) {
-        const rule = rulesList[i];
-        const [ruleName, ruleParam] = rule.split(':');
-
-        if (ruleName === 'asyncEmailCheck') {
-          ctrl.$validate_email_async(field);
+        if (!rules) {
+          ctrl.clearFieldError(field);
+          ctrl.validationState.set(field, true);
+          ctrl.updateStats();
           return;
         }
 
-        const validator = ctrl.validationRules[ruleName];
-        if (!validator) continue;
+        const rulesList = rules.split('|');
+        let isValid = true;
+        let errorMessage = '';
 
-        const value = field.type === 'checkbox' ? field.checked : field.value;
+        for (let i = 0; i < rulesList.length; i++) {
+          const [ruleName, ruleParam] = rulesList[i].split(':');
 
-        if (!validator(value, ruleParam)) {
-          isValid = false;
-          errorMessage = ctrl.errorMessages[ruleName];
-          if (ruleParam) {
-            errorMessage = errorMessage.replace('{0}', ruleParam);
+          if (ruleName === 'asyncEmailCheck') {
+            ctrl.validateEmailAsync(field);
+            return;
           }
-          break;
+
+          const validator = ctrl.validationRules[ruleName];
+          if (!validator) continue;
+
+          const value = field.type === 'checkbox' ? field.checked : field.value;
+
+          if (!validator(value, ruleParam)) {
+            isValid = false;
+            errorMessage = ctrl.errorMessages[ruleName];
+            if (ruleParam) {
+              errorMessage = errorMessage.replace('{0}', ruleParam);
+            }
+            break;
+          }
         }
-      }
 
-      if (isValid) {
-        ctrl.$clear_field_error(field);
-        ctrl.validationState.set(field, true);
-      } else {
-        ctrl.$show_field_error(field, errorMessage);
-        ctrl.validationState.set(field, false);
-      }
-
-      ctrl.$update_stats();
-    `
-  end
-
-  def validate_email_async(field)
-    `
-      const ctrl = this;
-      const email = field.value;
-
-      if (!email || !ctrl.validationRules.email(email)) {
-        return;
-      }
-
-      ctrl.asyncValidationInProgress = true;
-      ctrl.$show_field_error(field, 'Checking email availability...', 'info');
-
-      // Simulate API call
-      setTimeout(function() {
-        // Simulate that test@example.com is taken
-        const isTaken = email.toLowerCase() === 'test@example.com';
-
-        if (isTaken) {
-          ctrl.$show_field_error(field, ctrl.errorMessages.asyncEmailCheck);
-          ctrl.validationState.set(field, false);
-        } else {
-          ctrl.$clear_field_error(field);
+        if (isValid) {
+          ctrl.clearFieldError(field);
           ctrl.validationState.set(field, true);
+        } else {
+          ctrl.showFieldError(field, errorMessage);
+          ctrl.validationState.set(field, false);
         }
 
-        ctrl.asyncValidationInProgress = false;
-        ctrl.$update_stats();
-      }, 1000);
-    `
-  end
+        ctrl.updateStats();
+      };
 
-  def clear_error(event)
-    field = Native(event).target
-
-    `
-      const ctrl = this;
-      const field = #{field};
-
-      if (ctrl.validationState.get(field) === false) {
-        ctrl.$clear_field_error(field);
-        ctrl.validationState.set(field, null);
-        ctrl.$update_stats();
-      }
-    `
-  end
-
-  def clear_field_error(field)
-    `
-      const ctrl = this;
-      const targetField = arguments[0];
-      const formGroup = targetField.closest('.form-group');
-
-      if (formGroup) {
-        formGroup.classList.remove('error', 'info');
-        const errorSpan = formGroup.querySelector('.error-message');
-        if (errorSpan) {
-          errorSpan.textContent = '';
+      this.clear_error = function(event) {
+        const field = event.target;
+        if (ctrl.validationState.get(field) === false) {
+          ctrl.clearFieldError(field);
+          ctrl.validationState.set(field, null);
+          ctrl.updateStats();
         }
-      }
-    `
-  end
+      };
 
-  def show_field_error(field, message, type = 'error')
-    `
-      const ctrl = this;
-      const targetField = arguments[0];
-      const errorMsg = arguments[1];
-      const errorType = arguments[2] || 'error';
-      const formGroup = targetField.closest('.form-group');
+      this.handle_submit = function(event) {
+        event.preventDefault();
 
-      if (formGroup) {
-        formGroup.classList.remove('error', 'info');
-        formGroup.classList.add(errorType);
-        const errorSpan = formGroup.querySelector('.error-message');
-        if (errorSpan) {
-          errorSpan.textContent = errorMsg;
+        // Validate all fields
+        ctrl.fieldTargets.forEach(function(field) {
+          ctrl.validate_field({ target: field });
+        });
+
+        const isValid = Array.from(ctrl.validationState.values()).every(s => s === true);
+
+        if (!isValid) {
+          ctrl.showStatus('Please fix all errors before submitting', 'error');
+          return;
         }
-      }
-    `
-  end
 
-  def update_stats
-    `
-      const ctrl = this;
+        const formData = new FormData(ctrl.element);
+        const data = Object.fromEntries(formData.entries());
 
-      const total = ctrl.fieldTargets.length;
-      let valid = 0;
-      let invalid = 0;
+        ctrl.showStatus('Submitting form...', 'info');
+        ctrl.submitBtnTarget.disabled = true;
 
-      ctrl.validationState.forEach(function(state) {
-        if (state === true) valid++;
-        if (state === false) invalid++;
-      });
-
-      if (ctrl.hasTotalFieldsTarget) {
-        ctrl.totalFieldsTarget.textContent = total;
-      }
-      if (ctrl.hasValidFieldsTarget) {
-        ctrl.validFieldsTarget.textContent = valid;
-      }
-      if (ctrl.hasInvalidFieldsTarget) {
-        ctrl.invalidFieldsTarget.textContent = invalid;
-      }
-
-      // Form is valid if all fields are validated and all are valid
-      const allFieldsValidated = ctrl.fieldTargets.every(function(field) {
-        const state = ctrl.validationState.get(field);
-        return state !== null;
-      });
-
-      const formIsValid = allFieldsValidated && invalid === 0 && valid === total;
-
-      if (ctrl.hasFormValidTarget) {
-        ctrl.formValidTarget.textContent = formIsValid ? 'Yes' : 'No';
-        ctrl.formValidTarget.className = formIsValid ? 'stat-value valid' : 'stat-value invalid';
-      }
-
-      if (ctrl.hasSubmitBtnTarget) {
-        ctrl.submitBtnTarget.disabled = !formIsValid || ctrl.asyncValidationInProgress;
-      }
-    `
-  end
-
-  def handle_submit(event)
-    Native(event).preventDefault
-
-    `
-      const ctrl = this;
-
-      // Validate all fields
-      ctrl.fieldTargets.forEach(function(field) {
-        const fakeEvent = { target: field };
-        ctrl.$validate_field(fakeEvent);
-      });
-
-      // Check if form is valid
-      const isValid = Array.from(ctrl.validationState.values()).every(function(state) {
-        return state === true;
-      });
-
-      if (!isValid) {
-        ctrl.$show_status('Please fix all errors before submitting', 'error');
-        return;
-      }
-
-      // Collect form data
-      const formData = new FormData(ctrl.element);
-      const data = Object.fromEntries(formData.entries());
-
-      ctrl.$show_status('Submitting form...', 'info');
-      ctrl.submitBtnTarget.disabled = true;
-
-      // Simulate API call
-      setTimeout(function() {
-        console.log('Form submitted:', data);
-        ctrl.$show_status('Registration successful! Welcome aboard.', 'success');
-
-        // Reset form after 2 seconds
         setTimeout(function() {
-          ctrl.$reset_form();
-        }, 2000);
-      }, 1500);
-    `
-  end
+          console.log('Form submitted:', data);
+          ctrl.showStatus('Registration successful! Welcome aboard.', 'success');
 
-  def reset_form
-    `
-      const ctrl = this;
-      ctrl.element.reset();
-      ctrl.validationState.clear();
+          setTimeout(function() { ctrl.reset_form(); }, 2000);
+        }, 1500);
+      };
 
-      ctrl.fieldTargets.forEach(function(field) {
-        ctrl.$clear_field_error(field);
-        ctrl.validationState.set(field, null);
-      });
+      this.reset_form = function() {
+        ctrl.element.reset();
+        ctrl.validationState.clear();
 
-      if (ctrl.hasStatusTarget) {
-        ctrl.statusTarget.textContent = '';
-        ctrl.statusTarget.className = 'form-status';
-      }
+        ctrl.fieldTargets.forEach(function(field) {
+          ctrl.clearFieldError(field);
+          ctrl.validationState.set(field, null);
+        });
 
-      ctrl.$update_stats();
-    `
-  end
+        if (ctrl.hasStatusTarget) {
+          ctrl.statusTarget.textContent = '';
+          ctrl.statusTarget.className = 'form-status';
+        }
 
-  def show_status(message, type)
-    `
-      const ctrl = this;
-      const statusMsg = arguments[0];
-      const statusType = arguments[1];
+        ctrl.updateStats();
+      };
 
-      if (ctrl.hasStatusTarget) {
-        ctrl.statusTarget.textContent = statusMsg;
-        ctrl.statusTarget.className = 'form-status ' + statusType;
-      }
+      ctrl.clearFieldError = function(field) {
+        const formGroup = field.closest('.form-group');
+        if (formGroup) {
+          formGroup.classList.remove('error', 'info');
+          const errorSpan = formGroup.querySelector('.error-message');
+          if (errorSpan) errorSpan.textContent = '';
+        }
+      };
+
+      ctrl.showFieldError = function(field, message, type) {
+        type = type || 'error';
+        const formGroup = field.closest('.form-group');
+        if (formGroup) {
+          formGroup.classList.remove('error', 'info');
+          formGroup.classList.add(type);
+          const errorSpan = formGroup.querySelector('.error-message');
+          if (errorSpan) errorSpan.textContent = message;
+        }
+      };
+
+      ctrl.updateStats = function() {
+        const total = ctrl.fieldTargets.length;
+        let valid = 0, invalid = 0;
+
+        ctrl.validationState.forEach(function(state) {
+          if (state === true) valid++;
+          if (state === false) invalid++;
+        });
+
+        if (ctrl.hasTotalFieldsTarget) ctrl.totalFieldsTarget.textContent = total;
+        if (ctrl.hasValidFieldsTarget) ctrl.validFieldsTarget.textContent = valid;
+        if (ctrl.hasInvalidFieldsTarget) ctrl.invalidFieldsTarget.textContent = invalid;
+
+        const allValidated = ctrl.fieldTargets.every(f => ctrl.validationState.get(f) !== null);
+        const formIsValid = allValidated && invalid === 0 && valid === total;
+
+        if (ctrl.hasFormValidTarget) {
+          ctrl.formValidTarget.textContent = formIsValid ? 'Yes' : 'No';
+          ctrl.formValidTarget.className = formIsValid ? 'stat-value valid' : 'stat-value invalid';
+        }
+
+        if (ctrl.hasSubmitBtnTarget) {
+          ctrl.submitBtnTarget.disabled = !formIsValid || ctrl.asyncValidationInProgress;
+        }
+      };
+
+      ctrl.showStatus = function(message, type) {
+        if (ctrl.hasStatusTarget) {
+          ctrl.statusTarget.textContent = message;
+          ctrl.statusTarget.className = 'form-status ' + type;
+        }
+      };
+
+      ctrl.validateEmailAsync = function(field) {
+        const email = field.value;
+        if (!email || !ctrl.validationRules.email(email)) return;
+
+        ctrl.asyncValidationInProgress = true;
+        ctrl.showFieldError(field, 'Checking email availability...', 'info');
+
+        setTimeout(function() {
+          const isTaken = email.toLowerCase() === 'test@example.com';
+
+          if (isTaken) {
+            ctrl.showFieldError(field, ctrl.errorMessages.asyncEmailCheck);
+            ctrl.validationState.set(field, false);
+          } else {
+            ctrl.clearFieldError(field);
+            ctrl.validationState.set(field, true);
+          }
+
+          ctrl.asyncValidationInProgress = false;
+          ctrl.updateStats();
+        }, 1000);
+      };
+
+      // Initialize
+      ctrl.fieldTargets.forEach(f => ctrl.validationState.set(f, null));
+      ctrl.updateStats();
     `
   end
 end

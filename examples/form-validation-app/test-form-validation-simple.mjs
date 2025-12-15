@@ -21,7 +21,7 @@ import { chromium } from 'playwright';
 
   try {
     console.log('Loading page...');
-    await page.goto('http://localhost:3011', {
+    await page.goto('http://localhost:3012', {
       waitUntil: 'networkidle',
       timeout: 10000
     });
