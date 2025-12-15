@@ -27,7 +27,7 @@ class ModalController < StimulusController
   def close_on_overlay(event)
     `
       if (this.hasOverlayTarget && event.target === this.overlayTarget) {
-        #{close}
+        this.$close();
       }
     `
   end

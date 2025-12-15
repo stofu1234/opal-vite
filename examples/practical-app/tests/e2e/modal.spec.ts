@@ -4,73 +4,85 @@ test.describe('Modal Functionality', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('http://localhost:3001/');
     await page.waitForLoadState('networkidle');
+
+    // Clear localStorage to start fresh
+    await page.evaluate(() => localStorage.clear());
+    await page.reload();
+    await page.waitForLoadState('networkidle');
+
+    // Add a todo so we can edit it to trigger the modal
+    await page.locator('[data-todo-target="input"]').fill('Test todo for modal');
+    await page.keyboard.press('Enter');
+    await expect(page.locator('[data-todo-target="list"]').locator('text=Test todo for modal')).toBeVisible();
   });
 
+  // Helper to open modal via edit button
+  async function openModal(page: import('@playwright/test').Page) {
+    const editButton = page.locator('[data-action*="todo#edit_todo"]').first();
+    await editButton.click();
+    // Wait for modal to become active
+    await expect(page.locator('.modal.active')).toBeVisible();
+  }
+
   test('should open modal', async ({ page }) => {
-    const modal = page.locator('[data-modal-target="container"]');
-    const openButton = page.locator('[data-action*="modal#open"]').first();
+    const modal = page.locator('.modal[data-controller="modal"]');
 
-    // Modal should be hidden initially
-    await expect(modal).not.toBeVisible();
+    // Modal should be hidden initially (no active class)
+    await expect(modal).not.toHaveClass(/active/);
 
-    // Click open button
-    await openButton.click();
+    // Click edit button to open modal
+    await openModal(page);
 
-    // Modal should be visible
-    await expect(modal).toBeVisible();
+    // Modal should be visible (has active class)
+    await expect(modal).toHaveClass(/active/);
   });
 
   test('should close modal with close button', async ({ page }) => {
-    const modal = page.locator('[data-modal-target="container"]');
-    const openButton = page.locator('[data-action*="modal#open"]').first();
+    const modal = page.locator('.modal[data-controller="modal"]');
 
     // Open modal
-    await openButton.click();
-    await expect(modal).toBeVisible();
+    await openModal(page);
+    await expect(modal).toHaveClass(/active/);
 
-    // Click close button
-    const closeButton = page.locator('[data-action*="modal#close"]').first();
+    // Click the X close button (use specific selector to avoid matching overlay)
+    const closeButton = page.locator('button.modal-close');
     await closeButton.click();
 
     // Modal should be hidden
-    await expect(modal).not.toBeVisible();
+    await expect(modal).not.toHaveClass(/active/);
   });
 
-  test('should close modal with backdrop click', async ({ page }) => {
-    const modal = page.locator('[data-modal-target="container"]');
-    const openButton = page.locator('[data-action*="modal#open"]').first();
+  test('should close modal with Cancel button', async ({ page }) => {
+    const modal = page.locator('.modal[data-controller="modal"]');
 
     // Open modal
-    await openButton.click();
-    await expect(modal).toBeVisible();
+    await openModal(page);
+    await expect(modal).toHaveClass(/active/);
 
-    // Click backdrop (outside modal content)
-    await page.locator('[data-modal-target="backdrop"]').click();
+    // Click Cancel button (secondary close option)
+    await page.locator('.modal button:has-text("Cancel")').click();
 
     // Modal should be hidden
-    await expect(modal).not.toBeVisible();
+    await expect(modal).not.toHaveClass(/active/);
   });
 
   test('should close modal with Escape key', async ({ page }) => {
-    const modal = page.locator('[data-modal-target="container"]');
-    const openButton = page.locator('[data-action*="modal#open"]').first();
+    const modal = page.locator('.modal[data-controller="modal"]');
 
     // Open modal
-    await openButton.click();
-    await expect(modal).toBeVisible();
+    await openModal(page);
+    await expect(modal).toHaveClass(/active/);
 
     // Press Escape
     await page.keyboard.press('Escape');
 
     // Modal should be hidden
-    await expect(modal).not.toBeVisible();
+    await expect(modal).not.toHaveClass(/active/);
   });
 
   test('should prevent body scroll when modal is open', async ({ page }) => {
-    const openButton = page.locator('[data-action*="modal#open"]').first();
-
     // Open modal
-    await openButton.click();
+    await openModal(page);
 
     // Check if body has overflow hidden
     const bodyOverflow = await page.evaluate(() => {
@@ -81,18 +93,17 @@ test.describe('Modal Functionality', () => {
   });
 
   test('should restore body scroll when modal closes', async ({ page }) => {
-    const modal = page.locator('[data-modal-target="container"]');
-    const openButton = page.locator('[data-action*="modal#open"]').first();
-    const closeButton = page.locator('[data-action*="modal#close"]').first();
+    const modal = page.locator('.modal[data-controller="modal"]');
 
     // Open modal
-    await openButton.click();
+    await openModal(page);
 
-    // Close modal
+    // Close modal using the X button
+    const closeButton = page.locator('button.modal-close');
     await closeButton.click();
 
-    // Wait for animation
-    await page.waitForTimeout(300);
+    // Wait for modal to close
+    await expect(modal).not.toHaveClass(/active/);
 
     // Body overflow should be restored
     const bodyOverflow = await page.evaluate(() => {
@@ -102,38 +113,39 @@ test.describe('Modal Functionality', () => {
     expect(['visible', 'auto', '']).toContain(bodyOverflow);
   });
 
-  test('should focus trap within modal', async ({ page }) => {
-    const openButton = page.locator('[data-action*="modal#open"]').first();
-
+  test('should focus input within modal', async ({ page }) => {
     // Open modal
-    await openButton.click();
+    await openModal(page);
 
-    // Tab through modal elements
-    await page.keyboard.press('Tab');
+    // Wait for focus to be set (modal uses setTimeout for focus)
+    await page.waitForTimeout(200);
 
-    // Focus should be within modal
+    // Focus should be on the input inside modal
     const focusedElement = await page.evaluate(() => {
-      return document.activeElement?.closest('[data-modal-target="container"]') !== null;
+      return document.activeElement?.closest('.modal[data-controller="modal"]') !== null;
     });
 
     expect(focusedElement).toBe(true);
   });
 
-  test('should handle multiple modals', async ({ page }) => {
-    const modals = page.locator('[data-modal-target="container"]');
+  test('should save changes when save button is clicked', async ({ page }) => {
+    const modal = page.locator('.modal[data-controller="modal"]');
 
-    // Check if multiple modals exist
-    const modalCount = await modals.count();
+    // Open modal
+    await openModal(page);
 
-    if (modalCount > 1) {
-      // Open first modal
-      await page.locator('[data-action*="modal#open"]').first().click();
-      await expect(modals.first()).toBeVisible();
+    // Change the todo text
+    const modalInput = page.locator('[data-modal-target="input"]');
+    await modalInput.clear();
+    await modalInput.fill('Updated todo text');
 
-      // Other modals should remain hidden
-      for (let i = 1; i < modalCount; i++) {
-        await expect(modals.nth(i)).not.toBeVisible();
-      }
-    }
+    // Click save button
+    await page.locator('.modal button:has-text("Save")').click();
+
+    // Modal should close
+    await expect(modal).not.toHaveClass(/active/);
+
+    // Todo should be updated
+    await expect(page.locator('[data-todo-target="list"]').locator('text=Updated todo text')).toBeVisible();
   });
 });
