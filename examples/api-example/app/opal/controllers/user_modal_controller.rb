@@ -94,10 +94,8 @@ class UserModalController < StimulusController
           posts.slice(0, 5).forEach(post => {
             const postItem = document.createElement('div');
             postItem.className = 'post-item';
-            postItem.innerHTML = \`
-              <h4>\${post.title}</h4>
-              <p>\${post.body}</p>
-            \`;
+            postItem.innerHTML = '<h4>' + post.title + '</h4>' +
+              '<p>' + post.body + '</p>';
             this.postsListTarget.appendChild(postItem);
           });
 

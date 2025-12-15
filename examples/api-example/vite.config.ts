@@ -4,7 +4,7 @@ import opal from 'vite-plugin-opal'
 export default defineConfig({
   plugins: [
     opal({
-      loadPaths: ['./app/opal/controllers'],
+      loadPaths: ['./app/opal'],
       sourceMap: true
     })
   ],

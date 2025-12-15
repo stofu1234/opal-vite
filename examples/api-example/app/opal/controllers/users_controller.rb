@@ -102,29 +102,27 @@ class UsersController < StimulusController
       card.setAttribute('data-user-id', user.id);
       card.onclick = () => ctrl.showUser.call(ctrl, { currentTarget: card });
 
-      card.innerHTML = \`
-        <div class="user-header">
-          <div class="user-avatar">\${user.name.charAt(0)}</div>
-          <div class="user-info">
-            <h3>\${user.name}</h3>
-            <p class="user-email">\${user.email}</p>
-          </div>
-        </div>
-        <div class="user-details">
-          <div class="detail-item">
-            <span class="detail-label">Company:</span>
-            <span class="detail-value">\${user.company.name}</span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">City:</span>
-            <span class="detail-value">\${user.address.city}</span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">Phone:</span>
-            <span class="detail-value">\${user.phone}</span>
-          </div>
-        </div>
-      \`;
+      card.innerHTML = '<div class="user-header">' +
+        '<div class="user-avatar">' + user.name.charAt(0) + '</div>' +
+        '<div class="user-info">' +
+          '<h3>' + user.name + '</h3>' +
+          '<p class="user-email">' + user.email + '</p>' +
+        '</div>' +
+      '</div>' +
+      '<div class="user-details">' +
+        '<div class="detail-item">' +
+          '<span class="detail-label">Company:</span>' +
+          '<span class="detail-value">' + user.company.name + '</span>' +
+        '</div>' +
+        '<div class="detail-item">' +
+          '<span class="detail-label">City:</span>' +
+          '<span class="detail-value">' + user.address.city + '</span>' +
+        '</div>' +
+        '<div class="detail-item">' +
+          '<span class="detail-label">Phone:</span>' +
+          '<span class="detail-value">' + user.phone + '</span>' +
+        '</div>' +
+      '</div>';
 
       ctrl.listTarget.appendChild(card);
     `
