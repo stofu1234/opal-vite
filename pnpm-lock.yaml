@@ -75,6 +75,9 @@ importers:
         specifier: ^5.0.0
         version: 5.4.21(@types/node@20.19.26)(terser@5.44.1)
     devDependencies:
+      '@playwright/test':
+        specifier: ^1.57.0
+        version: 1.57.0
       playwright:
         specifier: ^1.57.0
         version: 1.57.0

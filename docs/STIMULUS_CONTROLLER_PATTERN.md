@@ -1,8 +1,113 @@
-# Stimulus Controller Pattern: JavaScript Functions vs Ruby Methods
+# Stimulus Controller Pattern: Ruby-Native Approach
 
 ## 概要
 
-このドキュメントでは、Opal-Viteプロジェクトにおいて、StimulusコントローラーでRubyメソッドからJavaScript関数への置き換えを行った理由と、そのパターンについて説明します。
+このドキュメントでは、Opal-ViteプロジェクトにおけるStimulusコントローラーのRuby的な書き方について説明します。`opal_stimulus` gemと `opal_proxy` (JS::Proxy) を活用することで、Ruby構文でStimulusコントローラーを記述できます。
+
+## 推奨アプローチ: Ruby構文の活用
+
+`opal_proxy` gemが提供する `JS::Proxy` クラスにより、以下の機能が自動的に提供されます：
+
+1. **method_missing** によるsnake_case → camelCase自動変換
+2. **[]アクセス** でJSオブジェクトのプロパティに直接アクセス
+3. **wrap_result** でネストしたオブジェクトも自動的にProxyでラップ
+4. **Enumerable** をincludeしているのでeach等が使える
+
+### Ruby構文での実装例
+
+```ruby
+class FormController < StimulusController
+  include Toastable
+  include DomHelpers
+
+  self.targets = ["input", "error"]
+
+  def validate(event)
+    input = event.current_target           # camelCase → snake_case 自動変換
+    value = input.value.strip              # Rubyのメソッドチェーン
+    required = input.has_attribute('data-required')
+
+    error_message = validate_value(value, required)
+    show_field_error(input, error_message)
+  end
+
+  def submit(event)
+    event.prevent_default                  # preventDefault() → prevent_default
+
+    inputs = query_all('[data-form-target="input"]')
+    inputs.each do |input|                 # Enumerable#each が使える
+      if has_class?(input, 'error')
+        show_error('Please fix errors')    # Toastable concern
+        return
+      end
+    end
+
+    show_success('Form submitted!')
+  end
+
+  private
+
+  def validate_value(value, required)
+    return 'This field is required' if required && value.empty?
+    nil
+  end
+end
+```
+
+## Concernsによる共通機能の抽出
+
+### Toastable (トースト通知)
+
+```ruby
+module Toastable
+  def dispatch_toast(message, type = 'info')
+    `
+      const event = new CustomEvent('show-toast', {
+        detail: { message: #{message}, type: #{type} }
+      });
+      window.dispatchEvent(event);
+    `
+  end
+
+  def show_success(message)
+    dispatch_toast(message, 'success')
+  end
+
+  def show_error(message)
+    dispatch_toast(message, 'error')
+  end
+end
+```
+
+### DomHelpers (DOM操作)
+
+```ruby
+module DomHelpers
+  def query(selector)
+    element.query_selector(selector)
+  end
+
+  def query_all(selector)
+    element.query_selector_all(selector)
+  end
+
+  def add_class(el, class_name)
+    el.class_list.add(class_name)
+  end
+
+  def has_class?(el, class_name)
+    el.class_list.contains(class_name)
+  end
+
+  def set_timeout(delay_ms, &block)
+    window.set_timeout(block, delay_ms)
+  end
+end
+```
+
+## 過去の問題と解決策の履歴
+
+以下は、過去にJavaScript関数への置き換えを行った理由の記録です。現在は上記のRuby的アプローチを推奨しますが、参考として残しています。
 
 ## 問題の背景
 
@@ -454,14 +559,41 @@ this.doSomething = function(event) {
 
 ## 結論
 
-JavaScript関数への統一は、以下の理由から推奨されるパターンです：
+### 推奨: Ruby構文を活用したパターン
 
-1. **互換性**: OpalとStimulusの統合における問題を完全に解消
-2. **明確性**: すべてのロジックが一箇所に集約され、理解しやすい
-3. **保守性**: 一貫したパターンでメンテナンスが容易
-4. **信頼性**: ブラウザエラーがなく、安定して動作
+opal-viteの存在意義を最大限に活かすため、**Ruby構文を積極的に使用する**ことを推奨します：
 
-このパターンは、Opal + Stimulus環境における**ベストプラクティス**として採用すべきです。
+1. **Ruby的な記述**: `opal_proxy` の `JS::Proxy` によりsnake_case → camelCase変換が自動で行われる
+2. **Concernsの活用**: 共通機能を`Toastable`や`DomHelpers`などのモジュールに抽出
+3. **イベント引数**: Stimulusアクションの引数は自動的に`JS::Proxy`でラップされる
+4. **プロパティアクセス**: `event.current_target`、`input.class_list`などRuby風にアクセス
+
+### バッククォートが必要なケース
+
+以下の場合のみバッククォート内にJavaScriptを記述します：
+
+1. **イベントリスナーのコールバック**: `window.add_event_listener`のブロック内でeventオブジェクトが適切にラップされないため
+2. **CustomEventの作成**: `new CustomEvent(...)`
+3. **正規表現のテスト**: JavaScriptのRegExpを使う場合
+
+```ruby
+# バッククォートが必要な例
+def connect
+  `
+    window.addEventListener('show-toast', (e) => {
+      this.$show(e.detail.message, e.detail.type || 'info');
+    });
+  `
+end
+
+# Ruby構文で書ける例
+def validate(event)
+  input = event.current_target  # Ruby風にアクセス
+  input.class_list.add('error') # method_missingで変換
+end
+```
+
+このハイブリッドアプローチにより、Rubyの表現力を最大限活かしながら、JavaScriptとの相互運用も可能です。
 
 ## 参考リンク
 
