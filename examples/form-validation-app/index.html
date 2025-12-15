@@ -19,7 +19,7 @@
         <h2>User Registration</h2>
         <form
           data-controller="form-validation"
-          data-action="submit->form-validation#handleSubmit"
+          data-action="submit->form-validation#handle_submit"
           data-form-validation-submit-url-value="/api/register"
         >
           <!-- Name Field -->
@@ -30,7 +30,7 @@
               id="name"
               name="name"
               data-form-validation-target="field"
-              data-action="blur->form-validation#validateField input->form-validation#clearError"
+              data-action="blur->form-validation#validate_field input->form-validation#clear_error"
               data-rules="required|minLength:3|maxLength:50"
               placeholder="Enter your full name"
             />
@@ -45,7 +45,7 @@
               id="email"
               name="email"
               data-form-validation-target="field"
-              data-action="blur->form-validation#validateField input->form-validation#clearError"
+              data-action="blur->form-validation#validate_field input->form-validation#clear_error"
               data-rules="required|email|asyncEmailCheck"
               placeholder="your.email@example.com"
             />
@@ -61,7 +61,7 @@
               id="username"
               name="username"
               data-form-validation-target="field"
-              data-action="blur->form-validation#validateField input->form-validation#clearError"
+              data-action="blur->form-validation#validate_field input->form-validation#clear_error"
               data-rules="required|minLength:4|maxLength:20|alphanumeric"
               placeholder="username123"
             />
@@ -77,7 +77,7 @@
               id="password"
               name="password"
               data-form-validation-target="field"
-              data-action="blur->form-validation#validateField input->form-validation#clearError"
+              data-action="blur->form-validation#validate_field input->form-validation#clear_error"
               data-rules="required|minLength:8|password"
               placeholder="••••••••"
             />
@@ -93,7 +93,7 @@
               id="confirmPassword"
               name="confirmPassword"
               data-form-validation-target="field"
-              data-action="blur->form-validation#validateField input->form-validation#clearError"
+              data-action="blur->form-validation#validate_field input->form-validation#clear_error"
               data-rules="required|matches:password"
               placeholder="••••••••"
             />
@@ -108,7 +108,7 @@
               id="age"
               name="age"
               data-form-validation-target="field"
-              data-action="blur->form-validation#validateField input->form-validation#clearError"
+              data-action="blur->form-validation#validate_field input->form-validation#clear_error"
               data-rules="required|numeric|min:18|max:120"
               placeholder="18"
             />
@@ -124,7 +124,7 @@
               id="phone"
               name="phone"
               data-form-validation-target="field"
-              data-action="blur->form-validation#validateField input->form-validation#clearError"
+              data-action="blur->form-validation#validate_field input->form-validation#clear_error"
               data-rules="phone"
               placeholder="+1 (555) 123-4567"
             />
@@ -139,7 +139,7 @@
               id="website"
               name="website"
               data-form-validation-target="field"
-              data-action="blur->form-validation#validateField input->form-validation#clearError"
+              data-action="blur->form-validation#validate_field input->form-validation#clear_error"
               data-rules="url"
               placeholder="https://example.com"
             />
@@ -153,7 +153,7 @@
               id="country"
               name="country"
               data-form-validation-target="field"
-              data-action="change->form-validation#validateField"
+              data-action="change->form-validation#validate_field"
               data-rules="required"
             >
               <option value="">Select a country</option>
@@ -173,7 +173,7 @@
                 type="checkbox"
                 name="terms"
                 data-form-validation-target="field"
-                data-action="change->form-validation#validateField"
+                data-action="change->form-validation#validate_field"
                 data-rules="required"
               />
               I agree to the Terms and Conditions *
@@ -198,7 +198,7 @@
             <button type="submit" class="btn btn-primary" data-form-validation-target="submitBtn">
               Register
             </button>
-            <button type="button" class="btn btn-secondary" data-action="click->form-validation#resetForm">
+            <button type="button" class="btn btn-secondary" data-action="click->form-validation#reset_form">
               Reset
             </button>
           </div>

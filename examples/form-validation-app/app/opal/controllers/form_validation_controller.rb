@@ -122,10 +122,13 @@ class FormValidationController < StimulusController
   end
 
   def validate_field(event)
+    field = Native(event).target
+    rules = field.dataset.rules rescue nil
+
     `
       const ctrl = this;
-      const field = event.target;
-      const rules = field.dataset.rules;
+      const field = #{field};
+      const rules = #{rules};
 
       if (!rules) {
         ctrl.$clear_field_error(field);
@@ -206,9 +209,11 @@ class FormValidationController < StimulusController
   end
 
   def clear_error(event)
+    field = Native(event).target
+
     `
       const ctrl = this;
-      const field = event.target;
+      const field = #{field};
 
       if (ctrl.validationState.get(field) === false) {
         ctrl.$clear_field_error(field);
@@ -296,9 +301,10 @@ class FormValidationController < StimulusController
   end
 
   def handle_submit(event)
+    Native(event).preventDefault
+
     `
       const ctrl = this;
-      event.preventDefault();
 
       // Validate all fields
       ctrl.fieldTargets.forEach(function(field) {
