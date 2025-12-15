@@ -1,0 +1,196 @@
+name: Tests
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test-plugin:
+    name: Test Vite Plugin
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Run plugin tests
+        run: pnpm test
+        working-directory: packages/vite-plugin-opal
+
+  test-practical-app:
+    name: Test Practical App (E2E)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+          working-directory: examples/practical-app
+
+      - name: Install dependencies
+        run: |
+          pnpm install
+          cd examples/practical-app && bundle install
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
+        working-directory: examples/practical-app
+
+      - name: Run E2E tests
+        run: pnpm test
+        working-directory: examples/practical-app
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: playwright-report-practical-app
+          path: examples/practical-app/playwright-report/
+          retention-days: 30
+
+  test-chart-app:
+    name: Test Chart App (E2E)
+    runs-on: ubuntu-latest
+    if: false  # Disabled until chart-app has tests
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+          working-directory: examples/chart-app
+
+      - name: Install dependencies
+        run: |
+          pnpm install
+          cd examples/chart-app && bundle install
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
+        working-directory: examples/chart-app
+
+      - name: Run E2E tests
+        run: pnpm test
+        working-directory: examples/chart-app
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: playwright-report-chart-app
+          path: examples/chart-app/playwright-report/
+          retention-days: 30
+
+  build-examples:
+    name: Build All Examples
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        example:
+          - stimulus-app
+          - practical-app
+          - chart-app
+          - chat-app
+          - api-example
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+          working-directory: examples/${{ matrix.example }}
+
+      - name: Install dependencies
+        run: |
+          pnpm install
+          cd examples/${{ matrix.example }} && bundle install
+
+      - name: Build
+        run: pnpm build
+        working-directory: examples/${{ matrix.example }}
+
+      - name: Check build output
+        run: |
+          ls -lah dist/
+          test -f dist/index.html
+        working-directory: examples/${{ matrix.example }}
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-${{ matrix.example }}
+          path: examples/${{ matrix.example }}/dist
+          retention-days: 7
