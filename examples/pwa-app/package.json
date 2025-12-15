@@ -1,0 +1,19 @@
+{
+  "name": "pwa-app",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@hotwired/stimulus": "^3.2.2",
+    "vite": "^5.0.0"
+  },
+  "devDependencies": {
+    "vite-plugin-opal": "workspace:*",
+    "vite-plugin-pwa": "^0.20.0"
+  }
+}
