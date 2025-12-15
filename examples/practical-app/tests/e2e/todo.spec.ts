@@ -4,6 +4,10 @@ test.describe('Todo Functionality', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('http://localhost:3001/');
     await page.waitForLoadState('networkidle');
+    // Clear localStorage to ensure clean state for each test
+    await page.evaluate(() => localStorage.clear());
+    await page.reload();
+    await page.waitForLoadState('networkidle');
   });
 
   test('should add a new todo', async ({ page }) => {
@@ -26,20 +30,20 @@ test.describe('Todo Functionality', () => {
     await page.locator('[data-todo-target="input"]').fill('Test todo');
     await page.keyboard.press('Enter');
 
-    // Find the checkbox
+    // Find the checkbox and todo item
     const checkbox = page.locator('[data-todo-target="list"] input[type="checkbox"]').first();
-    const todoText = page.locator('[data-todo-target="list"] .todo-text').first();
+    const todoItem = page.locator('[data-todo-target="list"] .todo-item').first();
 
     // Initially unchecked
     await expect(checkbox).not.toBeChecked();
-    await expect(todoText).not.toHaveClass(/line-through/);
+    await expect(todoItem).not.toHaveClass(/completed/);
 
     // Toggle completion
     await checkbox.click();
 
-    // Should be checked and styled
+    // Should be checked and styled (completed class adds line-through via CSS)
     await expect(checkbox).toBeChecked();
-    await expect(todoText).toHaveClass(/line-through/);
+    await expect(todoItem).toHaveClass(/completed/);
   });
 
   test('should delete a todo', async ({ page }) => {
@@ -69,26 +73,26 @@ test.describe('Todo Functionality', () => {
     // Complete first todo
     await page.locator('[data-todo-target="list"] input[type="checkbox"]').first().click();
 
-    // Click "Completed" filter
-    await page.click('text=Completed');
+    // Click "Completed" filter button (using specific selector to avoid matching count text)
+    await page.click('button[data-filter="completed"]');
 
     // Should show only completed todo
-    await expect(page.locator('text=Todo 1')).toBeVisible();
-    await expect(page.locator('text=Todo 2')).not.toBeVisible();
+    await expect(page.locator('[data-todo-target="list"]').locator('text=Todo 1')).toBeVisible();
+    await expect(page.locator('[data-todo-target="list"]').locator('text=Todo 2')).not.toBeVisible();
 
-    // Click "Active" filter
-    await page.click('text=Active');
+    // Click "Active" filter button
+    await page.click('button[data-filter="active"]');
 
     // Should show only active todo
-    await expect(page.locator('text=Todo 1')).not.toBeVisible();
-    await expect(page.locator('text=Todo 2')).toBeVisible();
+    await expect(page.locator('[data-todo-target="list"]').locator('text=Todo 1')).not.toBeVisible();
+    await expect(page.locator('[data-todo-target="list"]').locator('text=Todo 2')).toBeVisible();
 
-    // Click "All" filter
-    await page.click('text=All');
+    // Click "All" filter button
+    await page.click('button[data-filter="all"]');
 
     // Should show both
-    await expect(page.locator('text=Todo 1')).toBeVisible();
-    await expect(page.locator('text=Todo 2')).toBeVisible();
+    await expect(page.locator('[data-todo-target="list"]').locator('text=Todo 1')).toBeVisible();
+    await expect(page.locator('[data-todo-target="list"]').locator('text=Todo 2')).toBeVisible();
   });
 
   test('should persist todos in localStorage', async ({ page }) => {
@@ -148,17 +152,20 @@ test.describe('Todo Functionality', () => {
       await page.keyboard.press('Enter');
     }
 
+    // Wait for all todos to be added
+    await expect(page.locator('[data-todo-target="list"] .todo-item')).toHaveCount(3);
+
     // Complete first two
     const checkboxes = page.locator('[data-todo-target="list"] input[type="checkbox"]');
     await checkboxes.nth(0).click();
     await checkboxes.nth(1).click();
 
-    // Click "Clear completed" button
-    await page.click('text=Clear completed');
+    // Click "Clear Completed" button (using specific selector)
+    await page.click('button:has-text("Clear Completed")');
 
-    // Only active todo should remain
-    await expect(page.locator('text=Todo 1')).not.toBeVisible();
-    await expect(page.locator('text=Todo 2')).not.toBeVisible();
-    await expect(page.locator('text=Todo 3')).toBeVisible();
+    // Only active todo should remain in the list
+    await expect(page.locator('[data-todo-target="list"]').locator('text=Todo 1')).not.toBeVisible();
+    await expect(page.locator('[data-todo-target="list"]').locator('text=Todo 2')).not.toBeVisible();
+    await expect(page.locator('[data-todo-target="list"]').locator('text=Todo 3')).toBeVisible();
   });
 });
