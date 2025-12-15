@@ -270,18 +270,10 @@ class TodoController < StimulusController
   end
 
   def show_empty_state
-    `
-      if (this.hasEmptyStateTarget) {
-        this.emptyStateTarget.style.display = 'block';
-      }
-    `
+    set_target_style(:empty_state, 'display', 'block')
   end
 
   def hide_empty_state
-    `
-      if (this.hasEmptyStateTarget) {
-        this.emptyStateTarget.style.display = 'none';
-      }
-    `
+    hide_target(:empty_state)
   end
 end

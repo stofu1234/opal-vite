@@ -132,6 +132,90 @@ module OpalVite
         target_set_html(name, '')
       end
 
+      # ===== Target Style Methods =====
+
+      # Set a style property on a target element
+      # @param name [Symbol, String] Target name
+      # @param property [String] CSS property name (e.g., 'display', 'color')
+      # @param value [String] CSS value
+      def set_target_style(name, property, value)
+        return unless has_target?(name)
+        method_name = "#{camelize(name, false)}Target"
+        `this[#{method_name}].style[#{property}] = #{value}`
+      end
+
+      # Get a style property from a target element
+      # @param name [Symbol, String] Target name
+      # @param property [String] CSS property name
+      # @return [String, nil] The style value
+      def get_target_style(name, property)
+        return nil unless has_target?(name)
+        method_name = "#{camelize(name, false)}Target"
+        `this[#{method_name}].style[#{property}]`
+      end
+
+      # Show a target element (set display to '')
+      # @param name [Symbol, String] Target name
+      def show_target(name)
+        set_target_style(name, 'display', '')
+      end
+
+      # Hide a target element (set display to 'none')
+      # @param name [Symbol, String] Target name
+      def hide_target(name)
+        set_target_style(name, 'display', 'none')
+      end
+
+      # Toggle target visibility
+      # @param name [Symbol, String] Target name
+      def toggle_target_visibility(name)
+        current = get_target_style(name, 'display')
+        if current == 'none'
+          show_target(name)
+        else
+          hide_target(name)
+        end
+      end
+
+      # ===== Target Class Methods =====
+
+      # Add a CSS class to a target element
+      # @param name [Symbol, String] Target name
+      # @param class_name [String] CSS class to add
+      def add_target_class(name, class_name)
+        return unless has_target?(name)
+        method_name = "#{camelize(name, false)}Target"
+        `this[#{method_name}].classList.add(#{class_name})`
+      end
+
+      # Remove a CSS class from a target element
+      # @param name [Symbol, String] Target name
+      # @param class_name [String] CSS class to remove
+      def remove_target_class(name, class_name)
+        return unless has_target?(name)
+        method_name = "#{camelize(name, false)}Target"
+        `this[#{method_name}].classList.remove(#{class_name})`
+      end
+
+      # Toggle a CSS class on a target element
+      # @param name [Symbol, String] Target name
+      # @param class_name [String] CSS class to toggle
+      def toggle_target_class(name, class_name)
+        return unless has_target?(name)
+        method_name = "#{camelize(name, false)}Target"
+        `this[#{method_name}].classList.toggle(#{class_name})`
+      end
+
+      # Check if a target has a CSS class
+      # @param name [Symbol, String] Target name
+      # @param class_name [String] CSS class to check
+      # @return [Boolean] true if target has the class
+      def has_target_class?(name, class_name)
+        return false unless has_target?(name)
+        method_name = "#{camelize(name, false)}Target"
+        `this[#{method_name}].classList.contains(#{class_name})`
+      end
+
       # ===== Date/Time Methods =====
 
       # Get current timestamp (milliseconds since epoch)
