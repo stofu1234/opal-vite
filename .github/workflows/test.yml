@@ -85,10 +85,23 @@ jobs:
           bundler-cache: true
           working-directory: examples/practical-app
 
-      - name: Install dependencies
+      - name: Build and install opal-vite gem
         run: |
-          pnpm install
-          cd examples/practical-app && bundle install
+          cd gems/opal-vite
+          bundle install
+          gem build opal-vite.gemspec
+          gem install opal-vite-*.gem
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build vite-plugin-opal
+        run: pnpm build
+        working-directory: packages/vite-plugin-opal
+
+      - name: Install example dependencies
+        run: bundle install
+        working-directory: examples/practical-app
 
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium
@@ -132,10 +145,23 @@ jobs:
           bundler-cache: true
           working-directory: examples/chart-app
 
-      - name: Install dependencies
+      - name: Build and install opal-vite gem
         run: |
-          pnpm install
-          cd examples/chart-app && bundle install
+          cd gems/opal-vite
+          bundle install
+          gem build opal-vite.gemspec
+          gem install opal-vite-*.gem
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build vite-plugin-opal
+        run: pnpm build
+        working-directory: packages/vite-plugin-opal
+
+      - name: Install example dependencies
+        run: bundle install
+        working-directory: examples/chart-app
 
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium
@@ -187,10 +213,23 @@ jobs:
           bundler-cache: true
           working-directory: examples/${{ matrix.example }}
 
-      - name: Install dependencies
+      - name: Build and install opal-vite gem
         run: |
-          pnpm install
-          cd examples/${{ matrix.example }} && bundle install
+          cd gems/opal-vite
+          bundle install
+          gem build opal-vite.gemspec
+          gem install opal-vite-*.gem
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build vite-plugin-opal
+        run: pnpm build
+        working-directory: packages/vite-plugin-opal
+
+      - name: Install example dependencies
+        run: bundle install
+        working-directory: examples/${{ matrix.example }}
 
       - name: Build
         run: pnpm build
