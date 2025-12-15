@@ -1,3 +1,4 @@
+# backtick_javascript: true
 require 'opal_stimulus'
 
 class PwaController < StimulusController

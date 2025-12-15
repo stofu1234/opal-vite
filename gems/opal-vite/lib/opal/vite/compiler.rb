@@ -104,9 +104,22 @@ module Opal
           builder.append_paths(path) unless builder.path_reader.paths.include?(path)
         end
 
-        # Then add regular lib directories
+        # Then add regular lib directories, but ONLY for Opal-compatible gems
+        # to avoid pulling in Rails/server-side dependencies
         gem_lib_paths.uniq.each do |path|
-          builder.append_paths(path) unless builder.path_reader.paths.include?(path)
+          # Only add paths from gems that:
+          # 1. Have an 'opal' directory (already processed above)
+          # 2. OR have 'opal' in their gem name
+          gem_root = File.dirname(path)
+          gem_name = File.basename(gem_root)
+
+          # Check if this gem has opal support
+          is_opal_gem = gem_name.start_with?('opal') ||
+                       gem_opal_paths.any? { |opal_path| opal_path.start_with?(gem_root) }
+
+          if is_opal_gem
+            builder.append_paths(path) unless builder.path_reader.paths.include?(path)
+          end
         end
       end
 
