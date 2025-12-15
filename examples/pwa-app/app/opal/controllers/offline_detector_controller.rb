@@ -8,6 +8,23 @@ class OfflineDetectorController < StimulusController
     `
       const ctrl = this;
 
+      ctrl.updateStatus = function() {
+        const isOnline = navigator.onLine;
+
+        if (ctrl.hasBannerTarget) {
+          ctrl.bannerTarget.dataset.status = isOnline ? 'online' : 'offline';
+        }
+
+        if (ctrl.hasStatusTextTarget) {
+          ctrl.statusTextTarget.textContent = isOnline ? '🟢 You are online' : '🔴 You are offline';
+        }
+
+        if (ctrl.hasOnlineStatusTarget) {
+          ctrl.onlineStatusTarget.textContent = isOnline ? 'Online' : 'Offline';
+          ctrl.onlineStatusTarget.className = isOnline ? 'status-value success' : 'status-value warning';
+        }
+      };
+
       // Set initial status
       ctrl.updateStatus();
 
@@ -19,26 +36,6 @@ class OfflineDetectorController < StimulusController
       window.addEventListener('offline', function() {
         ctrl.updateStatus();
       });
-    `
-  end
-
-  def update_status
-    `
-      const ctrl = this;
-      const isOnline = navigator.onLine;
-
-      if (ctrl.hasBannerTarget) {
-        ctrl.bannerTarget.dataset.status = isOnline ? 'online' : 'offline';
-      }
-
-      if (ctrl.hasStatusTextTarget) {
-        ctrl.statusTextTarget.textContent = isOnline ? '🟢 You are online' : '🔴 You are offline';
-      }
-
-      if (ctrl.hasOnlineStatusTarget) {
-        ctrl.onlineStatusTarget.textContent = isOnline ? 'Online' : 'Offline';
-        ctrl.onlineStatusTarget.className = isOnline ? 'status-value success' : 'status-value warning';
-      }
     `
   end
 end
