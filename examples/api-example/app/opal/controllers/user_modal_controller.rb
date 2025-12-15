@@ -1,108 +1,134 @@
 # backtick_javascript: true
+require 'opal_stimulus/stimulus_controller'
 
 # User modal controller for displaying user details
 class UserModalController < StimulusController
-  self.targets = ["overlay", "content", "userName", "userEmail", "userCompany", "userAddress", "userPhone", "userWebsite", "postsList"]
+  include JsProxyEx
+  include DomHelpers
+
+  self.targets = %w[
+    overlay
+    content
+    userName
+    userEmail
+    userCompany
+    userAddress
+    userPhone
+    userWebsite
+    postsList
+  ]
 
   def connect
-    puts "User modal controller connected!"
-
-    # Set up helper methods
-    `
-      const ctrl = this;
-
-      // Define displayUser helper
-      this.displayUser = function(user, posts) {
-        // Update user info
-        if (ctrl.hasUserNameTarget) {
-          ctrl.userNameTarget.textContent = user.name;
-        }
-        if (ctrl.hasUserEmailTarget) {
-          ctrl.userEmailTarget.textContent = user.email;
-        }
-        if (ctrl.hasUserCompanyTarget) {
-          ctrl.userCompanyTarget.textContent = user.company.name;
-        }
-        if (ctrl.hasUserAddressTarget) {
-          ctrl.userAddressTarget.textContent = user.address.street + ', ' + user.address.city;
-        }
-        if (ctrl.hasUserPhoneTarget) {
-          ctrl.userPhoneTarget.textContent = user.phone;
-        }
-        if (ctrl.hasUserWebsiteTarget) {
-          ctrl.userWebsiteTarget.textContent = user.website;
-        }
-
-        // Display posts
-        if (ctrl.hasPostsListTarget) {
-          ctrl.postsListTarget.innerHTML = '';
-
-          if (posts.length === 0) {
-            ctrl.postsListTarget.innerHTML = '<p class="no-posts">No posts yet</p>';
-          } else {
-            posts.slice(0, 5).forEach(post => {
-              const postItem = document.createElement('div');
-              postItem.className = 'post-item';
-              postItem.innerHTML = '<h4>' + post.title + '</h4>' +
-                '<p>' + post.body + '</p>';
-              ctrl.postsListTarget.appendChild(postItem);
-            });
-
-            if (posts.length > 5) {
-              const more = document.createElement('p');
-              more.className = 'more-posts';
-              more.textContent = '+ ' + (posts.length - 5) + ' more posts';
-              ctrl.postsListTarget.appendChild(more);
-            }
-          }
-        }
-      };
-
-      // Listen for show-user-modal event
-      window.addEventListener('show-user-modal', (e) => {
-        const { user, posts } = e.detail;
-        ctrl.displayUser(user, posts);
-        ctrl.open();
-      });
-    `
+    puts 'User modal controller connected!'
+    setup_event_listener
   end
 
-  # Open modal
+  # Stimulus action: Open modal
   def open
     `
       this.element.classList.add('active');
-      this.overlayTarget.classList.add('active');
-      this.contentTarget.classList.add('active');
+      if (this.hasOverlayTarget) this.overlayTarget.classList.add('active');
+      if (this.hasContentTarget) this.contentTarget.classList.add('active');
       document.body.style.overflow = 'hidden';
     `
   end
 
-  # Close modal
+  # Stimulus action: Close modal
   def close
     `
       this.element.classList.remove('active');
-      this.overlayTarget.classList.remove('active');
-      this.contentTarget.classList.remove('active');
+      if (this.hasOverlayTarget) this.overlayTarget.classList.remove('active');
+      if (this.hasContentTarget) this.contentTarget.classList.remove('active');
       document.body.style.overflow = '';
     `
   end
 
-  # Close on overlay click
-  def close_on_overlay
+  # Stimulus action: Close on overlay click
+  def close_on_overlay(event)
     `
-      if (event.target === this.overlayTarget) {
-        this.close();
+      if (this.hasOverlayTarget && event.target === this.overlayTarget) {
+        #{close}
       }
     `
   end
 
-  # Close on Escape key
-  def close_on_escape
+  # Stimulus action: Close on Escape key
+  def close_on_escape(event)
+    close if event.key == 'Escape'
+  end
+
+  private
+
+  def setup_event_listener
     `
-      if (event.key === 'Escape') {
-        this.close();
+      const ctrl = this;
+      window.addEventListener('show-user-modal', function(e) {
+        const user = e.detail.user;
+        const posts = e.detail.posts;
+        ctrl.$display_user(user, posts);
+        ctrl.$open();
+      });
+    `
+  end
+
+  def display_user(user, posts)
+    update_user_info(user)
+    display_posts(posts)
+  end
+
+  def update_user_info(user)
+    `
+      if (this.hasUserNameTarget) this.userNameTarget.textContent = #{user}.name;
+      if (this.hasUserEmailTarget) this.userEmailTarget.textContent = #{user}.email;
+      if (this.hasUserCompanyTarget) this.userCompanyTarget.textContent = #{user}.company.name;
+      if (this.hasUserPhoneTarget) this.userPhoneTarget.textContent = #{user}.phone;
+      if (this.hasUserWebsiteTarget) this.userWebsiteTarget.textContent = #{user}.website;
+      if (this.hasUserAddressTarget) {
+        const street = #{user}.address.street;
+        const city = #{user}.address.city;
+        this.userAddressTarget.textContent = street + ', ' + city;
       }
     `
   end
 
+  def display_posts(posts)
+    return unless `this.hasPostsListTarget`
+
+    `this.postsListTarget.innerHTML = ''`
+
+    posts_length = `#{posts}.length`
+    if posts_length == 0
+      `this.postsListTarget.innerHTML = '<p class="no-posts">No posts yet</p>'`
+      return
+    end
+
+    displayed_count = [posts_length, 5].min
+    displayed_count.times do |i|
+      post = `#{posts}[#{i}]`
+      append_post_item(post)
+    end
+
+    if posts_length > 5
+      more_text = "+ #{posts_length - 5} more posts"
+      `
+        const more = document.createElement('p');
+        more.className = 'more-posts';
+        more.textContent = #{more_text};
+        this.postsListTarget.appendChild(more);
+      `
+    end
+  end
+
+  def append_post_item(post)
+    title = `#{post}.title`
+    body = `#{post}.body`
+    html = "<h4>#{title}</h4><p>#{body}</p>"
+
+    `
+      const postItem = document.createElement('div');
+      postItem.className = 'post-item';
+      postItem.innerHTML = #{html};
+      this.postsListTarget.appendChild(postItem);
+    `
+  end
 end
