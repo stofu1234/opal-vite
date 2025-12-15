@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Form Validation - Opal + Stimulus</title>
+    <link rel="stylesheet" href="/app/styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <!-- Header -->
+      <header class="header">
+        <h1>📋 Form Validation Example</h1>
+        <p class="subtitle">Real-time validation with Stimulus + Opal</p>
+      </header>
+
+      <!-- Registration Form -->
+      <div class="form-card">
+        <h2>User Registration</h2>
+        <form
+          data-controller="form-validation"
+          data-action="submit->form-validation#handleSubmit"
+          data-form-validation-submit-url-value="/api/register"
+        >
+          <!-- Name Field -->
+          <div class="form-group">
+            <label for="name">Full Name *</label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              data-form-validation-target="field"
+              data-action="blur->form-validation#validateField input->form-validation#clearError"
+              data-rules="required|minLength:3|maxLength:50"
+              placeholder="Enter your full name"
+            />
+            <span class="error-message" data-form-validation-target="error"></span>
+          </div>
+
+          <!-- Email Field -->
+          <div class="form-group">
+            <label for="email">Email Address *</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              data-form-validation-target="field"
+              data-action="blur->form-validation#validateField input->form-validation#clearError"
+              data-rules="required|email|asyncEmailCheck"
+              placeholder="your.email@example.com"
+            />
+            <span class="error-message" data-form-validation-target="error"></span>
+            <span class="field-hint">We'll check if this email is available</span>
+          </div>
+
+          <!-- Username Field -->
+          <div class="form-group">
+            <label for="username">Username *</label>
+            <input
+              type="text"
+              id="username"
+              name="username"
+              data-form-validation-target="field"
+              data-action="blur->form-validation#validateField input->form-validation#clearError"
+              data-rules="required|minLength:4|maxLength:20|alphanumeric"
+              placeholder="username123"
+            />
+            <span class="error-message" data-form-validation-target="error"></span>
+            <span class="field-hint">Letters and numbers only, 4-20 characters</span>
+          </div>
+
+          <!-- Password Field -->
+          <div class="form-group">
+            <label for="password">Password *</label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              data-form-validation-target="field"
+              data-action="blur->form-validation#validateField input->form-validation#clearError"
+              data-rules="required|minLength:8|password"
+              placeholder="••••••••"
+            />
+            <span class="error-message" data-form-validation-target="error"></span>
+            <span class="field-hint">At least 8 characters with uppercase, lowercase, and number</span>
+          </div>
+
+          <!-- Confirm Password Field -->
+          <div class="form-group">
+            <label for="confirmPassword">Confirm Password *</label>
+            <input
+              type="password"
+              id="confirmPassword"
+              name="confirmPassword"
+              data-form-validation-target="field"
+              data-action="blur->form-validation#validateField input->form-validation#clearError"
+              data-rules="required|matches:password"
+              placeholder="••••••••"
+            />
+            <span class="error-message" data-form-validation-target="error"></span>
+          </div>
+
+          <!-- Age Field -->
+          <div class="form-group">
+            <label for="age">Age *</label>
+            <input
+              type="number"
+              id="age"
+              name="age"
+              data-form-validation-target="field"
+              data-action="blur->form-validation#validateField input->form-validation#clearError"
+              data-rules="required|numeric|min:18|max:120"
+              placeholder="18"
+            />
+            <span class="error-message" data-form-validation-target="error"></span>
+            <span class="field-hint">Must be 18 or older</span>
+          </div>
+
+          <!-- Phone Field -->
+          <div class="form-group">
+            <label for="phone">Phone Number</label>
+            <input
+              type="tel"
+              id="phone"
+              name="phone"
+              data-form-validation-target="field"
+              data-action="blur->form-validation#validateField input->form-validation#clearError"
+              data-rules="phone"
+              placeholder="+1 (555) 123-4567"
+            />
+            <span class="error-message" data-form-validation-target="error"></span>
+          </div>
+
+          <!-- Website Field -->
+          <div class="form-group">
+            <label for="website">Website</label>
+            <input
+              type="url"
+              id="website"
+              name="website"
+              data-form-validation-target="field"
+              data-action="blur->form-validation#validateField input->form-validation#clearError"
+              data-rules="url"
+              placeholder="https://example.com"
+            />
+            <span class="error-message" data-form-validation-target="error"></span>
+          </div>
+
+          <!-- Country Select -->
+          <div class="form-group">
+            <label for="country">Country *</label>
+            <select
+              id="country"
+              name="country"
+              data-form-validation-target="field"
+              data-action="change->form-validation#validateField"
+              data-rules="required"
+            >
+              <option value="">Select a country</option>
+              <option value="US">United States</option>
+              <option value="UK">United Kingdom</option>
+              <option value="CA">Canada</option>
+              <option value="AU">Australia</option>
+              <option value="JP">Japan</option>
+            </select>
+            <span class="error-message" data-form-validation-target="error"></span>
+          </div>
+
+          <!-- Terms Checkbox -->
+          <div class="form-group checkbox-group">
+            <label>
+              <input
+                type="checkbox"
+                name="terms"
+                data-form-validation-target="field"
+                data-action="change->form-validation#validateField"
+                data-rules="required"
+              />
+              I agree to the Terms and Conditions *
+            </label>
+            <span class="error-message" data-form-validation-target="error"></span>
+          </div>
+
+          <!-- Newsletter Checkbox -->
+          <div class="form-group checkbox-group">
+            <label>
+              <input
+                type="checkbox"
+                name="newsletter"
+                data-form-validation-target="field"
+              />
+              Subscribe to newsletter
+            </label>
+          </div>
+
+          <!-- Submit Button -->
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary" data-form-validation-target="submitBtn">
+              Register
+            </button>
+            <button type="button" class="btn btn-secondary" data-action="click->form-validation#resetForm">
+              Reset
+            </button>
+          </div>
+
+          <!-- Form Status -->
+          <div class="form-status" data-form-validation-target="status"></div>
+        </form>
+      </div>
+
+      <!-- Validation Stats -->
+      <div class="stats-card">
+        <h3>Validation Stats</h3>
+        <div class="stats-grid">
+          <div class="stat-item">
+            <span class="stat-label">Total Fields:</span>
+            <span class="stat-value" data-form-validation-target="totalFields">0</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Valid Fields:</span>
+            <span class="stat-value valid" data-form-validation-target="validFields">0</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Invalid Fields:</span>
+            <span class="stat-value invalid" data-form-validation-target="invalidFields">0</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Form Valid:</span>
+            <span class="stat-value" data-form-validation-target="formValid">No</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Features Info -->
+      <div class="info-card">
+        <h3>✨ Features Demonstrated</h3>
+        <div class="features-grid">
+          <div class="feature-item">
+            <h4>📝 Real-time Validation</h4>
+            <p>Validates fields on blur and clears errors on input</p>
+          </div>
+          <div class="feature-item">
+            <h4>🔍 Multiple Rules</h4>
+            <p>Required, min/max length, email, URL, phone, password strength</p>
+          </div>
+          <div class="feature-item">
+            <h4>⚡ Async Validation</h4>
+            <p>Email availability check with simulated API call</p>
+          </div>
+          <div class="feature-item">
+            <h4>🎯 Field Matching</h4>
+            <p>Password confirmation matching</p>
+          </div>
+          <div class="feature-item">
+            <h4>📊 Live Stats</h4>
+            <p>Track validation state in real-time</p>
+          </div>
+          <div class="feature-item">
+            <h4>💬 Custom Messages</h4>
+            <p>User-friendly error messages for each rule</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <footer class="footer">
+        <p>
+          Built with
+          <a href="https://opalrb.com/" target="_blank">Opal</a>,
+          <a href="https://stimulus.hotwired.dev/" target="_blank">Stimulus</a>, and
+          <a href="https://vitejs.dev/" target="_blank">Vite</a>
+        </p>
+      </footer>
+    </div>
+
+    <script type="module" src="/app/javascript/application.js"></script>
+  </body>
+</html>

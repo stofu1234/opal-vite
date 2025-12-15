@@ -66,6 +66,19 @@ importers:
         specifier: workspace:*
         version: link:../../packages/vite-plugin-opal
 
+  examples/form-validation-app:
+    dependencies:
+      '@hotwired/stimulus':
+        specifier: ^3.2.2
+        version: 3.2.2
+      vite:
+        specifier: ^5.0.0
+        version: 5.4.21(@types/node@20.19.26)
+    devDependencies:
+      vite-plugin-opal:
+        specifier: workspace:*
+        version: link:../../packages/vite-plugin-opal
+
   examples/inesita-app:
     dependencies:
       vite:
@@ -88,6 +101,12 @@ importers:
         specifier: ^5.0.0
         version: 5.4.21(@types/node@20.19.26)
     devDependencies:
+      '@playwright/test':
+        specifier: ^1.57.0
+        version: 1.57.0
+      playwright:
+        specifier: ^1.57.0
+        version: 1.57.0
       vite-plugin-opal:
         specifier: workspace:*
         version: link:../../packages/vite-plugin-opal
