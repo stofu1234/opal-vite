@@ -334,6 +334,180 @@ class I18nController < StimulusController
         }
       };
 
+      // Helper functions defined as JavaScript
+      ctrl.pluralize = function(forms, count) {
+        let key = 'other';
+        if (count === 0) {
+          key = 'zero';
+        } else if (count === 1) {
+          key = 'one';
+        }
+        const template = forms[key] || forms.other;
+        return template.replace('{count}', count);
+      };
+
+      ctrl.formatCurrency = function(amount) {
+        try {
+          return new Intl.NumberFormat(ctrl.currentLocaleValue, {
+            style: 'currency',
+            currency: ctrl.currentLocaleValue === 'ja' ? 'JPY' : 'USD'
+          }).format(amount);
+        } catch (e) {
+          return '$' + amount.toFixed(2);
+        }
+      };
+
+      ctrl.formatDate = function(date) {
+        try {
+          return new Intl.DateTimeFormat(ctrl.currentLocaleValue, {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          }).format(date);
+        } catch (e) {
+          return date.toLocaleDateString();
+        }
+      };
+
+      ctrl.formatTime = function(time) {
+        try {
+          return new Intl.DateTimeFormat(ctrl.currentLocaleValue, {
+            hour: 'numeric',
+            minute: 'numeric',
+            hour12: ctrl.currentLocaleValue === 'en'
+          }).format(time);
+        } catch (e) {
+          return time.toLocaleTimeString();
+        }
+      };
+
+      ctrl.updateTranslations = function() {
+        const t = ctrl.translations[ctrl.currentLocaleValue];
+        if (!t) return;
+
+        // Update text content
+        if (ctrl.hasTitleTarget) ctrl.titleTarget.textContent = t.title;
+        if (ctrl.hasSubtitleTarget) ctrl.subtitleTarget.textContent = t.subtitle;
+        if (ctrl.hasLanguageLabelTarget) ctrl.languageLabelTarget.textContent = t.languageLabel;
+        if (ctrl.hasWelcomeTitleTarget) ctrl.welcomeTitleTarget.textContent = t.welcomeTitle;
+        if (ctrl.hasWelcomeMessageTarget) ctrl.welcomeMessageTarget.textContent = t.welcomeMessage;
+        if (ctrl.hasProductsTitleTarget) ctrl.productsTitleTarget.textContent = t.productsTitle;
+        if (ctrl.hasProduct1NameTarget) ctrl.product1NameTarget.textContent = t.product1Name;
+        if (ctrl.hasProduct1DescTarget) ctrl.product1DescTarget.textContent = t.product1Desc;
+        if (ctrl.hasProduct2NameTarget) ctrl.product2NameTarget.textContent = t.product2Name;
+        if (ctrl.hasProduct2DescTarget) ctrl.product2DescTarget.textContent = t.product2Desc;
+        if (ctrl.hasProduct3NameTarget) ctrl.product3NameTarget.textContent = t.product3Name;
+        if (ctrl.hasProduct3DescTarget) ctrl.product3DescTarget.textContent = t.product3Desc;
+        if (ctrl.hasNotificationsTitleTarget) ctrl.notificationsTitleTarget.textContent = t.notificationsTitle;
+        if (ctrl.hasDateTimeTitleTarget) ctrl.dateTimeTitleTarget.textContent = t.dateTimeTitle;
+        if (ctrl.hasCurrentDateLabelTarget) ctrl.currentDateLabelTarget.textContent = t.currentDateLabel;
+        if (ctrl.hasCurrentTimeLabelTarget) ctrl.currentTimeLabelTarget.textContent = t.currentTimeLabel;
+        if (ctrl.hasFormTitleTarget) ctrl.formTitleTarget.textContent = t.formTitle;
+        if (ctrl.hasNameLabelTarget) ctrl.nameLabelTarget.textContent = t.nameLabel;
+        if (ctrl.hasEmailLabelTarget) ctrl.emailLabelTarget.textContent = t.emailLabel;
+        if (ctrl.hasMessageLabelTarget) ctrl.messageLabelTarget.textContent = t.messageLabel;
+        if (ctrl.hasSubmitBtnTarget) ctrl.submitBtnTarget.textContent = t.submitBtn;
+        if (ctrl.hasFeaturesTitleTarget) ctrl.featuresTitleTarget.textContent = t.featuresTitle;
+        if (ctrl.hasFeature1TitleTarget) ctrl.feature1TitleTarget.textContent = t.feature1Title;
+        if (ctrl.hasFeature1DescTarget) ctrl.feature1DescTarget.textContent = t.feature1Desc;
+        if (ctrl.hasFeature2TitleTarget) ctrl.feature2TitleTarget.textContent = t.feature2Title;
+        if (ctrl.hasFeature2DescTarget) ctrl.feature2DescTarget.textContent = t.feature2Desc;
+        if (ctrl.hasFeature3TitleTarget) ctrl.feature3TitleTarget.textContent = t.feature3Title;
+        if (ctrl.hasFeature3DescTarget) ctrl.feature3DescTarget.textContent = t.feature3Desc;
+        if (ctrl.hasFeature4TitleTarget) ctrl.feature4TitleTarget.textContent = t.feature4Title;
+        if (ctrl.hasFeature4DescTarget) ctrl.feature4DescTarget.textContent = t.feature4Desc;
+        if (ctrl.hasFeature5TitleTarget) ctrl.feature5TitleTarget.textContent = t.feature5Title;
+        if (ctrl.hasFeature5DescTarget) ctrl.feature5DescTarget.textContent = t.feature5Desc;
+        if (ctrl.hasFeature6TitleTarget) ctrl.feature6TitleTarget.textContent = t.feature6Title;
+        if (ctrl.hasFeature6DescTarget) ctrl.feature6DescTarget.textContent = t.feature6Desc;
+        if (ctrl.hasFooterTextTarget) ctrl.footerTextTarget.innerHTML = t.footerText;
+
+        // Update placeholders
+        if (ctrl.hasNameInputTarget) ctrl.nameInputTarget.placeholder = t.placeholders.name;
+        if (ctrl.hasEmailInputTarget) ctrl.emailInputTarget.placeholder = t.placeholders.email;
+        if (ctrl.hasMessageInputTarget) ctrl.messageInputTarget.placeholder = t.placeholders.message;
+
+        // Update pluralized messages
+        if (ctrl.hasNotification1Target) {
+          ctrl.notification1Target.textContent = ctrl.pluralize(t.plurals.message, 1);
+        }
+        if (ctrl.hasNotification2Target) {
+          ctrl.notification2Target.textContent = ctrl.pluralize(t.plurals.message, 5);
+        }
+        if (ctrl.hasNotification3Target) {
+          ctrl.notification3Target.textContent = ctrl.pluralize(t.plurals.message, 0);
+        }
+
+        // Update stock messages
+        if (ctrl.hasProduct1StockTarget) {
+          ctrl.product1StockTarget.textContent = ctrl.pluralize(t.plurals.item, 10);
+        }
+        if (ctrl.hasProduct2StockTarget) {
+          ctrl.product2StockTarget.textContent = ctrl.pluralize(t.plurals.item, 1);
+        }
+        if (ctrl.hasProduct3StockTarget) {
+          ctrl.product3StockTarget.textContent = ctrl.pluralize(t.plurals.item, 0);
+        }
+
+        // Update prices with locale-specific formatting
+        if (ctrl.hasProduct1PriceTarget) {
+          ctrl.product1PriceTarget.textContent = ctrl.formatCurrency(1299.99);
+        }
+        if (ctrl.hasProduct2PriceTarget) {
+          ctrl.product2PriceTarget.textContent = ctrl.formatCurrency(899.99);
+        }
+        if (ctrl.hasProduct3PriceTarget) {
+          ctrl.product3PriceTarget.textContent = ctrl.formatCurrency(349.99);
+        }
+
+        // Update date/time
+        if (ctrl.hasCurrentDateTarget) {
+          ctrl.currentDateTarget.textContent = ctrl.formatDate(new Date());
+        }
+        if (ctrl.hasCurrentTimeTarget) {
+          ctrl.currentTimeTarget.textContent = ctrl.formatTime(new Date());
+        }
+
+        // Update document language
+        document.documentElement.lang = ctrl.currentLocaleValue;
+      };
+
+      // Stimulus action methods
+      this.switchLanguage = function(event) {
+        const locale = event.currentTarget.dataset.locale;
+
+        if (!ctrl.translations[locale]) {
+          console.error('Unsupported locale:', locale);
+          return;
+        }
+
+        ctrl.currentLocaleValue = locale;
+        localStorage.setItem('preferredLocale', locale);
+
+        // Update active button
+        ctrl.langBtnTargets.forEach(function(btn) {
+          btn.classList.remove('active');
+        });
+        event.currentTarget.classList.add('active');
+
+        ctrl.updateTranslations();
+      };
+
+      this.handleSubmit = function(event) {
+        event.preventDefault();
+
+        const t = ctrl.translations[ctrl.currentLocaleValue];
+        const successMessages = {
+          en: 'Message sent successfully!',
+          ja: 'メッセージが送信されました！',
+          es: '¡Mensaje enviado con éxito!',
+          fr: 'Message envoyé avec succès !',
+          de: 'Nachricht erfolgreich gesendet!'
+        };
+
+        alert(successMessages[ctrl.currentLocaleValue] || successMessages.en);
+      };
+
       // Load saved locale from localStorage
       const savedLocale = localStorage.getItem('preferredLocale');
       if (savedLocale && ctrl.translations[savedLocale]) {
@@ -342,209 +516,6 @@ class I18nController < StimulusController
 
       // Apply initial translations
       ctrl.updateTranslations();
-    `
-  end
-
-  def switch_language(event)
-    `
-      const ctrl = this;
-      const locale = event.currentTarget.dataset.locale;
-
-      if (!ctrl.translations[locale]) {
-        console.error('Unsupported locale:', locale);
-        return;
-      }
-
-      ctrl.currentLocaleValue = locale;
-      localStorage.setItem('preferredLocale', locale);
-
-      // Update active button
-      ctrl.langBtnTargets.forEach(function(btn) {
-        btn.classList.remove('active');
-      });
-      event.currentTarget.classList.add('active');
-
-      ctrl.updateTranslations();
-    `
-  end
-
-  def update_translations
-    `
-      const ctrl = this;
-      const t = ctrl.translations[ctrl.currentLocaleValue];
-
-      if (!t) return;
-
-      // Update text content
-      if (ctrl.hasTitleTarget) ctrl.titleTarget.textContent = t.title;
-      if (ctrl.hasSubtitleTarget) ctrl.subtitleTarget.textContent = t.subtitle;
-      if (ctrl.hasLanguageLabelTarget) ctrl.languageLabelTarget.textContent = t.languageLabel;
-      if (ctrl.hasWelcomeTitleTarget) ctrl.welcomeTitleTarget.textContent = t.welcomeTitle;
-      if (ctrl.hasWelcomeMessageTarget) ctrl.welcomeMessageTarget.textContent = t.welcomeMessage;
-      if (ctrl.hasProductsTitleTarget) ctrl.productsTitleTarget.textContent = t.productsTitle;
-      if (ctrl.hasProduct1NameTarget) ctrl.product1NameTarget.textContent = t.product1Name;
-      if (ctrl.hasProduct1DescTarget) ctrl.product1DescTarget.textContent = t.product1Desc;
-      if (ctrl.hasProduct2NameTarget) ctrl.product2NameTarget.textContent = t.product2Name;
-      if (ctrl.hasProduct2DescTarget) ctrl.product2DescTarget.textContent = t.product2Desc;
-      if (ctrl.hasProduct3NameTarget) ctrl.product3NameTarget.textContent = t.product3Name;
-      if (ctrl.hasProduct3DescTarget) ctrl.product3DescTarget.textContent = t.product3Desc;
-      if (ctrl.hasNotificationsTitleTarget) ctrl.notificationsTitleTarget.textContent = t.notificationsTitle;
-      if (ctrl.hasDateTimeTitleTarget) ctrl.dateTimeTitleTarget.textContent = t.dateTimeTitle;
-      if (ctrl.hasCurrentDateLabelTarget) ctrl.currentDateLabelTarget.textContent = t.currentDateLabel;
-      if (ctrl.hasCurrentTimeLabelTarget) ctrl.currentTimeLabelTarget.textContent = t.currentTimeLabel;
-      if (ctrl.hasFormTitleTarget) ctrl.formTitleTarget.textContent = t.formTitle;
-      if (ctrl.hasNameLabelTarget) ctrl.nameLabelTarget.textContent = t.nameLabel;
-      if (ctrl.hasEmailLabelTarget) ctrl.emailLabelTarget.textContent = t.emailLabel;
-      if (ctrl.hasMessageLabelTarget) ctrl.messageLabelTarget.textContent = t.messageLabel;
-      if (ctrl.hasSubmitBtnTarget) ctrl.submitBtnTarget.textContent = t.submitBtn;
-      if (ctrl.hasFeaturesTitleTarget) ctrl.featuresTitleTarget.textContent = t.featuresTitle;
-      if (ctrl.hasFeature1TitleTarget) ctrl.feature1TitleTarget.textContent = t.feature1Title;
-      if (ctrl.hasFeature1DescTarget) ctrl.feature1DescTarget.textContent = t.feature1Desc;
-      if (ctrl.hasFeature2TitleTarget) ctrl.feature2TitleTarget.textContent = t.feature2Title;
-      if (ctrl.hasFeature2DescTarget) ctrl.feature2DescTarget.textContent = t.feature2Desc;
-      if (ctrl.hasFeature3TitleTarget) ctrl.feature3TitleTarget.textContent = t.feature3Title;
-      if (ctrl.hasFeature3DescTarget) ctrl.feature3DescTarget.textContent = t.feature3Desc;
-      if (ctrl.hasFeature4TitleTarget) ctrl.feature4TitleTarget.textContent = t.feature4Title;
-      if (ctrl.hasFeature4DescTarget) ctrl.feature4DescTarget.textContent = t.feature4Desc;
-      if (ctrl.hasFeature5TitleTarget) ctrl.feature5TitleTarget.textContent = t.feature5Title;
-      if (ctrl.hasFeature5DescTarget) ctrl.feature5DescTarget.textContent = t.feature5Desc;
-      if (ctrl.hasFeature6TitleTarget) ctrl.feature6TitleTarget.textContent = t.feature6Title;
-      if (ctrl.hasFeature6DescTarget) ctrl.feature6DescTarget.textContent = t.feature6Desc;
-      if (ctrl.hasFooterTextTarget) ctrl.footerTextTarget.innerHTML = t.footerText;
-
-      // Update placeholders
-      if (ctrl.hasNameInputTarget) ctrl.nameInputTarget.placeholder = t.placeholders.name;
-      if (ctrl.hasEmailInputTarget) ctrl.emailInputTarget.placeholder = t.placeholders.email;
-      if (ctrl.hasMessageInputTarget) ctrl.messageInputTarget.placeholder = t.placeholders.message;
-
-      // Update pluralized messages
-      if (ctrl.hasNotification1Target) {
-        ctrl.notification1Target.textContent = ctrl.pluralize(t.plurals.message, 1);
-      }
-      if (ctrl.hasNotification2Target) {
-        ctrl.notification2Target.textContent = ctrl.pluralize(t.plurals.message, 5);
-      }
-      if (ctrl.hasNotification3Target) {
-        ctrl.notification3Target.textContent = ctrl.pluralize(t.plurals.message, 0);
-      }
-
-      // Update stock messages
-      if (ctrl.hasProduct1StockTarget) {
-        ctrl.product1StockTarget.textContent = ctrl.pluralize(t.plurals.item, 10);
-      }
-      if (ctrl.hasProduct2StockTarget) {
-        ctrl.product2StockTarget.textContent = ctrl.pluralize(t.plurals.item, 1);
-      }
-      if (ctrl.hasProduct3StockTarget) {
-        ctrl.product3StockTarget.textContent = ctrl.pluralize(t.plurals.item, 0);
-      }
-
-      // Update prices with locale-specific formatting
-      if (ctrl.hasProduct1PriceTarget) {
-        ctrl.product1PriceTarget.textContent = ctrl.formatCurrency(1299.99);
-      }
-      if (ctrl.hasProduct2PriceTarget) {
-        ctrl.product2PriceTarget.textContent = ctrl.formatCurrency(899.99);
-      }
-      if (ctrl.hasProduct3PriceTarget) {
-        ctrl.product3PriceTarget.textContent = ctrl.formatCurrency(349.99);
-      }
-
-      // Update date/time
-      if (ctrl.hasCurrentDateTarget) {
-        ctrl.currentDateTarget.textContent = ctrl.formatDate(new Date());
-      }
-      if (ctrl.hasCurrentTimeTarget) {
-        ctrl.currentTimeTarget.textContent = ctrl.formatTime(new Date());
-      }
-
-      // Update document language
-      document.documentElement.lang = ctrl.currentLocaleValue;
-    `
-  end
-
-  def pluralize(forms, count)
-    `
-      const forms = arguments[0];
-      const count = arguments[1];
-
-      let key = 'other';
-      if (count === 0) {
-        key = 'zero';
-      } else if (count === 1) {
-        key = 'one';
-      }
-
-      const template = forms[key] || forms.other;
-      return template.replace('{count}', count);
-    `
-  end
-
-  def format_currency(amount)
-    `
-      const ctrl = this;
-      const amount = arguments[0];
-
-      try {
-        return new Intl.NumberFormat(ctrl.currentLocaleValue, {
-          style: 'currency',
-          currency: ctrl.currentLocaleValue === 'ja' ? 'JPY' : 'USD'
-        }).format(amount);
-      } catch (e) {
-        return '$' + amount.toFixed(2);
-      }
-    `
-  end
-
-  def format_date(date)
-    `
-      const ctrl = this;
-      const date = arguments[0];
-
-      try {
-        return new Intl.DateTimeFormat(ctrl.currentLocaleValue, {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
-        }).format(date);
-      } catch (e) {
-        return date.toLocaleDateString();
-      }
-    `
-  end
-
-  def format_time(time)
-    `
-      const ctrl = this;
-      const time = arguments[0];
-
-      try {
-        return new Intl.DateTimeFormat(ctrl.currentLocaleValue, {
-          hour: 'numeric',
-          minute: 'numeric',
-          hour12: ctrl.currentLocaleValue === 'en'
-        }).format(time);
-      } catch (e) {
-        return time.toLocaleTimeString();
-      }
-    `
-  end
-
-  def handle_submit(event)
-    `
-      const ctrl = this;
-      event.preventDefault();
-
-      const t = ctrl.translations[ctrl.currentLocaleValue];
-      const successMessages = {
-        en: 'Message sent successfully!',
-        ja: 'メッセージが送信されました！',
-        es: '¡Mensaje enviado con éxito!',
-        fr: 'Message envoyé avec succès !',
-        de: 'Nachricht erfolgreich gesendet!'
-      };
-
-      alert(successMessages[ctrl.currentLocaleValue] || successMessages.en);
     `
   end
 end
