@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chart App - Opal + Chart.js</title>
+    <link rel="stylesheet" href="/app/styles.css" />
+  </head>
+  <body>
+    <div class="dashboard" data-controller="dashboard">
+      <!-- Header -->
+      <header class="dashboard-header">
+        <div class="header-content">
+          <h1>📊 Data Visualization Dashboard</h1>
+          <p class="subtitle">Real-time charts with Opal + Chart.js + Stimulus</p>
+        </div>
+        <button
+          data-action="click->dashboard#refresh"
+          class="refresh-btn"
+        >
+          🔄 Refresh Data
+        </button>
+      </header>
+
+      <!-- Loading Overlay -->
+      <div class="loading-overlay" data-dashboard-target="loading" style="display: none;">
+        <div class="spinner"></div>
+        <p>Loading data...</p>
+      </div>
+
+      <!-- Statistics Cards -->
+      <div class="stats-grid" data-dashboard-target="stats">
+        <div class="stat-card">
+          <div class="stat-value">-</div>
+          <div class="stat-label">Loading...</div>
+        </div>
+      </div>
+
+      <!-- Charts Grid -->
+      <div class="charts-grid">
+        <!-- Users by Company (Pie Chart) -->
+        <div class="chart-card">
+          <div class="chart-header">
+            <h2>Users by Company</h2>
+            <span class="chart-type">Pie Chart</span>
+          </div>
+          <div class="chart-container">
+            <canvas
+              data-controller="data-chart"
+              data-data-chart-type-value="pie"
+              data-data-chart-event-name-value="update-company-chart"
+              data-data-chart-target="canvas"
+            ></canvas>
+          </div>
+        </div>
+
+        <!-- Users by City (Doughnut Chart) -->
+        <div class="chart-card">
+          <div class="chart-header">
+            <h2>Users by City</h2>
+            <span class="chart-type">Doughnut Chart</span>
+          </div>
+          <div class="chart-container">
+            <canvas
+              data-controller="data-chart"
+              data-data-chart-type-value="doughnut"
+              data-data-chart-event-name-value="update-city-chart"
+              data-data-chart-target="canvas"
+            ></canvas>
+          </div>
+        </div>
+
+        <!-- Weekly Activity (Bar Chart) -->
+        <div class="chart-card">
+          <div class="chart-header">
+            <h2>Weekly Activity</h2>
+            <span class="chart-type">Bar Chart</span>
+          </div>
+          <div class="chart-container">
+            <canvas
+              data-controller="data-chart"
+              data-data-chart-type-value="bar"
+              data-data-chart-event-name-value="update-activity-chart"
+              data-data-chart-target="canvas"
+            ></canvas>
+          </div>
+        </div>
+
+        <!-- Interactive Chart with Controls -->
+        <div class="chart-card">
+          <div class="chart-header">
+            <h2>Interactive Chart</h2>
+            <span class="chart-type">Line Chart</span>
+          </div>
+          <div class="chart-container">
+            <canvas
+              data-controller="chart"
+              data-chart-type-value="line"
+              data-chart-target="canvas"
+            ></canvas>
+          </div>
+          <div class="chart-controls">
+            <button
+              data-controller="chart"
+              data-action="click->chart#update_chart"
+              class="control-btn"
+            >
+              🎲 Randomize
+            </button>
+            <button
+              data-controller="chart"
+              data-action="click->chart#add_data"
+              class="control-btn"
+            >
+              ➕ Add Data
+            </button>
+            <button
+              data-controller="chart"
+              data-action="click->chart#remove_data"
+              class="control-btn"
+            >
+              ➖ Remove Data
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Info Section -->
+      <div class="info-section">
+        <h3>💡 About This Dashboard</h3>
+        <div class="info-grid">
+          <div class="info-item">
+            <h4>Real-time Data</h4>
+            <p>Charts are populated with data from JSONPlaceholder API, demonstrating how to integrate external data sources.</p>
+          </div>
+          <div class="info-item">
+            <h4>Interactive Controls</h4>
+            <p>The interactive chart shows how to dynamically update Chart.js visualizations using Stimulus actions.</p>
+          </div>
+          <div class="info-item">
+            <h4>Multiple Chart Types</h4>
+            <p>Demonstrates pie, doughnut, bar, and line charts - all powered by Chart.js and controlled by Opal.</p>
+          </div>
+          <div class="info-item">
+            <h4>Event-Driven Updates</h4>
+            <p>Charts listen for custom events and update automatically when new data arrives.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <footer class="dashboard-footer">
+        <p>
+          Built with
+          <a href="https://opalrb.com/" target="_blank">Opal</a>,
+          <a href="https://www.chartjs.org/" target="_blank">Chart.js</a>,
+          <a href="https://stimulus.hotwired.dev/" target="_blank">Stimulus</a>, and
+          <a href="https://vitejs.dev/" target="_blank">Vite</a>
+        </p>
+      </footer>
+    </div>
+
+    <script type="module" src="/app/javascript/application.js"></script>
+  </body>
+</html>

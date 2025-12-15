@@ -1,0 +1,18 @@
+{
+  "name": "chart-app",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "@hotwired/stimulus": "^3.2.2",
+    "chart.js": "^4.4.0",
+    "vite": "^5.0.0"
+  },
+  "devDependencies": {
+    "vite-plugin-opal": "workspace:*"
+  }
+}
