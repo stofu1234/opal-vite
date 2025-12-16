@@ -18,28 +18,31 @@ class ClipboardController < StimulusController
     button = get_target(:button)
 
     # Select the text
-    `#{source}.select()`
+    js_call_on(source, :select)
 
     text = get_value(source)
 
     # Copy using Clipboard API
-    `
-      const btn = #{button};
-      navigator.clipboard.writeText(#{text}).then(() => {
-        console.log('Text copied to clipboard');
-        btn.textContent = "Copied!";
-        setTimeout(() => {
-          btn.textContent = "Copy to Clipboard";
-        }, 2000);
-      }).catch((err) => {
-        console.error('Failed to copy text: ', err);
-      });
-    `
+    clipboard = js_get(js_global('navigator'), :clipboard)
+    promise = js_call_on(clipboard, :writeText, text)
+
+    js_then(promise) do
+      console_log('Text copied to clipboard')
+      set_text(button, 'Copied!')
+      set_timeout(2000) do
+        set_text(button, 'Copy to Clipboard')
+      end
+    end
+
+    js_catch(promise) do |err|
+      console_error('Failed to copy text: ', err)
+    end
   end
 
   private
 
   def supported?
-    `navigator.clipboard !== undefined`
+    clipboard = js_get(js_global('navigator'), :clipboard)
+    `#{clipboard} !== undefined`
   end
 end

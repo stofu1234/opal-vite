@@ -2,7 +2,7 @@
 
 # Counter controller demonstrating Stimulus Values API
 class CounterController < StimulusController
-  include JsProxyEx
+  include StimulusHelpers
 
   self.values = { count: :number }
   self.targets = ["display"]
@@ -34,11 +34,7 @@ class CounterController < StimulusController
   private
 
   def update_display
-    `
-      if (this.hasDisplayTarget) {
-        this.displayTarget.textContent = #{count_value.to_s};
-      }
-    `
+    target_set_text(:display, count_value.to_s) if has_target?(:display)
   end
 
   def count_value_changed

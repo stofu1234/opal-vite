@@ -11,9 +11,9 @@ class UserModalController < StimulusController
 
     # Listen for show-user-modal event
     on_window_event('show-user-modal') do |e|
-      detail = `#{e}.detail`
-      user = `#{detail}.user`
-      posts = `#{detail}.posts`
+      detail = js_get(e, :detail)
+      user = js_get(detail, :user)
+      posts = js_get(detail, :posts)
       display_user(user, posts)
       open
     end
@@ -39,7 +39,7 @@ class UserModalController < StimulusController
   def close_on_overlay
     target = event_target
     overlay = get_target(:overlay)
-    close if `#{target} === #{overlay}`
+    close if js_equals?(target, overlay)
   end
 
   # Close on Escape key
@@ -51,14 +51,17 @@ class UserModalController < StimulusController
 
   def display_user(user, posts)
     # Update user info
-    target_set_text(:userName, `#{user}.name`) if has_target?(:userName)
-    target_set_text(:userEmail, `#{user}.email`) if has_target?(:userEmail)
-    target_set_text(:userCompany, `#{user}.company.name`) if has_target?(:userCompany)
-    target_set_text(:userPhone, `#{user}.phone`) if has_target?(:userPhone)
-    target_set_text(:userWebsite, `#{user}.website`) if has_target?(:userWebsite)
+    target_set_text(:userName, js_get(user, :name)) if has_target?(:userName)
+    target_set_text(:userEmail, js_get(user, :email)) if has_target?(:userEmail)
+    target_set_text(:userCompany, js_get(js_get(user, :company), :name)) if has_target?(:userCompany)
+    target_set_text(:userPhone, js_get(user, :phone)) if has_target?(:userPhone)
+    target_set_text(:userWebsite, js_get(user, :website)) if has_target?(:userWebsite)
 
     if has_target?(:userAddress)
-      address = "#{`#{user}.address.street`}, #{`#{user}.address.city`}"
+      user_address = js_get(user, :address)
+      street = js_get(user_address, :street)
+      city = js_get(user_address, :city)
+      address = "#{street}, #{city}"
       target_set_text(:userAddress, address)
     end
 
@@ -70,26 +73,30 @@ class UserModalController < StimulusController
     posts_list = get_target(:postsList)
     set_html(posts_list, '')
 
-    length = `#{posts}.length`
+    length = js_length(posts)
 
-    if `#{length} === 0`
+    if length == 0
       set_html(posts_list, '<p class="no-posts">No posts yet</p>')
     else
       # Show first 5 posts
-      limit = `Math.min(#{length}, 5)`
-      `for (var i = 0; i < #{limit}; i++) {`
-        post = `#{posts}[i]`
+      limit = js_min(length, 5)
+
+      limit.times do |i|
+        post = js_array_at(posts, i)
         post_item = create_element('div')
         add_class(post_item, 'post-item')
-        set_html(post_item, "<h4>#{`#{post}.title`}</h4><p>#{`#{post}.body`}</p>")
+
+        title = js_get(post, :title)
+        body = js_get(post, :body)
+        set_html(post_item, "<h4>#{title}</h4><p>#{body}</p>")
         append_child(posts_list, post_item)
-      `}`
+      end
 
       # Show "more posts" indicator if needed
-      if `#{length} > 5`
+      if length > 5
         more = create_element('p')
         add_class(more, 'more-posts')
-        remaining = `#{length} - 5`
+        remaining = length - 5
         set_text(more, "+ #{remaining} more posts")
         append_child(posts_list, more)
       end

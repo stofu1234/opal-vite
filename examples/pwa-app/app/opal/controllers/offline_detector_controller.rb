@@ -2,8 +2,7 @@
 require 'opal_stimulus/stimulus_controller'
 
 class OfflineDetectorController < StimulusController
-  include JsProxyEx
-  include DomHelpers
+  include StimulusHelpers
 
   self.targets = %w[banner statusText onlineStatus]
 
@@ -15,11 +14,13 @@ class OfflineDetectorController < StimulusController
   private
 
   def setup_event_listeners
-    `
-      const ctrl = this;
-      window.addEventListener('online', function() { ctrl.$update_status(); });
-      window.addEventListener('offline', function() { ctrl.$update_status(); });
-    `
+    # Define update status method for event listeners
+    js_define_method(:handleOnlineStatus) do
+      update_status
+    end
+
+    on_window_event('online') { js_call(:handleOnlineStatus) }
+    on_window_event('offline') { js_call(:handleOnlineStatus) }
   end
 
   def update_status
@@ -27,11 +28,11 @@ class OfflineDetectorController < StimulusController
     status = is_online ? 'online' : 'offline'
 
     # Set banner status attribute
-    `
-      if (this.hasBannerTarget) {
-        this.bannerTarget.dataset.status = #{status};
-      }
-    `
+    if has_target?(:banner)
+      banner = get_target(:banner)
+      dataset = js_get(banner, :dataset)
+      js_set(dataset, :status, status)
+    end
 
     # Set status text
     status_text = is_online ? '🟢 You are online' : '🔴 You are offline'

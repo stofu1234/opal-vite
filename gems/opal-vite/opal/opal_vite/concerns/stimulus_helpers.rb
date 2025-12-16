@@ -790,6 +790,492 @@ module OpalVite
         is_nan?(result) ? default_value : result
       end
 
+      # ===== JavaScript Property Access Methods =====
+
+      # Get a JavaScript property from the controller (this[name])
+      # @param name [Symbol, String] Property name
+      # @return [Native] Property value
+      def js_prop(name)
+        `this[#{name.to_s}]`
+      end
+
+      # Set a JavaScript property on the controller (this[name] = value)
+      # @param name [Symbol, String] Property name
+      # @param value [Object] Value to set
+      def js_set_prop(name, value)
+        `this[#{name.to_s}] = #{value}`
+      end
+
+      # Check if controller has a JavaScript property
+      # @param name [Symbol, String] Property name
+      # @return [Boolean] true if property exists and is truthy
+      def js_has_prop?(name)
+        `!!this[#{name.to_s}]`
+      end
+
+      # Call a JavaScript method on the controller (this[name](...args))
+      # @param name [Symbol, String] Method name
+      # @param args [Array] Arguments to pass
+      # @return [Native] Method return value
+      def js_call(name, *args)
+        if args.empty?
+          `this[#{name.to_s}]()`
+        else
+          native_args = args.map { |a| a.respond_to?(:to_n) ? a.to_n : a }
+          `this[#{name.to_s}].apply(this, #{native_args})`
+        end
+      end
+
+      # Call a method on a JavaScript object
+      # @param obj [Native] JavaScript object
+      # @param method [Symbol, String] Method name
+      # @param args [Array] Arguments to pass
+      # @return [Native] Method return value
+      def js_call_on(obj, method, *args)
+        if args.empty?
+          `#{obj}[#{method.to_s}]()`
+        else
+          native_args = args.map { |a| a.respond_to?(:to_n) ? a.to_n : a }
+          `#{obj}[#{method.to_s}].apply(#{obj}, #{native_args})`
+        end
+      end
+
+      # Get a property from a JavaScript object
+      # @param obj [Native] JavaScript object
+      # @param prop [Symbol, String] Property name
+      # @return [Native] Property value
+      def js_get(obj, prop)
+        `#{obj}[#{prop.to_s}]`
+      end
+
+      # Set a property on a JavaScript object
+      # @param obj [Native] JavaScript object
+      # @param prop [Symbol, String] Property name
+      # @param value [Object] Value to set
+      def js_set(obj, prop, value)
+        `#{obj}[#{prop.to_s}] = #{value}`
+      end
+
+      # ===== JSON Methods =====
+
+      # Parse JSON string to JavaScript object
+      # @param json_string [String] JSON string
+      # @return [Native] Parsed JavaScript object
+      def json_parse(json_string)
+        `JSON.parse(#{json_string})`
+      end
+
+      # Stringify JavaScript object to JSON
+      # @param obj [Object] Object to stringify
+      # @return [String] JSON string
+      def json_stringify(obj)
+        native_obj = obj.respond_to?(:to_n) ? obj.to_n : obj
+        `JSON.stringify(#{native_obj})`
+      end
+
+      # ===== Console Methods =====
+
+      # Log to console
+      # @param args [Array] Arguments to log
+      def console_log(*args)
+        `console.log.apply(console, #{args})`
+      end
+
+      # Log warning to console
+      # @param args [Array] Arguments to log
+      def console_warn(*args)
+        `console.warn.apply(console, #{args})`
+      end
+
+      # Log error to console
+      # @param args [Array] Arguments to log
+      def console_error(*args)
+        `console.error.apply(console, #{args})`
+      end
+
+      # ===== String Methods =====
+
+      # Get character at index from string
+      # @param str [String] JavaScript string
+      # @param index [Integer] Character index
+      # @return [String] Character at index
+      def js_string_char_at(str, index)
+        `#{str}.charAt(#{index})`
+      end
+
+      # Get substring
+      # @param str [String] JavaScript string
+      # @param start [Integer] Start index
+      # @param end_idx [Integer, nil] End index (optional)
+      # @return [String] Substring
+      def js_substring(str, start, end_idx = nil)
+        if end_idx
+          `#{str}.substring(#{start}, #{end_idx})`
+        else
+          `#{str}.substring(#{start})`
+        end
+      end
+
+      # Split string
+      # @param str [String] JavaScript string
+      # @param separator [String] Separator
+      # @return [Native] Array of substrings
+      def js_split(str, separator)
+        `#{str}.split(#{separator})`
+      end
+
+      # Trim whitespace from string
+      # @param str [String] JavaScript string
+      # @return [String] Trimmed string
+      def js_trim(str)
+        `#{str}.trim()`
+      end
+
+      # Check if string includes substring
+      # @param str [String] JavaScript string
+      # @param search [String] Substring to search for
+      # @return [Boolean] true if includes
+      def js_includes?(str, search)
+        `#{str}.includes(#{search})`
+      end
+
+      # ===== Comparison Methods =====
+
+      # Check strict equality (===) between two JavaScript values
+      # @param a [Native] First value
+      # @param b [Native] Second value
+      # @return [Boolean] true if strictly equal
+      def js_equals?(a, b)
+        `#{a} === #{b}`
+      end
+
+      # Check loose equality (==) between two JavaScript values
+      # @param a [Native] First value
+      # @param b [Native] Second value
+      # @return [Boolean] true if loosely equal
+      def js_loose_equals?(a, b)
+        `#{a} == #{b}`
+      end
+
+      # ===== Math Methods =====
+
+      # Generate random number between 0 and 1
+      # @return [Float] Random number
+      def js_random
+        `Math.random()`
+      end
+
+      # Get minimum of two numbers
+      # @param a [Number] First number
+      # @param b [Number] Second number
+      # @return [Number] Minimum value
+      def js_min(a, b)
+        `Math.min(#{a}, #{b})`
+      end
+
+      # Get maximum of two numbers
+      # @param a [Number] First number
+      # @param b [Number] Second number
+      # @return [Number] Maximum value
+      def js_max(a, b)
+        `Math.max(#{a}, #{b})`
+      end
+
+      # Get absolute value
+      # @param num [Number] Number
+      # @return [Number] Absolute value
+      def js_abs(num)
+        `Math.abs(#{num})`
+      end
+
+      # Round number
+      # @param num [Number] Number
+      # @return [Integer] Rounded number
+      def js_round(num)
+        `Math.round(#{num})`
+      end
+
+      # Ceiling of number
+      # @param num [Number] Number
+      # @return [Integer] Ceiling value
+      def js_ceil(num)
+        `Math.ceil(#{num})`
+      end
+
+      # Format number with fixed decimal places
+      # @param num [Number] Number to format
+      # @param digits [Integer] Number of decimal places
+      # @return [String] Formatted number string
+      def js_to_fixed(num, digits)
+        `#{num}.toFixed(#{digits})`
+      end
+
+      # Generate random integer between 0 and max (exclusive)
+      # @param max [Integer] Maximum value (exclusive)
+      # @return [Integer] Random integer
+      def random_int(max)
+        `Math.floor(Math.random() * #{max})`
+      end
+
+      # Floor a number
+      # @param num [Number] Number to floor
+      # @return [Integer] Floored number
+      def js_floor(num)
+        `Math.floor(#{num})`
+      end
+
+      # ===== Global Object Access =====
+
+      # Check if a global JavaScript object/class exists
+      # @param name [String] Global name (e.g., 'Chart', 'React')
+      # @return [Boolean] true if exists
+      def js_global_exists?(name)
+        `typeof window[#{name}] !== 'undefined'`
+      end
+
+      # Get a global JavaScript object/class
+      # @param name [String] Global name
+      # @return [Native] Global object
+      def js_global(name)
+        `window[#{name}]`
+      end
+
+      # Create new instance of a JavaScript class
+      # @param klass [Native] JavaScript class/constructor
+      # @param args [Array] Constructor arguments
+      # @return [Native] New instance
+      def js_new(klass, *args)
+        if args.empty?
+          `new klass()`
+        else
+          native_args = args.map { |a| a.respond_to?(:to_n) ? a.to_n : a }
+          # Use Reflect.construct for dynamic argument passing
+          `Reflect.construct(#{klass}, #{native_args})`
+        end
+      end
+
+      # Define a JavaScript function on the controller (this[name] = function)
+      # @param name [Symbol, String] Function name
+      # @yield Block that becomes the function body
+      def js_define_method(name, &block)
+        `this[#{name.to_s}] = #{block}`
+      end
+
+      # Define a JavaScript function on an object (obj[name] = function)
+      # @param obj [Native] JavaScript object
+      # @param name [Symbol, String] Function name
+      # @yield Block that becomes the function body
+      def js_define_method_on(obj, name, &block)
+        `#{obj}[#{name.to_s}] = #{block}`
+      end
+
+      # ===== Array Methods =====
+
+      # Get array length
+      # @param arr [Native] JavaScript array
+      # @return [Integer] Array length
+      def js_length(arr)
+        `#{arr}.length`
+      end
+
+      # Map over array with block
+      # @param arr [Native] JavaScript array
+      # @yield [item] Block to execute for each item
+      # @return [Native] New array with mapped values
+      def js_map(arr, &block)
+        `#{arr}.map(#{block})`
+      end
+
+      # Filter array with block
+      # @param arr [Native] JavaScript array
+      # @yield [item] Block to execute for each item
+      # @return [Native] Filtered array
+      def js_filter(arr, &block)
+        `#{arr}.filter(#{block})`
+      end
+
+      # Reduce array with block
+      # @param arr [Native] JavaScript array
+      # @param initial [Object] Initial value
+      # @yield [acc, item] Block to execute for each item
+      # @return [Object] Reduced value
+      def js_reduce(arr, initial, &block)
+        `#{arr}.reduce(#{block}, #{initial})`
+      end
+
+      # ForEach over array with block
+      # @param arr [Native] JavaScript array
+      # @yield [item, index] Block to execute for each item
+      def js_each(arr, &block)
+        `#{arr}.forEach(#{block})`
+      end
+
+      # Slice array
+      # @param arr [Native] JavaScript array
+      # @param start [Integer] Start index
+      # @param end_idx [Integer, nil] End index (optional)
+      # @return [Native] Sliced array
+      def js_slice(arr, start, end_idx = nil)
+        if end_idx
+          `#{arr}.slice(#{start}, #{end_idx})`
+        else
+          `#{arr}.slice(#{start})`
+        end
+      end
+
+      # ===== Object Methods =====
+
+      # Create empty JavaScript object
+      # @return [Native] Empty JavaScript object
+      def js_object
+        `{}`
+      end
+
+      # Get object keys
+      # @param obj [Native] JavaScript object
+      # @return [Native] Array of keys
+      def js_keys(obj)
+        `Object.keys(#{obj})`
+      end
+
+      # Get object values
+      # @param obj [Native] JavaScript object
+      # @return [Native] Array of values
+      def js_values(obj)
+        `Object.values(#{obj})`
+      end
+
+      # Get object entries
+      # @param obj [Native] JavaScript object
+      # @return [Native] Array of [key, value] pairs
+      def js_entries(obj)
+        `Object.entries(#{obj})`
+      end
+
+      # Create Set from array and get size
+      # @param arr [Native] JavaScript array
+      # @return [Integer] Number of unique elements
+      def js_unique_count(arr)
+        `new Set(#{arr}).size`
+      end
+
+      # ===== Fetch API =====
+
+      # Simple fetch that returns Promise-wrapped response
+      # @param url [String] URL to fetch
+      # @return [Native] Promise
+      def js_fetch(url)
+        `fetch(#{url})`
+      end
+
+      # Fetch JSON from URL with callback
+      # @param url [String] URL to fetch
+      # @yield [data] Block to handle response data
+      def fetch_json(url, &success_block)
+        `
+          fetch(#{url})
+            .then(response => response.json())
+            .then(data => #{success_block}.$call(data))
+            .catch(error => console.error('Fetch error:', error))
+        `
+      end
+
+      # Fetch JSON from URL returning a Promise (for chaining)
+      # @param url [String] URL to fetch
+      # @return [Native] Promise that resolves to JSON data
+      def fetch_json_promise(url)
+        `fetch(#{url}).then(response => response.json())`
+      end
+
+      # Fetch JSON with response validation
+      # @param url [String] URL to fetch
+      # @return [Native] Promise that resolves to JSON data or rejects on error
+      def fetch_json_safe(url)
+        `fetch(#{url}).then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok: ' + response.status);
+          }
+          return response.json();
+        })`
+      end
+
+      # Fetch multiple URLs in parallel and get JSON results
+      # @param urls [Array<String>] URLs to fetch
+      # @return [Native] Promise that resolves to array of JSON results
+      def fetch_all_json(urls)
+        promises = urls.map { |url| fetch_json_promise(url) }
+        `Promise.all(#{promises})`
+      end
+
+      # Fetch JSON with success and error callbacks
+      # @param url [String] URL to fetch
+      # @param on_success [Proc] Success callback receiving data
+      # @param on_error [Proc] Error callback receiving error
+      def fetch_json_with_handlers(url, on_success:, on_error: nil)
+        promise = fetch_json_safe(url)
+        promise = js_then(promise) { |data| on_success.call(data) }
+        if on_error
+          js_catch(promise) { |error| on_error.call(error) }
+        else
+          js_catch(promise) { |error| console_error('Fetch error:', error) }
+        end
+      end
+
+      # ===== Promise Methods =====
+
+      # Create Promise.all from array of promises
+      # @param promises [Array<Native>] Array of promises
+      # @return [Native] Promise that resolves when all complete
+      def promise_all(promises)
+        `Promise.all(#{promises})`
+      end
+
+      # Create Promise.race from array of promises
+      # @param promises [Array<Native>] Array of promises
+      # @return [Native] Promise that resolves when first completes
+      def promise_race(promises)
+        `Promise.race(#{promises})`
+      end
+
+      # Create a resolved Promise with value
+      # @param value [Object] Value to resolve with
+      # @return [Native] Resolved Promise
+      def promise_resolve(value)
+        native_value = value.respond_to?(:to_n) ? value.to_n : value
+        `Promise.resolve(#{native_value})`
+      end
+
+      # Create a rejected Promise with error
+      # @param error [Object] Error to reject with
+      # @return [Native] Rejected Promise
+      def promise_reject(error)
+        `Promise.reject(#{error})`
+      end
+
+      # Add then handler to promise
+      # @param promise [Native] JavaScript Promise
+      # @yield [value] Block to handle resolved value
+      # @return [Native] New Promise
+      def js_then(promise, &block)
+        `#{promise}.then(#{block})`
+      end
+
+      # Add catch handler to promise
+      # @param promise [Native] JavaScript Promise
+      # @yield [error] Block to handle rejection
+      # @return [Native] New Promise
+      def js_catch(promise, &block)
+        `#{promise}.catch(#{block})`
+      end
+
+      # Add finally handler to promise
+      # @param promise [Native] JavaScript Promise
+      # @yield Block to execute regardless of outcome
+      # @return [Native] New Promise
+      def js_finally(promise, &block)
+        `#{promise}.finally(#{block})`
+      end
+
       private
 
       # Convert snake_case to camelCase
