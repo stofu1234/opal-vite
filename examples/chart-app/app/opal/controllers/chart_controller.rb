@@ -1,223 +1,251 @@
 # backtick_javascript: true
+require 'opal_stimulus/stimulus_controller'
 
 # Chart controller demonstrating Chart.js integration
 class ChartController < StimulusController
-  self.targets = ["canvas"]
+  include JsProxyEx
+  include DomHelpers
+
+  self.targets = %w[canvas]
   self.values = { type: :string, data: :string, options: :string, event_name: :string }
 
+  MONTH_NAMES = %w[Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec].freeze
+
+  # Value accessors (Stimulus values use camelCase in JavaScript)
+  def type_value
+    `this.typeValue || ''`
+  end
+
+  def data_value
+    `this.dataValue || ''`
+  end
+
+  def options_value
+    `this.optionsValue || ''`
+  end
+
+  def event_name_value
+    `this.eventNameValue || ''`
+  end
+
+  def has_event_name_value?
+    `this.hasEventNameValue`
+  end
+
+  DEFAULT_COLORS = [
+    'rgba(102, 126, 234, 0.8)',
+    'rgba(118, 75, 162, 0.8)',
+    'rgba(237, 100, 166, 0.8)',
+    'rgba(255, 159, 64, 0.8)',
+    'rgba(75, 192, 192, 0.8)',
+    'rgba(153, 102, 255, 0.8)'
+  ].freeze
+
+  def initialize
+    super
+    @chart = nil
+  end
+
   def connect
-    puts "Chart controller connected!"
+    puts 'Chart controller connected!'
+    return unless chart_js_available?
 
-    # Initialize Chart.js
-    `
-      const ctrl = this;
-
-      // Import Chart.js if not already available
-      if (typeof Chart === 'undefined') {
-        console.error('Chart.js is not loaded!');
-        return;
-      }
-
-      // Helper function to get default data for each chart type
-      ctrl.getDefaultData = function(type) {
-        const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-        const data1 = [12, 19, 3, 5, 2, 3];
-        const data2 = [2, 3, 20, 5, 1, 4];
-
-        const colors = [
-          'rgba(102, 126, 234, 0.8)',
-          'rgba(118, 75, 162, 0.8)',
-          'rgba(237, 100, 166, 0.8)',
-          'rgba(255, 159, 64, 0.8)',
-          'rgba(75, 192, 192, 0.8)',
-          'rgba(153, 102, 255, 0.8)'
-        ];
-
-        switch (type) {
-          case 'pie':
-          case 'doughnut':
-            return {
-              labels: labels,
-              datasets: [{
-                data: data1,
-                backgroundColor: colors
-              }]
-            };
-          case 'bar':
-          case 'line':
-          default:
-            return {
-              labels: labels,
-              datasets: [
-                {
-                  label: 'Dataset 1',
-                  data: data1,
-                  backgroundColor: 'rgba(102, 126, 234, 0.5)',
-                  borderColor: 'rgba(102, 126, 234, 1)',
-                  borderWidth: 2
-                },
-                {
-                  label: 'Dataset 2',
-                  data: data2,
-                  backgroundColor: 'rgba(118, 75, 162, 0.5)',
-                  borderColor: 'rgba(118, 75, 162, 1)',
-                  borderWidth: 2
-                }
-              ]
-            };
-        }
-      };
-
-      // Helper function to get default options for each chart type
-      ctrl.getDefaultOptions = function(type) {
-        return {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              display: true,
-              position: 'top'
-            },
-            title: {
-              display: false
-            }
-          }
-        };
-      };
-
-      // Update chart data
-      ctrl.updateData = function(newData) {
-        if (!ctrl.chart) return;
-
-        ctrl.chart.data = newData;
-        ctrl.chart.update();
-      };
-
-      // Add data point
-      ctrl.addDataPoint = function(label, values) {
-        if (!ctrl.chart) return;
-
-        ctrl.chart.data.labels.push(label);
-
-        ctrl.chart.data.datasets.forEach((dataset, index) => {
-          const value = Array.isArray(values) ? values[index] : values;
-          dataset.data.push(value);
-        });
-
-        ctrl.chart.update();
-      };
-
-      // Remove last data point
-      ctrl.removeDataPoint = function() {
-        if (!ctrl.chart) return;
-
-        ctrl.chart.data.labels.pop();
-        ctrl.chart.data.datasets.forEach(dataset => {
-          dataset.data.pop();
-        });
-
-        ctrl.chart.update();
-      };
-
-      // Randomize data
-      ctrl.randomizeData = function() {
-        if (!ctrl.chart) return;
-
-        ctrl.chart.data.datasets.forEach(dataset => {
-          dataset.data = dataset.data.map(() => Math.floor(Math.random() * 30));
-        });
-
-        ctrl.chart.update();
-      };
-
-      // Now initialize the chart after all helper functions are defined
-      // Get chart type from value or default to 'line'
-      const chartType = ctrl.typeValue || 'line';
-
-      // Parse data and options from values
-      let chartData;
-      let chartOptions;
-
-      try {
-        chartData = ctrl.dataValue ? JSON.parse(ctrl.dataValue) : ctrl.getDefaultData(chartType);
-        chartOptions = ctrl.optionsValue ? JSON.parse(ctrl.optionsValue) : ctrl.getDefaultOptions(chartType);
-      } catch (error) {
-        console.error('Error parsing chart data or options:', error);
-        chartData = ctrl.getDefaultData(chartType);
-        chartOptions = ctrl.getDefaultOptions(chartType);
-      }
-
-      // Create chart
-      const ctx = ctrl.canvasTarget.getContext('2d');
-
-      ctrl.chart = new Chart(ctx, {
-        type: chartType,
-        data: chartData,
-        options: chartOptions
-      });
-
-      // If event_name value is provided, listen for custom events to update chart
-      if (ctrl.hasEventNameValue && ctrl.eventNameValue) {
-        const eventName = ctrl.eventNameValue;
-        console.log('Chart: Setting up event listener for', eventName);
-
-        window.addEventListener(eventName, (e) => {
-          const { labels, data } = e.detail;
-
-          if (!ctrl.chart) return;
-
-          // Update chart data
-          ctrl.chart.data.labels = labels;
-
-          if (ctrl.chart.config.type === 'pie' || ctrl.chart.config.type === 'doughnut') {
-            // For pie/doughnut charts, use single dataset
-            ctrl.chart.data.datasets[0].data = data;
-          } else {
-            // For other charts, update all datasets
-            ctrl.chart.data.datasets.forEach((dataset, index) => {
-              dataset.data = Array.isArray(data[0]) ? data[index] : data;
-            });
-          }
-
-          ctrl.chart.update('active');
-        });
-      }
-    `
+    initialize_chart
+    setup_event_listener if has_event_name_value? && !event_name_value.empty?
   end
 
   def disconnect
-    `
-      if (this.chart) {
-        this.chart.destroy();
-      }
-    `
+    destroy_chart
   end
 
-  # Update chart with new data
+  # Stimulus action: Update chart with random data
   def update_chart
-    `
-      if (this.chart) {
-        this.randomizeData();
-      }
-    `
+    return unless @chart
+
+    randomize_data
   end
 
-  # Add new data point
+  # Stimulus action: Add new data point
   def add_data
-    `
-      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      const currentLabels = this.chart.data.labels.length;
-      const newLabel = monthNames[currentLabels % 12];
-      const newValues = [Math.floor(Math.random() * 30), Math.floor(Math.random() * 30)];
+    return unless @chart
 
-      this.addDataPoint(newLabel, newValues);
+    current_labels_count = `#{@chart}.data.labels.length`
+    new_label = MONTH_NAMES[current_labels_count % 12]
+    new_values = [random_value, random_value]
+
+    add_data_point(new_label, new_values)
+  end
+
+  # Stimulus action: Remove last data point
+  def remove_data
+    return unless @chart
+
+    remove_data_point
+  end
+
+  private
+
+  def chart_js_available?
+    available = `typeof Chart !== 'undefined'`
+    unless available
+      puts 'Chart.js is not loaded!'
+    end
+    available
+  end
+
+  def initialize_chart
+    chart_type = type_value.empty? ? 'line' : type_value
+    data_val = data_value
+    opts_val = options_value
+    ctx = canvas_target.to_n
+    labels = MONTH_NAMES[0..5].to_n
+    data1 = [12, 19, 3, 5, 2, 3].to_n
+    data2 = [2, 3, 20, 5, 1, 4].to_n
+    colors = DEFAULT_COLORS.to_n
+
+    @chart = `(function() {
+      var chartData;
+      var chartOptions;
+
+      // Parse data if provided, otherwise use defaults
+      if (data_val && data_val.length > 0) {
+        try {
+          chartData = JSON.parse(data_val);
+        } catch(e) {
+          chartData = null;
+        }
+      }
+
+      if (!chartData) {
+        if (chart_type === 'pie' || chart_type === 'doughnut') {
+          chartData = {
+            labels: labels,
+            datasets: [{
+              data: data1,
+              backgroundColor: colors
+            }]
+          };
+        } else {
+          chartData = {
+            labels: labels,
+            datasets: [
+              {
+                label: 'Dataset 1',
+                data: data1,
+                backgroundColor: 'rgba(102, 126, 234, 0.5)',
+                borderColor: 'rgba(102, 126, 234, 1)',
+                borderWidth: 2
+              },
+              {
+                label: 'Dataset 2',
+                data: data2,
+                backgroundColor: 'rgba(118, 75, 162, 0.5)',
+                borderColor: 'rgba(118, 75, 162, 1)',
+                borderWidth: 2
+              }
+            ]
+          };
+        }
+      }
+
+      // Parse options if provided, otherwise use defaults
+      if (opts_val && opts_val.length > 0) {
+        try {
+          chartOptions = JSON.parse(opts_val);
+        } catch(e) {
+          chartOptions = null;
+        }
+      }
+
+      if (!chartOptions) {
+        chartOptions = {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: true, position: 'top' },
+            title: { display: false }
+          }
+        };
+      }
+
+      return new Chart(ctx.getContext('2d'), {
+        type: chart_type,
+        data: chartData,
+        options: chartOptions
+      });
+    })()`
+  end
+
+  def destroy_chart
+    return unless @chart
+
+    chart = @chart
+    `chart.destroy()`
+    @chart = nil
+  end
+
+  def setup_event_listener
+    event_name = event_name_value
+    puts "Chart: Setting up event listener for #{event_name}"
+
+    chart = @chart
+    `
+      window.addEventListener(event_name, function(e) {
+        const { labels, data } = e.detail;
+        if (!chart) return;
+
+        chart.data.labels = labels;
+
+        if (chart.config.type === 'pie' || chart.config.type === 'doughnut') {
+          chart.data.datasets[0].data = data;
+        } else {
+          chart.data.datasets.forEach(function(dataset, index) {
+            dataset.data = Array.isArray(data[0]) ? data[index] : data;
+          });
+        }
+
+        chart.update('active');
+      });
     `
   end
 
-  # Remove last data point
-  def remove_data
+  def randomize_data
+    chart = @chart
     `
-      this.removeDataPoint();
+      chart.data.datasets.forEach(function(dataset) {
+        dataset.data = dataset.data.map(function() {
+          return Math.floor(Math.random() * 30);
+        });
+      });
+      chart.update();
     `
+  end
+
+  def add_data_point(label, values)
+    chart = @chart
+    values_js = values.to_n
+    `
+      chart.data.labels.push(label);
+      chart.data.datasets.forEach(function(dataset, index) {
+        const value = values_js[index] || values_js;
+        dataset.data.push(value);
+      });
+      chart.update();
+    `
+  end
+
+  def remove_data_point
+    chart = @chart
+    `
+      chart.data.labels.pop();
+      chart.data.datasets.forEach(function(dataset) {
+        dataset.data.pop();
+      });
+      chart.update();
+    `
+  end
+
+  def random_value
+    `Math.floor(Math.random() * 30)`
   end
 end

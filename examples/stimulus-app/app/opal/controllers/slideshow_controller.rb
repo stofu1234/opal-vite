@@ -1,5 +1,9 @@
+# backtick_javascript: true
+
 # Slideshow controller demonstrating CSS classes and state management
 class SlideshowController < StimulusController
+  include JsProxyEx
+
   self.targets = ["slide"]
   self.classes = ["active"]
   self.values = { index: :number }
@@ -14,23 +18,29 @@ class SlideshowController < StimulusController
   end
 
   def next
-    self.index_value = (index_value + 1) % slide_targets.length
+    length = `this.slideTargets.length`
+    self.index_value = (index_value + 1) % length
   end
 
   def previous
-    self.index_value = (index_value - 1) % slide_targets.length
+    length = `this.slideTargets.length`
+    self.index_value = (index_value - 1) % length
   end
 
   private
 
   def show_current_slide
-    slide_targets.each_with_index do |slide, index|
-      if index == index_value
-        slide.class_list.add(*active_classes)
-      else
-        slide.class_list.remove(*active_classes)
-      end
-    end
+    current_index = index_value
+    `
+      const activeClasses = this.activeClasses || ['active'];
+      this.slideTargets.forEach(function(slide, index) {
+        if (index === #{current_index}) {
+          slide.classList.add(...activeClasses);
+        } else {
+          slide.classList.remove(...activeClasses);
+        }
+      });
+    `
   end
 
   def index_value_changed
