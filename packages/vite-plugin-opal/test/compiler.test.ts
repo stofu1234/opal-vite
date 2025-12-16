@@ -135,7 +135,8 @@ puts Helper.greet
       const result = await compiler.compile(testFile)
 
       expect(result.code).toBeTruthy()
-      expect(result.dependencies).toContain('helper')
+      // Dependencies may include path prefix and extension
+      expect(result.dependencies.some(dep => dep.includes('helper'))).toBe(true)
     })
   })
 

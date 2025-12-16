@@ -406,7 +406,7 @@ module OpalVite
       # @param name [String] Event name
       # @yield Block to execute when event fires
       def on_window_event(name, &block)
-        `window.addEventListener(#{name}, function(e) { #{block.call(`e`)} })`
+        `window.addEventListener(#{name}, #{block})`
       end
 
       # Remove window event listener
@@ -420,13 +420,13 @@ module OpalVite
       # @param name [String] Event name
       # @yield Block to execute when event fires
       def on_document_event(name, &block)
-        `document.addEventListener(#{name}, function(e) { #{block.call(`e`)} })`
+        `document.addEventListener(#{name}, #{block})`
       end
 
       # Add event listener when DOM is ready
       # @yield Block to execute when DOM is ready
       def on_dom_ready(&block)
-        `document.addEventListener('DOMContentLoaded', function() { #{block.call} })`
+        `document.addEventListener('DOMContentLoaded', #{block})`
       end
 
       # Add event listener to any element
@@ -434,7 +434,7 @@ module OpalVite
       # @param name [String] Event name
       # @yield Block to execute when event fires
       def on_element_event(element, name, &block)
-        `#{element}.addEventListener(#{name}, function(e) { #{block.call(`e`)} })`
+        `#{element}.addEventListener(#{name}, #{block})`
       end
 
       # Remove event listener from element
@@ -449,7 +449,12 @@ module OpalVite
       # @param name [String] Event name
       # @yield Block to execute when event fires
       def on_controller_event(name, &block)
-        `this.element.addEventListener(#{name}, function(e) { #{block.call(`e`)} })`
+        `
+          const handler = #{block};
+          this.element.addEventListener(#{name}, function(e) {
+            handler(e);
+          });
+        `
       end
 
       # Get the current event's target element

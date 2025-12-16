@@ -28,7 +28,11 @@ class ModalController < StimulusController
     # Listen for modal-save event on this element
     on_controller_event('modal-save') do |e|
       detail = `#{e}.detail`
-      dispatch_window_event('update-todo', detail)
+      # Use raw JS for window event dispatch to avoid Opal wrapping issues
+      `
+        const updateEvent = new CustomEvent('update-todo', { detail: #{detail} });
+        window.dispatchEvent(updateEvent);
+      `
       close_modal
       reset_form if has_target?(:input)
     end
