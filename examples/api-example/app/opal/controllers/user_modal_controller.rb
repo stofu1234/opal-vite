@@ -1,134 +1,98 @@
 # backtick_javascript: true
-require 'opal_stimulus/stimulus_controller'
 
 # User modal controller for displaying user details
 class UserModalController < StimulusController
-  include JsProxyEx
-  include DomHelpers
+  include StimulusHelpers
 
-  self.targets = %w[
-    overlay
-    content
-    userName
-    userEmail
-    userCompany
-    userAddress
-    userPhone
-    userWebsite
-    postsList
-  ]
+  self.targets = ["overlay", "content", "userName", "userEmail", "userCompany", "userAddress", "userPhone", "userWebsite", "postsList"]
 
   def connect
-    puts 'User modal controller connected!'
-    setup_event_listener
+    puts "User modal controller connected!"
+
+    # Listen for show-user-modal event
+    on_window_event('show-user-modal') do |e|
+      detail = `#{e}.detail`
+      user = `#{detail}.user`
+      posts = `#{detail}.posts`
+      display_user(user, posts)
+      open
+    end
   end
 
-  # Stimulus action: Open modal
+  # Open modal
   def open
-    `
-      this.element.classList.add('active');
-      if (this.hasOverlayTarget) this.overlayTarget.classList.add('active');
-      if (this.hasContentTarget) this.contentTarget.classList.add('active');
-      document.body.style.overflow = 'hidden';
-    `
+    element_add_class('active')
+    add_target_class(:overlay, 'active')
+    add_target_class(:content, 'active')
+    lock_body_scroll
   end
 
-  # Stimulus action: Close modal
+  # Close modal
   def close
-    `
-      this.element.classList.remove('active');
-      if (this.hasOverlayTarget) this.overlayTarget.classList.remove('active');
-      if (this.hasContentTarget) this.contentTarget.classList.remove('active');
-      document.body.style.overflow = '';
-    `
+    element_remove_class('active')
+    remove_target_class(:overlay, 'active')
+    remove_target_class(:content, 'active')
+    unlock_body_scroll
   end
 
-  # Stimulus action: Close on overlay click
-  def close_on_overlay(event)
-    `
-      if (this.hasOverlayTarget && event.target === this.overlayTarget) {
-        #{close}
-      }
-    `
+  # Close on overlay click
+  def close_on_overlay
+    target = event_target
+    overlay = get_target(:overlay)
+    close if `#{target} === #{overlay}`
   end
 
-  # Stimulus action: Close on Escape key
-  def close_on_escape(event)
-    close if event.key == 'Escape'
+  # Close on Escape key
+  def close_on_escape
+    close if event_key == 'Escape'
   end
 
   private
 
-  def setup_event_listener
-    `
-      const ctrl = this;
-      window.addEventListener('show-user-modal', function(e) {
-        const user = e.detail.user;
-        const posts = e.detail.posts;
-        ctrl.$display_user(user, posts);
-        ctrl.$open();
-      });
-    `
-  end
-
   def display_user(user, posts)
-    update_user_info(user)
-    display_posts(posts)
-  end
+    # Update user info
+    target_set_text(:userName, `#{user}.name`) if has_target?(:userName)
+    target_set_text(:userEmail, `#{user}.email`) if has_target?(:userEmail)
+    target_set_text(:userCompany, `#{user}.company.name`) if has_target?(:userCompany)
+    target_set_text(:userPhone, `#{user}.phone`) if has_target?(:userPhone)
+    target_set_text(:userWebsite, `#{user}.website`) if has_target?(:userWebsite)
 
-  def update_user_info(user)
-    `
-      if (this.hasUserNameTarget) this.userNameTarget.textContent = #{user}.name;
-      if (this.hasUserEmailTarget) this.userEmailTarget.textContent = #{user}.email;
-      if (this.hasUserCompanyTarget) this.userCompanyTarget.textContent = #{user}.company.name;
-      if (this.hasUserPhoneTarget) this.userPhoneTarget.textContent = #{user}.phone;
-      if (this.hasUserWebsiteTarget) this.userWebsiteTarget.textContent = #{user}.website;
-      if (this.hasUserAddressTarget) {
-        const street = #{user}.address.street;
-        const city = #{user}.address.city;
-        this.userAddressTarget.textContent = street + ', ' + city;
-      }
-    `
+    if has_target?(:userAddress)
+      address = "#{`#{user}.address.street`}, #{`#{user}.address.city`}"
+      target_set_text(:userAddress, address)
+    end
+
+    # Display posts
+    display_posts(posts) if has_target?(:postsList)
   end
 
   def display_posts(posts)
-    return unless `this.hasPostsListTarget`
+    posts_list = get_target(:postsList)
+    set_html(posts_list, '')
 
-    `this.postsListTarget.innerHTML = ''`
+    length = `#{posts}.length`
 
-    posts_length = `#{posts}.length`
-    if posts_length == 0
-      `this.postsListTarget.innerHTML = '<p class="no-posts">No posts yet</p>'`
-      return
+    if `#{length} === 0`
+      set_html(posts_list, '<p class="no-posts">No posts yet</p>')
+    else
+      # Show first 5 posts
+      limit = `Math.min(#{length}, 5)`
+      `for (var i = 0; i < #{limit}; i++) {`
+        post = `#{posts}[i]`
+        post_item = create_element('div')
+        add_class(post_item, 'post-item')
+        set_html(post_item, "<h4>#{`#{post}.title`}</h4><p>#{`#{post}.body`}</p>")
+        append_child(posts_list, post_item)
+      `}`
+
+      # Show "more posts" indicator if needed
+      if `#{length} > 5`
+        more = create_element('p')
+        add_class(more, 'more-posts')
+        remaining = `#{length} - 5`
+        set_text(more, "+ #{remaining} more posts")
+        append_child(posts_list, more)
+      end
     end
-
-    displayed_count = [posts_length, 5].min
-    displayed_count.times do |i|
-      post = `#{posts}[#{i}]`
-      append_post_item(post)
-    end
-
-    if posts_length > 5
-      more_text = "+ #{posts_length - 5} more posts"
-      `
-        const more = document.createElement('p');
-        more.className = 'more-posts';
-        more.textContent = #{more_text};
-        this.postsListTarget.appendChild(more);
-      `
-    end
-  end
-
-  def append_post_item(post)
-    title = `#{post}.title`
-    body = `#{post}.body`
-    html = "<h4>#{title}</h4><p>#{body}</p>"
-
-    `
-      const postItem = document.createElement('div');
-      postItem.className = 'post-item';
-      postItem.innerHTML = #{html};
-      this.postsListTarget.appendChild(postItem);
-    `
   end
 end

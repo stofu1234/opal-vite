@@ -2,6 +2,8 @@
 
 # Demonstrates Turbo Frames manipulation from Ruby
 class TurboFrameController < StimulusController
+  include StimulusHelpers
+
   self.targets = ["frame", "content"]
 
   def connect
@@ -9,53 +11,43 @@ class TurboFrameController < StimulusController
   end
 
   def load_content
-    # Find the turbo-frame element and set its src
-    # Note: 'event' is available globally in the JavaScript context
-    `
-      const button = event.currentTarget;
-      const frameId = button.getAttribute('data-frame-id');
-      const url = button.getAttribute('data-url');
-      console.log('Loading content into frame:', frameId, 'from', url);
+    frame_id = event_data('frame-id')
+    url = event_data('url')
+    puts "Loading content into frame: #{frame_id} from #{url}"
 
-      const frame = document.getElementById(frameId);
-      if (frame) {
-        frame.src = url;
-      }
-    `
+    frame = query("##{frame_id}")
+    `#{frame}.src = #{url}` if frame
   end
 
   def update_frame_content
-    # Directly update frame content with current timestamp
-    `
-      const button = event.currentTarget;
-      const frameId = button.getAttribute('data-frame-id');
-      const timestamp = new Date().toLocaleTimeString();
-      const content = '<div class="demo-box"><h4>Updated!</h4><p>Frame content was updated from Ruby at ' + timestamp + '</p></div>';
+    frame_id = event_data('frame-id')
+    timestamp = `new Date().toLocaleTimeString()`
 
-      console.log('Updating frame', frameId, 'with new content');
+    puts "Updating frame #{frame_id} with new content"
 
-      const frame = document.getElementById(frameId);
-      if (frame) {
-        frame.innerHTML = content;
-      }
-    `
+    content = <<~HTML
+      <div class="demo-box">
+        <h4>Updated!</h4>
+        <p>Frame content was updated from Ruby at #{timestamp}</p>
+      </div>
+    HTML
+
+    frame = query("##{frame_id}")
+    set_html(frame, content) if frame
   end
 
   def toggle_loading
-    # Simulate loading state
     puts "Toggling frame loading state"
 
-    `
-      const frame = document.getElementById('dynamic-frame');
-      if (frame) {
-        if (frame.hasAttribute('busy')) {
-          frame.removeAttribute('busy');
-          frame.innerHTML = '<div class="demo-box"><h4>Frame Content</h4><p>Content loaded!</p></div>';
-        } else {
-          frame.setAttribute('busy', '');
-          frame.innerHTML = '<div class="demo-box"><h4>Loading...</h4><p>Please wait...</p></div>';
-        }
-      }
-    `
+    frame = query('#dynamic-frame')
+    return unless frame
+
+    if `#{frame}.hasAttribute('busy')`
+      remove_attr(frame, 'busy')
+      set_html(frame, '<div class="demo-box"><h4>Frame Content</h4><p>Content loaded!</p></div>')
+    else
+      set_attr(frame, 'busy', '')
+      set_html(frame, '<div class="demo-box"><h4>Loading...</h4><p>Please wait...</p></div>')
+    end
   end
 end

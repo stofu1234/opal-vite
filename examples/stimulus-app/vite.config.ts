@@ -5,7 +5,8 @@ export default defineConfig({
   plugins: [
     opal({
       loadPaths: ['./app/opal/controllers'],
-      sourceMap: true
+      sourceMap: true,
+      includeConcerns: true
     })
   ],
   server: {

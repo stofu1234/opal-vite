@@ -2,50 +2,40 @@
 
 # Theme controller for dark mode toggle
 class ThemeController < StimulusController
-  include JsProxyEx
-  include Toastable
-  include DomHelpers
-  include Storable
-
-  THEMES = {
-    'light' => { next: 'dark', label: 'Dark Mode' },
-    'dark' => { next: 'light', label: 'Light Mode' }
-  }.freeze
-
-  STORAGE_KEY = 'theme'.freeze
+  include StimulusHelpers
 
   def connect
     load_theme
   end
 
-  def toggle(event)
-    html = document.document_element
-    current_theme = html.get_attribute('data-theme') || 'light'
-    new_theme = THEMES[current_theme][:next]
+  def toggle
+    current_theme = get_root_attr('data-theme') || 'light'
+    new_theme = current_theme == 'light' ? 'dark' : 'light'
 
-    # Apply new theme
-    html.set_attribute('data-theme', new_theme)
-    `localStorage.setItem(#{STORAGE_KEY}, #{new_theme})`
+    set_root_attr('data-theme', new_theme)
+    storage_set('theme', new_theme)
 
     # Update button text
-    btn = event.current_target
-    btn.text_content = THEMES[new_theme][:label]
+    btn = event_target
+    set_text(btn, new_theme == 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode')
 
     # Show toast
-    show_info("Switched to #{new_theme} mode")
+    dispatch_window_event('show-toast', {
+      message: "Switched to #{new_theme} mode",
+      type: 'info'
+    })
   end
 
   private
 
   def load_theme
-    theme = `localStorage.getItem(#{STORAGE_KEY})` || 'light'
-    theme = 'light' if !theme || theme == 'null'
-    document.document_element.set_attribute('data-theme', theme)
+    theme = storage_get('theme') || 'light'
+    set_root_attr('data-theme', theme)
 
     # Update button text if exists
-    btn = query('[data-action*="toggle"]')
-    if element_exists?(btn)
-      btn.text_content = THEMES[theme][:label]
+    btn = query_element('[data-action*="toggle"]')
+    if btn
+      set_text(btn, theme == 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode')
     end
   end
 end

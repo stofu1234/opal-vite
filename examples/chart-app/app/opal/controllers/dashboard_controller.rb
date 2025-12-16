@@ -1,166 +1,124 @@
 # backtick_javascript: true
-require 'opal_stimulus/stimulus_controller'
 
 # Dashboard controller for managing multiple charts
 class DashboardController < StimulusController
-  include JsProxyEx
-  include Toastable
-  include DomHelpers
+  include StimulusHelpers
 
-  self.targets = %w[stats loading]
-
-  API_URL = 'https://jsonplaceholder.typicode.com/users'.freeze
-  WEEKDAYS = %w[Mon Tue Wed Thu Fri Sat Sun].freeze
+  self.targets = ["stats", "loading"]
 
   def connect
-    puts 'Dashboard controller connected!'
+    puts "Dashboard controller connected!"
     fetch_data
   end
 
-  # Stimulus action: Refresh dashboard data
+  # Refresh dashboard data
   def refresh
     show_loading
-    fetch_data(show_toast: true)
+    fetch_and_process_data do
+      hide_loading
+      dispatch_window_event('show-toast', {
+        message: 'Dashboard refreshed!',
+        type: 'success'
+      })
+    end
   end
 
   private
 
-  def fetch_data(show_toast: false)
+  def fetch_data
     show_loading
+    fetch_and_process_data { hide_loading }
+  end
 
+  def fetch_and_process_data(&on_complete)
     `
       const ctrl = this;
-      fetch(#{API_URL})
-        .then(function(response) { return response.json(); })
-        .then(function(users) {
-          ctrl.$hide_loading();
-          ctrl.$process_users(users);
-          if (#{show_toast}) {
-            ctrl.$show_success('Dashboard refreshed!');
-          }
+
+      fetch('https://jsonplaceholder.typicode.com/users')
+        .then(response => response.json())
+        .then(users => {
+          #{on_complete.call if on_complete}
+          ctrl.$process_user_data(users);
+          ctrl.$update_stats(users);
         })
-        .catch(function(error) {
+        .catch(error => {
           console.error('Error fetching data:', error);
-          ctrl.$hide_loading();
-          if (#{show_toast}) {
-            ctrl.$show_error('Failed to refresh dashboard');
-          }
+          #{on_complete.call if on_complete}
         });
     `
   end
 
-  def process_users(js_users)
-    users = convert_users_to_ruby(js_users)
+  def process_user_data(users)
+    # Count users by company
+    `
+      const companyCount = {};
+      #{users}.forEach(user => {
+        const company = user.company.name;
+        companyCount[company] = (companyCount[company] || 0) + 1;
+      });
+    `
 
-    update_company_chart(users)
-    update_city_chart(users)
-    update_activity_chart
-    update_stats(users)
-  end
-
-  def convert_users_to_ruby(js_users)
-    users = []
-    length = `#{js_users}.length`
-    length.times do |i|
-      user = `#{js_users}[#{i}]`
-      users << {
-        name: `#{user}.name`,
-        company: `#{user}.company.name`,
-        city: `#{user}.address.city`,
-        lat: `parseFloat(#{user}.address.geo.lat)`
-      }
-    end
-    users
-  end
-
-  def update_company_chart(users)
-    company_count = {}
-    users.each do |user|
-      company = user[:company]
-      company_count[company] ||= 0
-      company_count[company] += 1
-    end
-
-    dispatch_custom_event('update-company-chart', {
-      labels: company_count.keys,
-      data: company_count.values
+    dispatch_window_event('update-company-chart', {
+      labels: `Object.keys(companyCount)`,
+      data: `Object.values(companyCount)`
     })
-  end
 
-  def update_city_chart(users)
-    city_count = {}
-    users.each do |user|
-      city = user[:city]
-      city_count[city] ||= 0
-      city_count[city] += 1
-    end
+    # Count users by city
+    `
+      const cityCount = {};
+      #{users}.forEach(user => {
+        const city = user.address.city;
+        cityCount[city] = (cityCount[city] || 0) + 1;
+      });
+    `
 
-    labels = city_count.keys.first(6)
-    data = city_count.values.first(6)
-
-    dispatch_custom_event('update-city-chart', {
-      labels: labels,
-      data: data
+    dispatch_window_event('update-city-chart', {
+      labels: `Object.keys(cityCount).slice(0, 6)`,
+      data: `Object.values(cityCount).slice(0, 6)`
     })
-  end
 
-  def update_activity_chart
-    activity_data = 7.times.map { random_activity }
-
-    dispatch_custom_event('update-activity-chart', {
-      labels: WEEKDAYS,
-      data: activity_data
+    # Generate random activity data
+    dispatch_window_event('update-activity-chart', {
+      labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+      data: `Array.from({ length: 7 }, () => Math.floor(Math.random() * 100))`
     })
   end
 
   def update_stats(users)
-    return unless `this.hasStatsTarget`
+    return unless has_target?(:stats)
 
-    total_users = users.length
-    total_companies = users.map { |u| u[:company] }.uniq.length
-    total_cities = users.map { |u| u[:city] }.uniq.length
-    avg_latitude = (users.sum { |u| u[:lat] } / users.length).round(2)
+    total_users = `#{users}.length`
+    total_companies = `new Set(#{users}.map(u => u.company.name)).size`
+    total_cities = `new Set(#{users}.map(u => u.address.city)).size`
+    avg_latitude = `(#{users}.reduce((sum, u) => sum + parseFloat(u.address.geo.lat), 0) / #{users}.length).toFixed(2)`
 
-    html = build_stats_html(total_users, total_companies, total_cities, avg_latitude)
-    `this.statsTarget.innerHTML = #{html}`
-  end
+    html = <<~HTML
+      <div class="stat-card">
+        <div class="stat-value">#{total_users}</div>
+        <div class="stat-label">Total Users</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">#{total_companies}</div>
+        <div class="stat-label">Companies</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">#{total_cities}</div>
+        <div class="stat-label">Cities</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">#{avg_latitude}°</div>
+        <div class="stat-label">Avg Latitude</div>
+      </div>
+    HTML
 
-  def build_stats_html(total_users, total_companies, total_cities, avg_latitude)
-    "<div class=\"stat-card\">" \
-      "<div class=\"stat-value\">#{total_users}</div>" \
-      "<div class=\"stat-label\">Total Users</div>" \
-    "</div>" \
-    "<div class=\"stat-card\">" \
-      "<div class=\"stat-value\">#{total_companies}</div>" \
-      "<div class=\"stat-label\">Companies</div>" \
-    "</div>" \
-    "<div class=\"stat-card\">" \
-      "<div class=\"stat-value\">#{total_cities}</div>" \
-      "<div class=\"stat-label\">Cities</div>" \
-    "</div>" \
-    "<div class=\"stat-card\">" \
-      "<div class=\"stat-value\">#{avg_latitude}&deg;</div>" \
-      "<div class=\"stat-label\">Avg Latitude</div>" \
-    "</div>"
+    target_set_html(:stats, html)
   end
 
   def show_loading
-    `
-      if (this.hasLoadingTarget) {
-        this.loadingTarget.style.display = 'flex';
-      }
-    `
+    set_target_style(:loading, 'display', 'flex') if has_target?(:loading)
   end
 
   def hide_loading
-    `
-      if (this.hasLoadingTarget) {
-        this.loadingTarget.style.display = 'none';
-      }
-    `
-  end
-
-  def random_activity
-    `Math.floor(Math.random() * 100)`
+    hide_target(:loading) if has_target?(:loading)
   end
 end

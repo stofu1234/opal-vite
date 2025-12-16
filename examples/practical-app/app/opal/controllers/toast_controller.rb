@@ -2,61 +2,58 @@
 
 # Toast notification controller
 class ToastController < StimulusController
-  include JsProxyEx
+  include StimulusHelpers
 
   self.targets = ["container"]
 
-  ICONS = {
-    'info' => 'ℹ️',
-    'success' => '✅',
-    'error' => '❌',
-    'warning' => '⚠️'
-  }.freeze
-
   def connect
-    # Listen for show-toast event using backtick for direct JS callback
-    `
-      const ctrl = this;
-      window.addEventListener('show-toast', function(e) {
-        ctrl.$show(e.detail.message, e.detail.type || 'info');
-      });
-    `
+    # Listen for show-toast event
+    on_window_event('show-toast') do |e|
+      detail = `#{e}.detail`
+      message = `#{detail}.message`
+      type = `#{detail}.type || 'info'`
+      show(message, type)
+    end
   end
 
   # Show toast notification
-  def show(message, type = 'info')
-    # Find or create toast container
-    container = if has_container_target
-                  container_target
-                else
-                  document.query_selector('.toast-container[data-toast-target="container"]')
-                end
+  def show(message = nil, type = 'info')
+    # Get arguments if called from JavaScript
+    message ||= `arguments[0]`
+    type = `arguments[1] || 'info'` if `arguments.length > 1`
 
-    unless container.to_n
+    # Find container
+    container = has_target?(:container) ? get_target(:container) : nil
+    container ||= query('.toast-container[data-toast-target="container"]')
+
+    unless container
       puts "No toast container found"
       return
     end
 
     # Create toast element
-    toast = document.create_element('div')
-    toast.class_name = "toast toast-#{type}"
+    toast = create_element('div')
+    `#{toast}.className = 'toast toast-' + #{type}`
 
     # Add icon based on type
-    icon = ICONS[type] || ICONS['info']
+    icon = case type
+           when 'success' then '✅'
+           when 'error' then '❌'
+           when 'warning' then '⚠️'
+           else 'ℹ️'
+           end
 
-    toast.inner_html = "<span class=\"toast-icon\">#{icon}</span>" \
-                       "<span class=\"toast-message\">#{message}</span>"
-
-    container.append_child(toast)
+    set_html(toast, "<span class=\"toast-icon\">#{icon}</span><span class=\"toast-message\">#{message}</span>")
+    append_child(container, toast)
 
     # Animate in
-    window.set_timeout(-> { toast.class_list.add('show') }, 10)
+    set_timeout(10) { add_class(toast, 'show') }
 
     # Auto remove after 3 seconds
-    window.set_timeout(-> {
-      toast.class_list.remove('show')
-      window.set_timeout(-> { toast.remove }, 300)
-    }, 3000)
+    set_timeout(3000) do
+      remove_class(toast, 'show')
+      set_timeout(300) { remove_element(toast) }
+    end
   end
 
   # Manually show toast (for testing)

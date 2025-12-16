@@ -2,6 +2,9 @@
 require 'native'
 require 'opal_stimulus/stimulus_controller'
 
+# Load StimulusHelpers from opal-vite gem
+require 'opal_vite/concerns/stimulus_helpers'
+
 # Load controllers
 require 'controllers/chat_controller'
 

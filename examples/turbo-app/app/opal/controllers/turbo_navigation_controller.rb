@@ -2,29 +2,22 @@
 
 # Demonstrates Turbo Drive navigation from Ruby
 class TurboNavigationController < StimulusController
+  include StimulusHelpers
+
   def connect
     puts "TurboNavigation controller connected!"
   end
 
   def visit_page
-    # Get the target page from the clicked button and navigate using Turbo
-    # Note: 'event' is available globally in the JavaScript context
-    `
-      const button = event.currentTarget;
-      const page = button.getAttribute('data-page');
-      console.log('Navigating to:', page);
-      window.Turbo.visit(page);
-    `
+    page = event_data('page')
+    puts "Navigating to: #{page}"
+    `window.Turbo.visit(#{page})`
   end
 
   def visit_with_replace
-    # Navigate with replace action (replaces current history entry)
-    `
-      const button = event.currentTarget;
-      const page = button.getAttribute('data-page');
-      console.log('Navigating to', page, 'with replace action');
-      window.Turbo.visit(page, { action: 'replace' });
-    `
+    page = event_data('page')
+    puts "Navigating to #{page} with replace action"
+    `window.Turbo.visit(#{page}, { action: 'replace' })`
   end
 
   def go_back
