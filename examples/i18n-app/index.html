@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>i18n - Opal + Stimulus</title>
+    <link rel="stylesheet" href="/app/styles.css" />
+  </head>
+  <body>
+    <div class="container" data-controller="i18n" data-i18n-current-locale-value="en">
+      <!-- Header -->
+      <header class="header">
+        <h1 data-i18n-target="title">🌍 Internationalization Example</h1>
+        <p class="subtitle" data-i18n-target="subtitle">
+          Multi-language support with Stimulus + Opal
+        </p>
+      </header>
+
+      <!-- Language Selector -->
+      <div class="language-selector">
+        <h3 data-i18n-target="languageLabel">Select Language</h3>
+        <div class="language-buttons">
+          <button
+            class="lang-btn active"
+            data-action="click->i18n#switchLanguage"
+            data-locale="en"
+            data-i18n-target="langBtn"
+          >
+            🇺🇸 English
+          </button>
+          <button
+            class="lang-btn"
+            data-action="click->i18n#switchLanguage"
+            data-locale="ja"
+            data-i18n-target="langBtn"
+          >
+            🇯🇵 日本語
+          </button>
+          <button
+            class="lang-btn"
+            data-action="click->i18n#switchLanguage"
+            data-locale="es"
+            data-i18n-target="langBtn"
+          >
+            🇪🇸 Español
+          </button>
+          <button
+            class="lang-btn"
+            data-action="click->i18n#switchLanguage"
+            data-locale="fr"
+            data-i18n-target="langBtn"
+          >
+            🇫🇷 Français
+          </button>
+          <button
+            class="lang-btn"
+            data-action="click->i18n#switchLanguage"
+            data-locale="de"
+            data-i18n-target="langBtn"
+          >
+            🇩🇪 Deutsch
+          </button>
+        </div>
+      </div>
+
+      <!-- Welcome Section -->
+      <div class="content-card">
+        <h2 data-i18n-target="welcomeTitle">Welcome!</h2>
+        <p data-i18n-target="welcomeMessage">
+          This application demonstrates internationalization (i18n) features.
+          Switch languages using the buttons above.
+        </p>
+      </div>
+
+      <!-- Product Showcase -->
+      <div class="content-card">
+        <h2 data-i18n-target="productsTitle">Featured Products</h2>
+
+        <div class="product">
+          <h3 data-i18n-target="product1Name">Laptop</h3>
+          <p data-i18n-target="product1Desc">High-performance laptop for professionals</p>
+          <p class="price" data-i18n-target="product1Price">$1,299.99</p>
+          <p class="stock" data-i18n-target="product1Stock">10 items in stock</p>
+        </div>
+
+        <div class="product">
+          <h3 data-i18n-target="product2Name">Smartphone</h3>
+          <p data-i18n-target="product2Desc">Latest model with amazing camera</p>
+          <p class="price" data-i18n-target="product2Price">$899.99</p>
+          <p class="stock" data-i18n-target="product2Stock">1 item in stock</p>
+        </div>
+
+        <div class="product">
+          <h3 data-i18n-target="product3Name">Headphones</h3>
+          <p data-i18n-target="product3Desc">Wireless noise-cancelling headphones</p>
+          <p class="price" data-i18n-target="product3Price">$349.99</p>
+          <p class="stock" data-i18n-target="product3Stock">0 items in stock</p>
+        </div>
+      </div>
+
+      <!-- Notification Center -->
+      <div class="content-card">
+        <h2 data-i18n-target="notificationsTitle">Notifications</h2>
+
+        <div class="notification">
+          <p data-i18n-target="notification1">You have 1 new message</p>
+        </div>
+
+        <div class="notification">
+          <p data-i18n-target="notification2">You have 5 new messages</p>
+        </div>
+
+        <div class="notification">
+          <p data-i18n-target="notification3">You have 0 new messages</p>
+        </div>
+      </div>
+
+      <!-- Date/Time Display -->
+      <div class="content-card">
+        <h2 data-i18n-target="dateTimeTitle">Date & Time</h2>
+        <p>
+          <strong data-i18n-target="currentDateLabel">Current Date:</strong>
+          <span data-i18n-target="currentDate">December 15, 2025</span>
+        </p>
+        <p>
+          <strong data-i18n-target="currentTimeLabel">Current Time:</strong>
+          <span data-i18n-target="currentTime">2:30 PM</span>
+        </p>
+      </div>
+
+      <!-- Form Example -->
+      <div class="content-card">
+        <h2 data-i18n-target="formTitle">Contact Form</h2>
+        <form data-action="submit->i18n#handleSubmit">
+          <div class="form-group">
+            <label data-i18n-target="nameLabel">Name</label>
+            <input type="text" data-i18n-target="nameInput" placeholder="Enter your name" />
+          </div>
+
+          <div class="form-group">
+            <label data-i18n-target="emailLabel">Email</label>
+            <input type="email" data-i18n-target="emailInput" placeholder="Enter your email" />
+          </div>
+
+          <div class="form-group">
+            <label data-i18n-target="messageLabel">Message</label>
+            <textarea data-i18n-target="messageInput" placeholder="Enter your message" rows="4"></textarea>
+          </div>
+
+          <button type="submit" class="btn btn-primary" data-i18n-target="submitBtn">
+            Send Message
+          </button>
+        </form>
+      </div>
+
+      <!-- Features Info -->
+      <div class="info-card">
+        <h3 data-i18n-target="featuresTitle">✨ Features Demonstrated</h3>
+        <div class="features-grid">
+          <div class="feature-item">
+            <h4 data-i18n-target="feature1Title">🌐 Multi-language</h4>
+            <p data-i18n-target="feature1Desc">Support for 5 languages: EN, JA, ES, FR, DE</p>
+          </div>
+          <div class="feature-item">
+            <h4 data-i18n-target="feature2Title">💾 localStorage</h4>
+            <p data-i18n-target="feature2Desc">Language preference persisted in browser</p>
+          </div>
+          <div class="feature-item">
+            <h4 data-i18n-target="feature3Title">🔢 Pluralization</h4>
+            <p data-i18n-target="feature3Desc">Smart handling of singular/plural forms</p>
+          </div>
+          <div class="feature-item">
+            <h4 data-i18n-target="feature4Title">💰 Number Formatting</h4>
+            <p data-i18n-target="feature4Desc">Currency and number formatting per locale</p>
+          </div>
+          <div class="feature-item">
+            <h4 data-i18n-target="feature5Title">📅 Date Formatting</h4>
+            <p data-i18n-target="feature5Desc">Locale-specific date and time formats</p>
+          </div>
+          <div class="feature-item">
+            <h4 data-i18n-target="feature6Title">⚡ Dynamic Switching</h4>
+            <p data-i18n-target="feature6Desc">Instant language switching without reload</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <footer class="footer">
+        <p data-i18n-target="footerText">
+          Built with
+          <a href="https://opalrb.com/" target="_blank">Opal</a>,
+          <a href="https://stimulus.hotwired.dev/" target="_blank">Stimulus</a>, and
+          <a href="https://vitejs.dev/" target="_blank">Vite</a>
+        </p>
+      </footer>
+    </div>
+
+    <script type="module" src="/app/javascript/application.js"></script>
+  </body>
+</html>
