@@ -1191,12 +1191,7 @@ module OpalVite
       # @param url [String] URL to fetch
       # @return [Native] Promise that resolves to JSON data or rejects on error
       def fetch_json_safe(url)
-        `fetch(#{url}).then(response => {
-          if (!response.ok) {
-            throw new Error('Network response was not ok: ' + response.status);
-          }
-          return response.json();
-        })`
+        `fetch(#{url}).then(function(response) { if (!response.ok) { throw new Error('Network response was not ok: ' + response.status); } return response.json(); })`
       end
 
       # Fetch multiple URLs in parallel and get JSON results
