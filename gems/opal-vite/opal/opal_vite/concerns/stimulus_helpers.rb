@@ -384,8 +384,9 @@ module OpalVite
       # @param name [String] Event name
       # @param detail [Hash] Event detail data
       def dispatch_window_event(name, detail = {})
+        native_detail = detail.is_a?(Hash) ? detail.to_n : detail
         `
-          const event = new CustomEvent(#{name}, { detail: #{detail.to_n} });
+          const event = new CustomEvent(#{name}, { detail: #{native_detail} });
           window.dispatchEvent(event);
         `
       end
@@ -394,8 +395,9 @@ module OpalVite
       # @param name [String] Event name
       # @param detail [Hash] Event detail data
       def dispatch_event(name, detail = {})
+        native_detail = detail.is_a?(Hash) ? detail.to_n : detail
         `
-          const event = new CustomEvent(#{name}, { detail: #{detail.to_n} });
+          const event = new CustomEvent(#{name}, { detail: #{native_detail} });
           this.element.dispatchEvent(event);
         `
       end
@@ -405,6 +407,49 @@ module OpalVite
       # @yield Block to execute when event fires
       def on_window_event(name, &block)
         `window.addEventListener(#{name}, function(e) { #{block.call(`e`)} })`
+      end
+
+      # Remove window event listener
+      # @param name [String] Event name
+      # @param handler [Native] Handler function to remove
+      def off_window_event(name, handler)
+        `window.removeEventListener(#{name}, #{handler})`
+      end
+
+      # Add document event listener
+      # @param name [String] Event name
+      # @yield Block to execute when event fires
+      def on_document_event(name, &block)
+        `document.addEventListener(#{name}, function(e) { #{block.call(`e`)} })`
+      end
+
+      # Add event listener when DOM is ready
+      # @yield Block to execute when DOM is ready
+      def on_dom_ready(&block)
+        `document.addEventListener('DOMContentLoaded', function() { #{block.call} })`
+      end
+
+      # Add event listener to any element
+      # @param element [Native] DOM element
+      # @param name [String] Event name
+      # @yield Block to execute when event fires
+      def on_element_event(element, name, &block)
+        `#{element}.addEventListener(#{name}, function(e) { #{block.call(`e`)} })`
+      end
+
+      # Remove event listener from element
+      # @param element [Native] DOM element
+      # @param name [String] Event name
+      # @param handler [Native] Handler function to remove
+      def off_element_event(element, name, handler)
+        `#{element}.removeEventListener(#{name}, #{handler})`
+      end
+
+      # Add event listener to controller's element (this.element)
+      # @param name [String] Event name
+      # @yield Block to execute when event fires
+      def on_controller_event(name, &block)
+        `this.element.addEventListener(#{name}, function(e) { #{block.call(`e`)} })`
       end
 
       # Get the current event's target element

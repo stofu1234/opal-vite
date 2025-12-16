@@ -26,17 +26,12 @@ class ModalController < StimulusController
     end
 
     # Listen for modal-save event on this element
-    `
-      const ctrl = this;
-      this.element.addEventListener('modal-save', function(e) {
-        const updateEvent = new CustomEvent('update-todo', { detail: e.detail });
-        window.dispatchEvent(updateEvent);
-        ctrl.$close_modal();
-        if (ctrl['$has_target?']('input')) {
-          ctrl.$reset_form();
-        }
-      });
-    `
+    on_controller_event('modal-save') do |e|
+      detail = `#{e}.detail`
+      dispatch_window_event('update-todo', detail)
+      close_modal
+      reset_form if has_target?(:input)
+    end
   end
 
   # Open modal
