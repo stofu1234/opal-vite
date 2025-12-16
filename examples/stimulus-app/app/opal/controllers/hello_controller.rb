@@ -2,7 +2,7 @@
 
 # Simple Hello World controller demonstrating basic Stimulus features
 class HelloController < StimulusController
-  include JsProxyEx
+  include StimulusHelpers
 
   self.targets = ["name", "output"]
 
@@ -11,7 +11,7 @@ class HelloController < StimulusController
   end
 
   def greet
-    name = `this.nameTarget.value`
-    `this.outputTarget.textContent = #{"Hello, #{name}! (from Ruby)"}`
+    name = target_value(:name)
+    target_set_text(:output, "Hello, #{name}! (from Ruby)")
   end
 end

@@ -14,8 +14,10 @@ class DashboardController < StimulusController
   # Refresh dashboard data
   def refresh
     show_loading
-    fetch_and_process_data do
+    fetch_and_process_data do |users|
       hide_loading
+      process_user_data(users)
+      update_stats(users)
       dispatch_window_event('show-toast', {
         message: 'Dashboard refreshed!',
         type: 'success'
@@ -27,70 +29,68 @@ class DashboardController < StimulusController
 
   def fetch_data
     show_loading
-    fetch_and_process_data { hide_loading }
+    fetch_and_process_data do |users|
+      hide_loading
+      process_user_data(users)
+      update_stats(users)
+    end
   end
 
   def fetch_and_process_data(&on_complete)
-    `
-      const ctrl = this;
-
-      fetch('https://jsonplaceholder.typicode.com/users')
-        .then(response => response.json())
-        .then(users => {
-          #{on_complete.call if on_complete}
-          ctrl.$process_user_data(users);
-          ctrl.$update_stats(users);
-        })
-        .catch(error => {
-          console.error('Error fetching data:', error);
-          #{on_complete.call if on_complete}
-        });
-    `
+    fetch_json('https://jsonplaceholder.typicode.com/users') do |users|
+      on_complete.call(users) if on_complete
+    end
   end
 
   def process_user_data(users)
     # Count users by company
-    `
-      const companyCount = {};
-      #{users}.forEach(user => {
-        const company = user.company.name;
-        companyCount[company] = (companyCount[company] || 0) + 1;
-      });
-    `
+    company_count = count_by(users) { |user| js_get(js_get(user, :company), :name) }
 
     dispatch_window_event('update-company-chart', {
-      labels: `Object.keys(companyCount)`,
-      data: `Object.values(companyCount)`
+      labels: js_keys(company_count),
+      data: js_values(company_count)
     })
 
     # Count users by city
-    `
-      const cityCount = {};
-      #{users}.forEach(user => {
-        const city = user.address.city;
-        cityCount[city] = (cityCount[city] || 0) + 1;
-      });
-    `
+    city_count = count_by(users) { |user| js_get(js_get(user, :address), :city) }
 
     dispatch_window_event('update-city-chart', {
-      labels: `Object.keys(cityCount).slice(0, 6)`,
-      data: `Object.values(cityCount).slice(0, 6)`
+      labels: js_slice(js_keys(city_count), 0, 6),
+      data: js_slice(js_values(city_count), 0, 6)
     })
 
     # Generate random activity data
+    activity_data = (0...7).map { random_int(100) }
     dispatch_window_event('update-activity-chart', {
       labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-      data: `Array.from({ length: 7 }, () => Math.floor(Math.random() * 100))`
+      data: activity_data
     })
+  end
+
+  def count_by(arr, &key_block)
+    result = js_object
+    js_each(arr) do |item|
+      key = key_block.call(item)
+      current = js_get(result, key) || 0
+      js_set(result, key, current + 1)
+    end
+    result
   end
 
   def update_stats(users)
     return unless has_target?(:stats)
 
-    total_users = `#{users}.length`
-    total_companies = `new Set(#{users}.map(u => u.company.name)).size`
-    total_cities = `new Set(#{users}.map(u => u.address.city)).size`
-    avg_latitude = `(#{users}.reduce((sum, u) => sum + parseFloat(u.address.geo.lat), 0) / #{users}.length).toFixed(2)`
+    total_users = js_length(users)
+    company_names = js_map(users) { |u| js_get(js_get(u, :company), :name) }
+    total_companies = js_unique_count(company_names)
+    city_names = js_map(users) { |u| js_get(js_get(u, :address), :city) }
+    total_cities = js_unique_count(city_names)
+
+    lat_sum = js_reduce(users, 0) do |sum, u|
+      lat = js_get(js_get(js_get(u, :address), :geo), :lat)
+      sum + parse_float(lat)
+    end
+    avg_latitude = js_to_fixed(lat_sum / total_users, 2)
 
     html = <<~HTML
       <div class="stat-card">

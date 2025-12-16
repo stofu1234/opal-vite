@@ -17,25 +17,15 @@ class ChatController < StimulusController
     text = target_value(:input)
     text = `#{text}.trim()`
 
-    return if `#{text} === '' || !this.isConnected`
+    return if `#{text} === ''` || !js_prop(:isConnected)
 
-    # Send message to server
-    `
-      this.ws.send(JSON.stringify({
-        type: 'message',
-        text: #{text}
-      }));
-    `
+    ws = js_prop(:ws)
+    js_call_on(ws, :send, json_stringify({ type: 'message', text: text }))
 
     target_set_value(:input, '')
 
     # Send typing stopped
-    `
-      this.ws.send(JSON.stringify({
-        type: 'typing',
-        isTyping: false
-      }));
-    `
+    js_call_on(ws, :send, json_stringify({ type: 'typing', isTyping: false }))
   end
 
   # Handle input keypress
@@ -47,23 +37,19 @@ class ChatController < StimulusController
     end
 
     # Send typing indicator
-    `
-      if (this.isConnected) {
-        this.ws.send(JSON.stringify({
-          type: 'typing',
-          isTyping: true
-        }));
+    return unless js_prop(:isConnected)
 
-        if (this.typingTimeout) clearTimeout(this.typingTimeout);
+    ws = js_prop(:ws)
+    js_call_on(ws, :send, json_stringify({ type: 'typing', isTyping: true }))
 
-        this.typingTimeout = setTimeout(() => {
-          this.ws.send(JSON.stringify({
-            type: 'typing',
-            isTyping: false
-          }));
-        }, 1000);
-      }
-    `
+    typing_timeout = js_prop(:typingTimeout)
+    clear_timeout(typing_timeout) if typing_timeout
+
+    new_timeout = set_timeout(1000) do
+      ws = js_prop(:ws)
+      js_call_on(ws, :send, json_stringify({ type: 'typing', isTyping: false })) if ws
+    end
+    js_set_prop(:typingTimeout, new_timeout)
   end
 
   # Join chat with username
@@ -77,17 +63,13 @@ class ChatController < StimulusController
     end
 
     # Set username value
-    `this.usernameValue = #{username}`
+    js_set_prop(:usernameValue, username)
 
     # Send join message if connected
-    `
-      if (this.isConnected) {
-        this.ws.send(JSON.stringify({
-          type: 'join',
-          username: #{username}
-        }));
-      }
-    `
+    if js_prop(:isConnected)
+      ws = js_prop(:ws)
+      js_call_on(ws, :send, json_stringify({ type: 'join', username: username }))
+    end
 
     # Hide login, show chat
     hide_target(:loginContainer) if has_target?(:loginContainer)
@@ -107,76 +89,82 @@ class ChatController < StimulusController
   private
 
   def setup_websocket
-    `
-      const ctrl = this;
-      this.ws = null;
-      this.isConnected = false;
-      this.typingTimeout = null;
+    js_set_prop(:ws, nil)
+    js_set_prop(:isConnected, false)
+    js_set_prop(:typingTimeout, nil)
 
-      this.connectWebSocket = function() {
-        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const wsUrl = protocol + '//' + window.location.hostname + ':3007';
-        ctrl.ws = new WebSocket(wsUrl);
+    # Define connectWebSocket function
+    js_define_method(:connectWebSocket) do
+      protocol = `window.location.protocol === 'https:' ? 'wss:' : 'ws:'`
+      ws_url = `#{protocol} + '//' + window.location.hostname + ':3007'`
 
-        ctrl.ws.onopen = function() {
-          console.log('✅ Connected to WebSocket server');
-          ctrl.isConnected = true;
-          if (ctrl.usernameValue) {
-            ctrl.ws.send(JSON.stringify({ type: 'join', username: ctrl.usernameValue }));
-          }
-        };
+      ws = js_new(js_global('WebSocket'), ws_url)
+      js_set_prop(:ws, ws)
 
-        ctrl.ws.onmessage = function(event) {
-          ctrl.$handle_message(JSON.parse(event.data));
-        };
+      # onopen handler
+      js_define_method_on(ws, :onopen) do
+        console_log('✅ Connected to WebSocket server')
+        js_set_prop(:isConnected, true)
+        username = js_prop(:usernameValue)
+        if username
+          js_call_on(ws, :send, json_stringify({ type: 'join', username: username }))
+        end
+      end
 
-        ctrl.ws.onclose = function() {
-          console.log('❌ Disconnected from WebSocket server');
-          ctrl.isConnected = false;
-          setTimeout(() => {
-            console.log('🔄 Attempting to reconnect...');
-            ctrl.connectWebSocket();
-          }, 3000);
-        };
+      # onmessage handler
+      js_define_method_on(ws, :onmessage) do |event|
+        data = json_parse(`#{event}.data`)
+        handle_message(data)
+      end
 
-        ctrl.ws.onerror = function(error) {
-          console.error('WebSocket error:', error);
-        };
-      };
+      # onclose handler
+      js_define_method_on(ws, :onclose) do
+        console_log('❌ Disconnected from WebSocket server')
+        js_set_prop(:isConnected, false)
+        set_timeout(3000) do
+          console_log('🔄 Attempting to reconnect...')
+          js_call(:connectWebSocket)
+        end
+      end
 
-      ctrl.connectWebSocket();
-    `
+      # onerror handler
+      js_define_method_on(ws, :onerror) do |error|
+        console_error('WebSocket error:', error)
+      end
+    end
+
+    js_call(:connectWebSocket)
   end
 
   def handle_message(message)
-    type = `#{message}.type`
+    type = js_get(message, :type)
 
     case type
     when 'history'
-      load_history(`#{message}.messages`)
+      load_history(js_get(message, :messages))
     when 'message'
       add_message(message)
     when 'system'
       add_system_message(message)
     when 'user_count'
-      update_user_count(`#{message}.count`)
+      update_user_count(js_get(message, :count))
     when 'typing'
       update_typing_indicator(message)
     end
   end
 
   def load_history(messages)
-    length = `#{messages}.length`
-    `for (var i = 0; i < #{length}; i++) {`
-      msg = `#{messages}[i]`
-      msg_type = `#{msg}.type`
+    length = js_length(messages)
+    length.times do |i|
+      msg = `#{messages}[#{i}]`
+      msg_type = js_get(msg, :type)
 
       if msg_type == 'message'
         add_message(msg, false)
       elsif msg_type == 'system'
         add_system_message(msg, false)
       end
-    `}`
+    end
   end
 
   def add_message(message, scroll = true)
@@ -185,12 +173,13 @@ class ChatController < StimulusController
     msg_el = create_element('div')
     add_class(msg_el, 'message')
 
-    username = `#{message}.username`
+    username = js_get(message, :username)
     is_own = `#{username} === this.usernameValue`
     add_class(msg_el, 'own-message') if is_own
 
-    time = `new Date(#{message}.timestamp).toLocaleTimeString()`
-    text = escape_html(`#{message}.text`)
+    timestamp = js_get(message, :timestamp)
+    time = `new Date(#{timestamp}).toLocaleTimeString()`
+    text = escape_html(js_get(message, :text))
 
     set_html(msg_el, <<~HTML)
       <div class="message-header">
@@ -209,7 +198,7 @@ class ChatController < StimulusController
 
     msg_el = create_element('div')
     add_class(msg_el, 'system-message')
-    set_text(msg_el, `#{message}.text`)
+    set_text(msg_el, js_get(message, :text))
 
     append_child(messages_el, msg_el)
     scroll_to_bottom if scroll
@@ -224,8 +213,8 @@ class ChatController < StimulusController
   def update_typing_indicator(message)
     return unless has_target?(:typingIndicator)
 
-    if `#{message}.isTyping`
-      username = `#{message}.username`
+    if js_get(message, :isTyping)
+      username = js_get(message, :username)
       target_set_text(:typingIndicator, "#{username} is typing...")
       show_target(:typingIndicator)
     else

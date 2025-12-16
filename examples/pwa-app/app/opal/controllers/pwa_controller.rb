@@ -2,10 +2,7 @@
 require 'opal_stimulus/stimulus_controller'
 
 class PwaController < StimulusController
-  include JsProxyEx
-  include Toastable
-  include DomHelpers
-  include Storable
+  include StimulusHelpers
 
   self.targets = %w[
     installPrompt
@@ -21,7 +18,6 @@ class PwaController < StimulusController
 
   def initialize
     super
-    @deferred_prompt = nil
     @notes = []
   end
 
@@ -36,51 +32,47 @@ class PwaController < StimulusController
 
   # Stimulus action: Install PWA
   def install
-    unless @deferred_prompt
+    deferred_prompt = js_prop(:deferredPrompt)
+    unless deferred_prompt
       `alert('Installation prompt not available. Try using browser menu to install.')`
       return
     end
 
-    `#{@deferred_prompt}.prompt()`
+    js_call_on(deferred_prompt, :prompt)
 
-    `#{@deferred_prompt}.userChoice.then(function(choiceResult) {
-      if (choiceResult.outcome === 'accepted') {
-        console.log('User accepted the install prompt');
-      } else {
-        console.log('User dismissed the install prompt');
-      }
-    })`
+    user_choice = js_get(deferred_prompt, :userChoice)
+    js_then(user_choice) do |choice_result|
+      outcome = js_get(choice_result, :outcome)
+      if `#{outcome} === 'accepted'`
+        console_log('User accepted the install prompt')
+      else
+        console_log('User dismissed the install prompt')
+      end
+    end
 
-    @deferred_prompt = nil
-    `
-      if (this.hasInstallPromptTarget) {
-        this.installPromptTarget.style.display = 'none';
-      }
-    `
+    js_set_prop(:deferredPrompt, nil)
+    hide_target(:installPrompt) if has_target?(:installPrompt)
   end
 
   # Stimulus action: Dismiss install prompt
   def dismiss_install_prompt
-    `
-      if (this.hasInstallPromptTarget) {
-        this.installPromptTarget.style.display = 'none';
-      }
-    `
+    hide_target(:installPrompt) if has_target?(:installPrompt)
   end
 
   # Stimulus action: Add note
   def add_note(event)
     event.prevent_default
 
-    return unless `this.hasNoteInputTarget`
+    return unless has_target?(:noteInput)
 
-    note_text = `this.noteInputTarget.value.trim()`
-    return if note_text.nil? || note_text.empty?
+    note_text = target_value(:noteInput)
+    note_text = `#{note_text}.trim()`
+    return if `#{note_text} === ''`
 
     note = {
-      id: `Date.now()`,
+      id: js_timestamp,
       text: note_text,
-      createdAt: `new Date().toISOString()`,
+      createdAt: js_iso_date,
       synced: `navigator.onLine`
     }
 
@@ -88,12 +80,12 @@ class PwaController < StimulusController
     save_notes
     render_notes
 
-    `this.noteInputTarget.value = ''`
+    target_set_value(:noteInput, '')
   end
 
   # Stimulus action: Delete note
   def delete_note(event)
-    note_id = wrap_js(event.current_target.dataset)[:note_id].to_i
+    note_id = event_data_int('note-id')
 
     @notes.reject! { |note| note[:id] == note_id }
 
@@ -103,125 +95,140 @@ class PwaController < StimulusController
 
   # Stimulus action: Update cache
   def update_cache
-    `
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistration().then(function(registration) {
-          if (registration) {
-            registration.update().then(function() {
-              #{update_last_update_time}
-              alert('Cache updated! Refresh to see changes.');
-            });
-          }
-        });
-      }
-    `
+    return unless `'serviceWorker' in navigator`
+
+    navigator = js_global('navigator')
+    sw = js_get(navigator, :serviceWorker)
+    promise = js_call_on(sw, :getRegistration)
+
+    js_then(promise) do |registration|
+      if registration
+        update_promise = js_call_on(registration, :update)
+        js_then(update_promise) do
+          update_last_update_time
+          `alert('Cache updated! Refresh to see changes.')`
+        end
+      end
+    end
   end
 
   # Stimulus action: Clear cache
   def clear_cache
-    `
-      if ('caches' in window) {
-        caches.keys().then(function(names) {
-          return Promise.all(
-            names.map(function(name) {
-              return caches.delete(name);
-            })
-          );
-        }).then(function() {
-          #{update_cache_count}
-          alert('Cache cleared! Refresh to rebuild cache.');
-        });
-      }
-    `
+    return unless `'caches' in window`
+
+    caches = js_global('caches')
+    promise = js_call_on(caches, :keys)
+
+    js_then(promise) do |names|
+      delete_promises = js_map(names) do |name|
+        js_call_on(caches, :delete, name)
+      end
+
+      all_promise = js_call_on(js_global('Promise'), :all, delete_promises)
+      js_then(all_promise) do
+        update_cache_count
+        `alert('Cache cleared! Refresh to rebuild cache.')`
+      end
+    end
   end
 
   private
 
   def setup_install_listeners
-    `
-      const ctrl = this;
+    # Define install prompt handler
+    js_define_method(:handleBeforeInstallPrompt) do |e|
+      `#{e}.preventDefault()`
+      js_set_prop(:deferredPrompt, e)
+      set_target_style(:installPrompt, 'display', 'block') if has_target?(:installPrompt)
+    end
 
-      // Listen for beforeinstallprompt event
-      window.addEventListener('beforeinstallprompt', function(e) {
-        e.preventDefault();
-        ctrl.deferred_prompt = e;
-        if (ctrl.$has_install_prompt_target()) {
-          ctrl.$install_prompt_target().style.display = 'block';
-        }
-      });
+    # Define app installed handler
+    js_define_method(:handleAppInstalled) do
+      hide_target(:installPrompt) if has_target?(:installPrompt)
+      if has_target?(:installStatus)
+        target_set_text(:installStatus, 'Installed ✓')
+        set_install_status_class('status-value success')
+      end
+    end
 
-      // Listen for app installed event
-      window.addEventListener('appinstalled', function() {
-        if (ctrl.$has_install_prompt_target()) {
-          ctrl.$install_prompt_target().style.display = 'none';
-        }
-        if (ctrl.$has_install_status_target()) {
-          ctrl.$install_status_target().textContent = 'Installed ✓';
-          ctrl.$install_status_target().className = 'status-value success';
-        }
-      });
-    `
+    on_window_event('beforeinstallprompt') { |e| js_call(:handleBeforeInstallPrompt, e) }
+    on_window_event('appinstalled') { js_call(:handleAppInstalled) }
+  end
+
+  def set_install_status_class(class_name)
+    return unless has_target?(:installStatus)
+    install_status = get_target(:installStatus)
+    js_set(install_status, :className, class_name)
   end
 
   def check_install_status
     is_standalone = `window.matchMedia('(display-mode: standalone)').matches`
 
     if is_standalone
-      set_target_text(:install_status, 'Installed ✓')
-      set_target_class(:install_status, 'status-value success')
+      target_set_text(:installStatus, 'Installed ✓')
+      set_install_status_class('status-value success')
     else
-      set_target_text(:install_status, 'Not installed')
-      set_target_class(:install_status, 'status-value')
+      target_set_text(:installStatus, 'Not installed')
+      set_install_status_class('status-value')
     end
   end
 
   def check_service_worker
-    `
-      const ctrl = this;
+    return unless has_target?(:swStatus)
 
-      if (!ctrl.hasSwStatusTarget) return;
+    unless `'serviceWorker' in navigator`
+      target_set_text(:swStatus, 'Not supported')
+      set_sw_status_class('status-value error')
+      return
+    end
 
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistration().then(function(registration) {
-          if (registration) {
-            ctrl.swStatusTarget.textContent = 'Active ✓';
-            ctrl.swStatusTarget.className = 'status-value success';
+    # Define update handler
+    js_define_method(:handleSwUpdate) do
+      update_last_update_time
+    end
 
-            // Listen for updates
-            registration.addEventListener('updatefound', function() {
-              const newWorker = registration.installing;
-              newWorker.addEventListener('statechange', function() {
-                if (newWorker.state === 'activated') {
-                  ctrl.$update_last_update_time();
-                }
-              });
-            });
-          } else {
-            ctrl.swStatusTarget.textContent = 'Not registered';
-            ctrl.swStatusTarget.className = 'status-value warning';
-          }
-        });
-      } else {
-        ctrl.swStatusTarget.textContent = 'Not supported';
-        ctrl.swStatusTarget.className = 'status-value error';
-      }
-    `
+    navigator = js_global('navigator')
+    sw = js_get(navigator, :serviceWorker)
+    promise = js_call_on(sw, :getRegistration)
+
+    js_then(promise) do |registration|
+      if registration
+        target_set_text(:swStatus, 'Active ✓')
+        set_sw_status_class('status-value success')
+
+        # Listen for updates
+        on_element_event(registration, 'updatefound') do
+          new_worker = js_get(registration, :installing)
+          on_element_event(new_worker, 'statechange') do
+            state = js_get(new_worker, :state)
+            js_call(:handleSwUpdate) if `#{state} === 'activated'`
+          end
+        end
+      else
+        target_set_text(:swStatus, 'Not registered')
+        set_sw_status_class('status-value warning')
+      end
+    end
+  end
+
+  def set_sw_status_class(class_name)
+    return unless has_target?(:swStatus)
+    sw_status = get_target(:swStatus)
+    js_set(sw_status, :className, class_name)
   end
 
   def load_notes
-    js_data = storage_get(NOTES_KEY)
+    js_data = storage_get_json(NOTES_KEY)
     return unless js_data
 
     begin
       @notes = []
-      length = `#{js_data}.length`
-      length.times do |i|
-        item = `#{js_data}[#{i}]`
+      js_each(js_data) do |item|
         @notes << {
-          id: `#{item}.id`,
-          text: `#{item}.text`,
-          createdAt: `#{item}.createdAt`,
-          synced: `#{item}.synced`
+          id: js_get(item, :id),
+          text: js_get(item, :text),
+          createdAt: js_get(item, :createdAt),
+          synced: js_get(item, :synced)
         }
       end
       render_notes
@@ -240,16 +247,16 @@ class PwaController < StimulusController
         synced: #{note[:synced]}
       })`
     end
-    storage_set(NOTES_KEY, `#{js_array}`)
+    storage_set_json(NOTES_KEY, js_array)
   rescue => e
     puts "Error saving notes: #{e}"
   end
 
   def render_notes
-    return unless `this.hasNotesListTarget`
+    return unless has_target?(:notesList)
 
     if @notes.empty?
-      `this.notesListTarget.innerHTML = '<p class="empty-state">No notes yet. Add one above!</p>'`
+      target_set_html(:notesList, '<p class="empty-state">No notes yet. Add one above!</p>')
       return
     end
 
@@ -266,37 +273,47 @@ class PwaController < StimulusController
       "</div>"
     end.join
 
-    `this.notesListTarget.innerHTML = #{html}`
+    target_set_html(:notesList, html)
   end
 
   def update_last_update_time
-    set_target_text(:last_update, `new Date().toLocaleTimeString()`)
+    target_set_text(:lastUpdate, `new Date().toLocaleTimeString()`)
   end
 
   def update_cache_count
-    `
-      const ctrl = this;
+    return unless has_target?(:cacheCount)
 
-      if (!ctrl.hasCacheCountTarget) return;
+    unless `'caches' in window`
+      target_set_text(:cacheCount, 'N/A')
+      return
+    end
 
-      if ('caches' in window) {
-        caches.keys().then(function(names) {
-          let totalEntries = 0;
-          const promises = names.map(function(name) {
-            return caches.open(name).then(function(cache) {
-              return cache.keys().then(function(keys) {
-                totalEntries += keys.length;
-              });
-            });
-          });
+    # Define cache count handler
+    js_define_method(:updateCacheCountValue) do |count|
+      target_set_text(:cacheCount, count.to_s)
+    end
 
-          Promise.all(promises).then(function() {
-            ctrl.cacheCountTarget.textContent = totalEntries;
-          });
-        });
-      } else {
-        ctrl.cacheCountTarget.textContent = 'N/A';
-      }
-    `
+    caches = js_global('caches')
+    promise = js_call_on(caches, :keys)
+
+    js_then(promise) do |names|
+      js_set_prop(:totalEntries, 0)
+
+      promises = js_map(names) do |name|
+        open_promise = js_call_on(caches, :open, name)
+        js_then(open_promise) do |cache|
+          keys_promise = js_call_on(cache, :keys)
+          js_then(keys_promise) do |keys|
+            current = js_prop(:totalEntries) || 0
+            js_set_prop(:totalEntries, current + js_length(keys))
+          end
+        end
+      end
+
+      all_promise = js_call_on(js_global('Promise'), :all, promises)
+      js_then(all_promise) do
+        js_call(:updateCacheCountValue, js_prop(:totalEntries))
+      end
+    end
   end
 end

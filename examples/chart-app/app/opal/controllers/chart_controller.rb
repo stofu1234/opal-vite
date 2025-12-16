@@ -7,147 +7,238 @@ class ChartController < StimulusController
   self.targets = ["canvas"]
   self.values = { type: :string, data: :string, options: :string, event_name: :string }
 
+  # Default chart colors
+  CHART_COLORS = [
+    'rgba(102, 126, 234, 0.8)',
+    'rgba(118, 75, 162, 0.8)',
+    'rgba(237, 100, 166, 0.8)',
+    'rgba(255, 159, 64, 0.8)',
+    'rgba(75, 192, 192, 0.8)',
+    'rgba(153, 102, 255, 0.8)'
+  ].freeze
+
+  DEFAULT_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'].freeze
+  MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].freeze
+
   def connect
     puts "Chart controller connected!"
     initialize_chart
   end
 
   def disconnect
-    `
-      if (this.chart) {
-        this.chart.destroy();
-      }
-    `
+    chart = js_prop(:chart)
+    js_call_on(chart, :destroy) if chart
   end
 
   # Update chart with new data
   def update_chart
-    `
-      if (this.chart) {
-        this.randomizeData();
-      }
-    `
+    js_call(:randomizeData) if js_has_prop?(:chart)
   end
 
   # Add new data point
   def add_data
-    `
-      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      const currentLabels = this.chart.data.labels.length;
-      const newLabel = monthNames[currentLabels % 12];
-      const newValues = [Math.floor(Math.random() * 30), Math.floor(Math.random() * 30)];
-      this.addDataPoint(newLabel, newValues);
-    `
+    return unless js_has_prop?(:chart)
+
+    chart = js_prop(:chart)
+    labels = js_get(js_get(chart, :data), :labels)
+    current_count = js_length(labels)
+    new_label = MONTH_NAMES[current_count % 12]
+    new_values = [random_int(30), random_int(30)]
+
+    js_call(:addDataPoint, new_label, new_values)
   end
 
   # Remove last data point
   def remove_data
-    `this.removeDataPoint()`
+    js_call(:removeDataPoint)
   end
 
   private
 
   def initialize_chart
-    # Chart.js initialization requires pure JavaScript due to complex object structures
-    `
-      const ctrl = this;
+    # Check if Chart.js is loaded
+    unless js_global_exists?('Chart')
+      console_error('Chart.js is not loaded!')
+      return
+    end
 
-      if (typeof Chart === 'undefined') {
-        console.error('Chart.js is not loaded!');
-        return;
-      }
+    # Define helper functions on controller
+    setup_chart_helpers
 
-      // Helper functions
-      ctrl.getDefaultData = function(type) {
-        const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-        const data1 = [12, 19, 3, 5, 2, 3];
-        const data2 = [2, 3, 20, 5, 1, 4];
-        const colors = [
-          'rgba(102, 126, 234, 0.8)',
-          'rgba(118, 75, 162, 0.8)',
-          'rgba(237, 100, 166, 0.8)',
-          'rgba(255, 159, 64, 0.8)',
-          'rgba(75, 192, 192, 0.8)',
-          'rgba(153, 102, 255, 0.8)'
-        ];
+    # Get chart configuration
+    chart_type = js_prop(:typeValue) || 'line'
+    chart_data = parse_chart_data(chart_type)
+    chart_options = parse_chart_options
 
-        if (type === 'pie' || type === 'doughnut') {
-          return { labels, datasets: [{ data: data1, backgroundColor: colors }] };
-        }
-        return {
-          labels,
+    # Create chart instance
+    canvas = get_target(:canvas)
+    ctx = js_call_on(canvas, :getContext, '2d')
+    chart_class = js_global('Chart')
+    config = { type: chart_type, data: chart_data, options: chart_options }
+    chart = js_new(chart_class, ctx, config.to_n)
+    js_set_prop(:chart, chart)
+
+    # Set up event listener if event_name is provided
+    setup_chart_event_listener
+  end
+
+  def setup_chart_helpers
+    # Define getDefaultData function
+    js_define_method(:getDefaultData) do |type|
+      data1 = [12, 19, 3, 5, 2, 3]
+      data2 = [2, 3, 20, 5, 1, 4]
+
+      if `#{type} === 'pie' || #{type} === 'doughnut'`
+        {
+          labels: DEFAULT_LABELS,
+          datasets: [{ data: data1, backgroundColor: CHART_COLORS }]
+        }.to_n
+      else
+        {
+          labels: DEFAULT_LABELS,
           datasets: [
-            { label: 'Dataset 1', data: data1, backgroundColor: 'rgba(102, 126, 234, 0.5)', borderColor: 'rgba(102, 126, 234, 1)', borderWidth: 2 },
-            { label: 'Dataset 2', data: data2, backgroundColor: 'rgba(118, 75, 162, 0.5)', borderColor: 'rgba(118, 75, 162, 1)', borderWidth: 2 }
+            {
+              label: 'Dataset 1',
+              data: data1,
+              backgroundColor: 'rgba(102, 126, 234, 0.5)',
+              borderColor: 'rgba(102, 126, 234, 1)',
+              borderWidth: 2
+            },
+            {
+              label: 'Dataset 2',
+              data: data2,
+              backgroundColor: 'rgba(118, 75, 162, 0.5)',
+              borderColor: 'rgba(118, 75, 162, 1)',
+              borderWidth: 2
+            }
           ]
-        };
-      };
+        }.to_n
+      end
+    end
 
-      ctrl.getDefaultOptions = function() {
-        return {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: true, position: 'top' }, title: { display: false } }
-        };
-      };
+    # Define getDefaultOptions function
+    js_define_method(:getDefaultOptions) do
+      {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: true, position: 'top' },
+          title: { display: false }
+        }
+      }.to_n
+    end
 
-      ctrl.addDataPoint = function(label, values) {
-        if (!ctrl.chart) return;
-        ctrl.chart.data.labels.push(label);
-        ctrl.chart.data.datasets.forEach((dataset, i) => {
-          dataset.data.push(Array.isArray(values) ? values[i] : values);
-        });
-        ctrl.chart.update();
-      };
+    # Define addDataPoint function
+    js_define_method(:addDataPoint) do |label, values|
+      chart = js_prop(:chart)
+      next unless chart
 
-      ctrl.removeDataPoint = function() {
-        if (!ctrl.chart) return;
-        ctrl.chart.data.labels.pop();
-        ctrl.chart.data.datasets.forEach(d => d.data.pop());
-        ctrl.chart.update();
-      };
+      labels = js_get(js_get(chart, :data), :labels)
+      `#{labels}.push(#{label})`
 
-      ctrl.randomizeData = function() {
-        if (!ctrl.chart) return;
-        ctrl.chart.data.datasets.forEach(d => {
-          d.data = d.data.map(() => Math.floor(Math.random() * 30));
-        });
-        ctrl.chart.update();
-      };
+      datasets = js_get(js_get(chart, :data), :datasets)
+      js_each(datasets) do |dataset, i|
+        data_arr = js_get(dataset, :data)
+        value = `Array.isArray(#{values}) ? #{values}[#{i}] : #{values}`
+        `#{data_arr}.push(#{value})`
+      end
 
-      // Initialize chart
-      const chartType = ctrl.typeValue || 'line';
-      let chartData, chartOptions;
+      js_call_on(chart, :update)
+    end
 
-      try {
-        chartData = ctrl.dataValue ? JSON.parse(ctrl.dataValue) : ctrl.getDefaultData(chartType);
-        chartOptions = ctrl.optionsValue ? JSON.parse(ctrl.optionsValue) : ctrl.getDefaultOptions();
-      } catch (error) {
-        console.error('Error parsing chart data:', error);
-        chartData = ctrl.getDefaultData(chartType);
-        chartOptions = ctrl.getDefaultOptions();
-      }
+    # Define removeDataPoint function
+    js_define_method(:removeDataPoint) do
+      chart = js_prop(:chart)
+      next unless chart
 
-      const ctx = ctrl.canvasTarget.getContext('2d');
-      ctrl.chart = new Chart(ctx, { type: chartType, data: chartData, options: chartOptions });
+      labels = js_get(js_get(chart, :data), :labels)
+      `#{labels}.pop()`
 
-      // Set up event listener if event_name is provided
-      if (ctrl.hasEventNameValue && ctrl.eventNameValue) {
-        window.addEventListener(ctrl.eventNameValue, (e) => {
-          if (!ctrl.chart) return;
-          const { labels, data } = e.detail;
-          ctrl.chart.data.labels = labels;
+      datasets = js_get(js_get(chart, :data), :datasets)
+      js_each(datasets) do |dataset|
+        data_arr = js_get(dataset, :data)
+        `#{data_arr}.pop()`
+      end
 
-          if (ctrl.chart.config.type === 'pie' || ctrl.chart.config.type === 'doughnut') {
-            ctrl.chart.data.datasets[0].data = data;
-          } else {
-            ctrl.chart.data.datasets.forEach((dataset, i) => {
-              dataset.data = Array.isArray(data[0]) ? data[i] : data;
-            });
-          }
-          ctrl.chart.update('active');
-        });
-      }
-    `
+      js_call_on(chart, :update)
+    end
+
+    # Define randomizeData function
+    js_define_method(:randomizeData) do
+      chart = js_prop(:chart)
+      next unless chart
+
+      datasets = js_get(js_get(chart, :data), :datasets)
+      js_each(datasets) do |dataset|
+        data_arr = js_get(dataset, :data)
+        new_data = js_map(data_arr) { random_int(30) }
+        js_set(dataset, :data, new_data)
+      end
+
+      js_call_on(chart, :update)
+    end
+  end
+
+  def parse_chart_data(chart_type)
+    data_value = js_prop(:dataValue)
+    if data_value && `#{data_value} !== ""`
+      begin
+        json_parse(data_value)
+      rescue
+        console_error('Error parsing chart data')
+        js_call(:getDefaultData, chart_type)
+      end
+    else
+      js_call(:getDefaultData, chart_type)
+    end
+  end
+
+  def parse_chart_options
+    options_value = js_prop(:optionsValue)
+    if options_value && `#{options_value} !== ""`
+      begin
+        json_parse(options_value)
+      rescue
+        console_error('Error parsing chart options')
+        js_call(:getDefaultOptions)
+      end
+    else
+      js_call(:getDefaultOptions)
+    end
+  end
+
+  def setup_chart_event_listener
+    has_event = js_prop(:hasEventNameValue)
+    event_name = js_prop(:eventNameValue)
+
+    return unless has_event && event_name
+
+    on_window_event(event_name) do |e|
+      chart = js_prop(:chart)
+      next unless chart
+
+      detail = `#{e}.detail`
+      labels = `#{detail}.labels`
+      data = `#{detail}.data`
+
+      chart_data = js_get(chart, :data)
+      js_set(chart_data, :labels, labels)
+
+      chart_type = js_get(js_get(chart, :config), :type)
+
+      if `#{chart_type} === 'pie' || #{chart_type} === 'doughnut'`
+        datasets = js_get(chart_data, :datasets)
+        first_dataset = `#{datasets}[0]`
+        js_set(first_dataset, :data, data)
+      else
+        datasets = js_get(chart_data, :datasets)
+        js_each(datasets) do |dataset, i|
+          value = `Array.isArray(#{data}[0]) ? #{data}[#{i}] : #{data}`
+          js_set(dataset, :data, value)
+        end
+      end
+
+      js_call_on(chart, :update, 'active')
+    end
   end
 end

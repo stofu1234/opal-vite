@@ -6,6 +6,8 @@ class UsersController < StimulusController
 
   self.targets = ["list", "loading", "error"]
 
+  API_BASE = 'https://jsonplaceholder.typicode.com'
+
   def connect
     puts "Users controller connected!"
     fetch_users
@@ -17,27 +19,19 @@ class UsersController < StimulusController
     hide_error
     target_set_html(:list, '') if has_target?(:list)
 
-    # Fetch data from JSONPlaceholder API
-    `
-      const ctrl = this;
+    # Fetch data from JSONPlaceholder API using Ruby-style helpers
+    promise = fetch_json_safe("#{API_BASE}/users")
 
-      fetch('https://jsonplaceholder.typicode.com/users')
-        .then(response => {
-          if (!response.ok) {
-            throw new Error('Network response was not ok');
-          }
-          return response.json();
-        })
-        .then(users => {
-          ctrl.$hide_loading();
-          users.forEach(user => ctrl.$add_user_to_dom(user));
-        })
-        .catch(error => {
-          console.error('Error fetching users:', error);
-          ctrl.$hide_loading();
-          ctrl.$show_error('Failed to load users. Please try again.');
-        });
-    `
+    promise = js_then(promise) do |users|
+      hide_loading
+      js_each(users) { |user| add_user_to_dom(user) }
+    end
+
+    js_catch(promise) do |error|
+      console_error('Error fetching users:', error)
+      hide_loading
+      show_error('Failed to load users. Please try again.')
+    end
   end
 
   # Reload users
@@ -49,26 +43,28 @@ class UsersController < StimulusController
   def show_user
     user_id = event_data_int('user-id')
 
-    # Fetch user details and posts
-    `
-      const ctrl = this;
+    # Fetch user details and posts in parallel using Ruby-style helpers
+    urls = [
+      "#{API_BASE}/users/#{user_id}",
+      "#{API_BASE}/posts?userId=#{user_id}"
+    ]
 
-      Promise.all([
-        fetch('https://jsonplaceholder.typicode.com/users/' + #{user_id}).then(r => r.json()),
-        fetch('https://jsonplaceholder.typicode.com/posts?userId=' + #{user_id}).then(r => r.json())
-      ])
-        .then(([user, posts]) => {
-          // Dispatch event to show modal with user details
-          const modalEvent = new CustomEvent('show-user-modal', {
-            detail: { user, posts }
-          });
-          window.dispatchEvent(modalEvent);
-        })
-        .catch(error => {
-          console.error('Error fetching user details:', error);
-          alert('Failed to load user details');
-        });
-    `
+    promise = fetch_all_json(urls)
+
+    promise = js_then(promise) do |results|
+      user = js_array_at(results, 0)
+      posts = js_array_at(results, 1)
+
+      dispatch_window_event('show-user-modal', {
+        user: user,
+        posts: posts
+      })
+    end
+
+    js_catch(promise) do |error|
+      console_error('Error fetching user details:', error)
+      `alert('Failed to load user details')`
+    end
   end
 
   private
@@ -78,17 +74,23 @@ class UsersController < StimulusController
 
     card = create_element('div')
     add_class(card, 'user-card')
-    set_attr(card, 'data-user-id', `#{user}.id`)
 
-    # Set click handler
-    `#{card}.onclick = () => this.$show_user.call(this, { currentTarget: #{card} })`
+    user_id = js_get(user, :id)
+    set_attr(card, 'data-user-id', user_id)
 
-    name = `#{user}.name`
-    email = `#{user}.email`
-    company = `#{user}.company.name`
-    city = `#{user}.address.city`
-    phone = `#{user}.phone`
-    initial = `#{name}.charAt(0)`
+    # Set click handler using Ruby block
+    js_define_method_on(card, :onclick) do
+      show_user_by_id(user_id)
+    end
+
+    # Extract user properties
+    name = js_get(user, :name)
+    email = js_get(user, :email)
+    company = js_get(js_get(user, :company), :name)
+    address = js_get(user, :address)
+    city = js_get(address, :city)
+    phone = js_get(user, :phone)
+    initial = js_string_char_at(name, 0)
 
     html = <<~HTML
       <div class="user-header">
@@ -116,6 +118,32 @@ class UsersController < StimulusController
 
     set_html(card, html)
     append_child(list, card)
+  end
+
+  # Helper method for onclick handler
+  def show_user_by_id(user_id)
+    # Fetch user details and posts in parallel
+    urls = [
+      "#{API_BASE}/users/#{user_id}",
+      "#{API_BASE}/posts?userId=#{user_id}"
+    ]
+
+    promise = fetch_all_json(urls)
+
+    promise = js_then(promise) do |results|
+      user = js_array_at(results, 0)
+      posts = js_array_at(results, 1)
+
+      dispatch_window_event('show-user-modal', {
+        user: user,
+        posts: posts
+      })
+    end
+
+    js_catch(promise) do |error|
+      console_error('Error fetching user details:', error)
+      `alert('Failed to load user details')`
+    end
   end
 
   def show_loading
