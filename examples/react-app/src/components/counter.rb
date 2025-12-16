@@ -1,53 +1,64 @@
+# backtick_javascript: true
 require 'native'
 
-class Counter
-  def self.create
-    react = Native(`window.React`)
+# Load ReactHelpers from opal-vite gem
+require 'opal_vite/concerns/react_helpers'
 
-    react.createElement('div', { className: 'counter-container' },
-      react.createElement('div', { className: 'counter-card' },
-        react.createElement('h2', nil, 'Counter Component (Ruby + React)'),
-        react.createElement(CounterComponent, nil)
+class Counter
+  extend ReactHelpers
+
+  def self.create
+    r = react
+
+    r.createElement('div', { className: 'counter-container' },
+      r.createElement('div', { className: 'counter-card' },
+        r.createElement('h2', nil, 'Counter Component (Ruby + React)'),
+        r.createElement(CounterComponent, nil)
       )
     )
   end
 end
 
 class CounterComponent
+  extend ReactHelpers
+
+  # React functional component with hooks
+  # Note: React hooks (useState) require JavaScript function context,
+  # so this part must remain as backtick JavaScript
   def self.to_n
-    react = Native(`window.React`)
+    r = react
 
     `function() {
-      const [count, setCount] = #{react}.useState(0);
+      const [count, setCount] = #{r}.useState(0);
 
       const increment = () => setCount(count + 1);
       const decrement = () => setCount(count - 1);
       const reset = () => setCount(0);
 
-      return #{react}.createElement('div', null,
-        #{react}.createElement('div', { className: 'counter-display' },
-          #{react}.createElement('div', { className: 'count-value' }, count)
+      return #{r}.createElement('div', null,
+        #{r}.createElement('div', { className: 'counter-display' },
+          #{r}.createElement('div', { className: 'count-value' }, count)
         ),
-        #{react}.createElement('div', { className: 'counter-controls' },
-          #{react}.createElement('button',
+        #{r}.createElement('div', { className: 'counter-controls' },
+          #{r}.createElement('button',
             { className: 'btn btn-decrement', onClick: decrement },
             '−'
           ),
-          #{react}.createElement('button',
+          #{r}.createElement('button',
             { className: 'btn btn-reset', onClick: reset },
             'Reset'
           ),
-          #{react}.createElement('button',
+          #{r}.createElement('button',
             { className: 'btn btn-increment', onClick: increment },
             '+'
           )
         ),
-        #{react}.createElement('div', { className: 'counter-info' },
-          #{react}.createElement('p', null, 'Current count: ' + count),
-          #{react}.createElement('p', { className: 'status' },
-            count > 0 ? #{react}.createElement('span', { className: 'positive' }, '↑ Positive') :
-            count < 0 ? #{react}.createElement('span', { className: 'negative' }, '↓ Negative') :
-            #{react}.createElement('span', { className: 'zero' }, '● Zero')
+        #{r}.createElement('div', { className: 'counter-info' },
+          #{r}.createElement('p', null, 'Current count: ' + count),
+          #{r}.createElement('p', { className: 'status' },
+            count > 0 ? #{r}.createElement('span', { className: 'positive' }, '↑ Positive') :
+            count < 0 ? #{r}.createElement('span', { className: 'negative' }, '↓ Negative') :
+            #{r}.createElement('span', { className: 'zero' }, '● Zero')
           )
         )
       );

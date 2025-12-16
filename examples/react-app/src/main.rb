@@ -1,4 +1,8 @@
+# backtick_javascript: true
 require 'native'
+
+# Load ReactHelpers from opal-vite gem
+require 'opal_vite/concerns/react_helpers'
 
 puts "🚀 Opal + React + Vite Example"
 puts "Ruby version: #{RUBY_VERSION}"
@@ -9,6 +13,8 @@ puts "Platform: #{RUBY_PLATFORM}"
 # React components are defined in JSX files and imported by main_loader.js
 
 class AppOrchestrator
+  extend ReactHelpers
+
   def self.initialize_app
     puts "✅ Initializing React app from Ruby..."
 
@@ -25,11 +31,12 @@ class AppOrchestrator
 
   def self.setup_console_commands
     # Expose Ruby methods to JavaScript console
-    `window.rubyCommands = {
-      greet: #{method(:greet)},
-      calculate: #{method(:calculate)},
-      getInfo: #{method(:get_info)}
-    }`
+    commands = {
+      greet: method(:greet),
+      calculate: method(:calculate),
+      getInfo: method(:get_info)
+    }
+    window_set('rubyCommands', Native(commands))
 
     puts "✅ Ruby commands available in console:"
     puts "   - rubyCommands.greet('YourName')"
@@ -40,7 +47,7 @@ class AppOrchestrator
   def self.greet(name)
     message = "Hello, #{name}! This greeting comes from Ruby! 💎"
     puts message
-    `alert(#{message})`
+    alert_message(message)
     message
   end
 
@@ -81,15 +88,11 @@ class AppOrchestrator
 end
 
 # Initialize when DOM is ready
-`
-document.addEventListener('DOMContentLoaded', function() {
-  console.log('✅ DOM ready, initializing from Ruby...');
-`
+AppOrchestrator.on_dom_ready do
+  console_log('✅ DOM ready, initializing from Ruby...')
   AppOrchestrator.initialize_app
-`
-  console.log('✅ Ruby initialization complete!');
-});
-`
+  console_log('✅ Ruby initialization complete!')
+end
 
 puts "✅ Ruby code loaded successfully!"
 puts "   React components will be mounted by JavaScript"

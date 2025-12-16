@@ -2,8 +2,8 @@
 require 'native'
 require 'opal_stimulus/stimulus_controller'
 
-# Load concerns from opal-vite gem (automatically available when includeConcerns: true)
-require 'opal_vite/concerns/js_proxy_ex'
+# Load StimulusHelpers from opal-vite gem
+require 'opal_vite/concerns/stimulus_helpers'
 
 # Load all controllers
 require 'controllers/hello_controller'

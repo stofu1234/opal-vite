@@ -2,125 +2,130 @@
 
 # Modal dialog controller with animations
 class ModalController < StimulusController
-  include JsProxyEx
-  include Toastable
-  include DomHelpers
+  include StimulusHelpers
 
   self.targets = ["overlay", "content", "title", "body", "input"]
 
   def connect
-    setup_event_listeners
+    # Listen for open-modal event
+    on_window_event('open-modal') do |e|
+      detail = `#{e}.detail`
+      title = `#{detail}.title`
+      todo_text = `#{detail}.todoText`
+      todo_id = `#{detail}.todoId`
+
+      target_set_text(:title, title) if has_target?(:title) && title
+
+      if has_target?(:input) && todo_text
+        target_set_value(:input, todo_text)
+        input = get_target(:input)
+        set_attr(input, 'data-todo-id', todo_id)
+      end
+
+      open_modal
+    end
+
+    # Listen for modal-save event on this element
+    on_controller_event('modal-save') do |e|
+      detail = `#{e}.detail`
+      # Use raw JS for window event dispatch to avoid Opal wrapping issues
+      `
+        const updateEvent = new CustomEvent('update-todo', { detail: #{detail} });
+        window.dispatchEvent(updateEvent);
+      `
+      close_modal
+      reset_form if has_target?(:input)
+    end
   end
 
+  # Open modal
   def open
-    activate_modal
-    focus_input_delayed
-    prevent_body_scroll
+    open_modal
   end
 
+  # Open with data (for editing)
+  def open_with_data
+    data = `arguments[0]`
+    title = `#{data}.title`
+    todo_text = `#{data}.todoText`
+    todo_id = `#{data}.todoId`
+
+    target_set_text(:title, title) if has_target?(:title) && title
+
+    if has_target?(:input) && todo_text
+      target_set_value(:input, todo_text)
+      input = get_target(:input)
+      set_attr(input, 'data-todo-id', todo_id)
+    end
+
+    open_modal
+  end
+
+  # Close modal
   def close
-    deactivate_modal
-    restore_body_scroll
-    reset_input
+    close_modal
+    reset_form if has_target?(:input)
   end
 
-  def close_on_overlay(event)
-    `
-      if (this.hasOverlayTarget && event.target === this.overlayTarget) {
-        this.$close();
-      }
-    `
+  # Close on overlay click
+  def close_on_overlay
+    target = event_target
+    overlay = get_target(:overlay)
+    close if `#{target} === #{overlay}`
   end
 
-  def close_on_escape(event)
-    close if event.key == 'Escape'
+  # Close on Escape key
+  def close_on_escape
+    close if event_key == 'Escape'
   end
 
+  # Save (for edit todo)
   def save
-    text = `this.hasInputTarget ? this.inputTarget.value.trim() : ''`
+    input = get_target(:input)
+    text = get_value(input)
+    text = `#{text}.trim()`
 
-    if text.empty?
-      show_error('Please enter todo text')
+    if `#{text} === ''`
+      dispatch_window_event('show-toast', {
+        message: 'Please enter todo text',
+        type: 'error'
+      })
       return
     end
 
-    todo_id = `this.hasInputTarget ? this.inputTarget.getAttribute('data-todo-id') : null`
+    todo_id = get_attr(input, 'data-todo-id')
 
     # Dispatch save event
-    dispatch_custom_event('modal-save', { todoId: todo_id.to_i, text: text }, element)
+    dispatch_event('modal-save', {
+      todoId: parse_int(todo_id),
+      text: text
+    })
   end
 
   private
 
-  def setup_event_listeners
-    # Listen for open-modal event
-    `
-      const ctrl = this;
-      window.addEventListener('open-modal', function(e) {
-        const data = e.detail;
+  def open_modal
+    element_add_class('active')
+    add_target_class(:overlay, 'active')
+    add_target_class(:content, 'active')
 
-        if (data.title && ctrl.hasTitleTarget) {
-          ctrl.titleTarget.textContent = data.title;
-        }
+    if has_target?(:input)
+      set_timeout(100) { target_focus(:input) }
+    end
 
-        if (data.todoText && ctrl.hasInputTarget) {
-          ctrl.inputTarget.value = data.todoText;
-          ctrl.inputTarget.setAttribute('data-todo-id', data.todoId);
-        }
-
-        ctrl.$open();
-      });
-
-      // Listen for modal-save event to dispatch update-todo
-      ctrl.element.addEventListener('modal-save', function(e) {
-        const updateEvent = new CustomEvent('update-todo', {
-          detail: e.detail
-        });
-        window.dispatchEvent(updateEvent);
-        ctrl.$close();
-      });
-    `
+    lock_body_scroll
   end
 
-  def activate_modal
-    `
-      this.element.classList.add('active');
-      if (this.hasOverlayTarget) this.overlayTarget.classList.add('active');
-      if (this.hasContentTarget) this.contentTarget.classList.add('active');
-    `
+  def close_modal
+    element_remove_class('active')
+    remove_target_class(:overlay, 'active')
+    remove_target_class(:content, 'active')
+    unlock_body_scroll
   end
 
-  def deactivate_modal
-    `
-      this.element.classList.remove('active');
-      if (this.hasOverlayTarget) this.overlayTarget.classList.remove('active');
-      if (this.hasContentTarget) this.contentTarget.classList.remove('active');
-    `
-  end
-
-  def focus_input_delayed
-    `
-      const ctrl = this;
-      if (this.hasInputTarget) {
-        setTimeout(function() { ctrl.inputTarget.focus(); }, 100);
-      }
-    `
-  end
-
-  def prevent_body_scroll
-    `document.body.style.overflow = 'hidden'`
-  end
-
-  def restore_body_scroll
-    `document.body.style.overflow = ''`
-  end
-
-  def reset_input
-    `
-      if (this.hasInputTarget) {
-        this.inputTarget.value = '';
-        this.inputTarget.removeAttribute('data-todo-id');
-      }
-    `
+  def reset_form
+    target_set_value(:input, '')
+    input = get_target(:input)
+    remove_attr(input, 'data-todo-id')
   end
 end

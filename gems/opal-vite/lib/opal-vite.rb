@@ -21,9 +21,17 @@ module Opal
         yield(config) if block_given?
       end
 
+      # Returns the path to the opal/ directory in this gem
+      # Contains built-in concerns like StimulusHelpers
+      def opal_lib_path
+        File.expand_path('../../opal', __dir__)
+      end
+
       # CLI entry point for compilation
-      def compile_for_vite(file_path)
-        compiler = Compiler.new
+      # @param file_path [String] The path to the Ruby file to compile
+      # @param include_concerns [Boolean] Whether to include built-in concerns
+      def compile_for_vite(file_path, include_concerns: true)
+        compiler = Compiler.new(include_concerns: include_concerns)
         result = compiler.compile_file(file_path)
 
         # Output JSON to stdout for the Vite plugin to consume
