@@ -424,7 +424,7 @@ module OpalVite
       # @param attr [String] Data attribute name (without 'data-' prefix)
       # @return [Integer, nil] Parsed integer value
       def event_data_int(attr)
-        `parseInt(event.currentTarget.getAttribute('data-' + #{attr}))`
+        parse_int(event_data(attr))
       end
 
       # Prevent default event behavior
@@ -696,6 +696,48 @@ module OpalVite
         return unless has_target?(name)
         method_name = "#{camelize(name, false)}Target"
         `this[#{method_name}].blur()`
+      end
+
+      # ===== Type Conversion Methods =====
+
+      # Parse string to integer (wrapper for JavaScript parseInt)
+      # @param value [String, Number] Value to parse
+      # @param radix [Integer] Radix (default: 10)
+      # @return [Integer, NaN] Parsed integer
+      def parse_int(value, radix = 10)
+        `parseInt(#{value}, #{radix})`
+      end
+
+      # Parse string to float (wrapper for JavaScript parseFloat)
+      # @param value [String, Number] Value to parse
+      # @return [Float, NaN] Parsed float
+      def parse_float(value)
+        `parseFloat(#{value})`
+      end
+
+      # Check if value is NaN
+      # @param value [Number] Value to check
+      # @return [Boolean] true if NaN
+      def is_nan?(value)
+        `Number.isNaN(#{value})`
+      end
+
+      # Parse integer with default value (returns default if NaN)
+      # @param value [String, Number] Value to parse
+      # @param default_value [Integer] Default value if parsing fails
+      # @return [Integer] Parsed integer or default
+      def parse_int_or(value, default_value = 0)
+        result = parse_int(value)
+        is_nan?(result) ? default_value : result
+      end
+
+      # Parse float with default value (returns default if NaN)
+      # @param value [String, Number] Value to parse
+      # @param default_value [Float] Default value if parsing fails
+      # @return [Float] Parsed float or default
+      def parse_float_or(value, default_value = 0.0)
+        result = parse_float(value)
+        is_nan?(result) ? default_value : result
       end
 
       private

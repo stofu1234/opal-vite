@@ -98,7 +98,7 @@ class ModalController < StimulusController
 
     # Dispatch save event
     dispatch_event('modal-save', {
-      todoId: `parseInt(#{todo_id})`,
+      todoId: parse_int(todo_id),
       text: text
     })
   end

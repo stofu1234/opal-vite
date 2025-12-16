@@ -268,4 +268,48 @@ module ReactHelpers
   def to_json(object)
     `JSON.stringify(#{object})`
   end
+
+  # ===================
+  # Type Conversion
+  # ===================
+
+  # Parse string to integer (wrapper for JavaScript parseInt)
+  # @param value [String, Number] Value to parse
+  # @param radix [Integer] Radix (default: 10)
+  # @return [Integer, NaN] Parsed integer
+  def parse_int(value, radix = 10)
+    `parseInt(#{value}, #{radix})`
+  end
+
+  # Parse string to float (wrapper for JavaScript parseFloat)
+  # @param value [String, Number] Value to parse
+  # @return [Float, NaN] Parsed float
+  def parse_float(value)
+    `parseFloat(#{value})`
+  end
+
+  # Check if value is NaN
+  # @param value [Number] Value to check
+  # @return [Boolean] true if NaN
+  def is_nan?(value)
+    `Number.isNaN(#{value})`
+  end
+
+  # Parse integer with default value (returns default if NaN)
+  # @param value [String, Number] Value to parse
+  # @param default_value [Integer] Default value if parsing fails
+  # @return [Integer] Parsed integer or default
+  def parse_int_or(value, default_value = 0)
+    result = parse_int(value)
+    is_nan?(result) ? default_value : result
+  end
+
+  # Parse float with default value (returns default if NaN)
+  # @param value [String, Number] Value to parse
+  # @param default_value [Float] Default value if parsing fails
+  # @return [Float] Parsed float or default
+  def parse_float_or(value, default_value = 0.0)
+    result = parse_float(value)
+    is_nan?(result) ? default_value : result
+  end
 end

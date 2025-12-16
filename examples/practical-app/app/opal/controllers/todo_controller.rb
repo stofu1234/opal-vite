@@ -17,7 +17,7 @@ class TodoController < StimulusController
     # Listen for update-todo event from modal
     on_window_event('update-todo') do |e|
       detail = `#{e}.detail`
-      todo_id = `parseInt(#{detail}.todoId)`
+      todo_id = parse_int(`#{detail}.todoId`)
       new_text = `#{detail}.text`
 
       update_todo_text(todo_id, new_text)

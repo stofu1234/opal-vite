@@ -17,8 +17,8 @@ class FormController < StimulusController
 
     # Get validation rules from data attributes
     required = has_attr?(input, 'data-required')
-    min_length = `parseInt(#{get_attr(input, 'data-min-length')} || '0')`
-    max_length = `parseInt(#{get_attr(input, 'data-max-length')} || '1000')`
+    min_length = parse_int_or(get_attr(input, 'data-min-length'), 0)
+    max_length = parse_int_or(get_attr(input, 'data-max-length'), 1000)
     pattern = get_attr(input, 'data-pattern')
 
     error_message = ''
