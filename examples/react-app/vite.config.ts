@@ -10,7 +10,8 @@ export default defineConfig({
       gemPath: path.resolve(__dirname, '../../gems/opal-vite'),
       loadPaths: ['./src'],
       sourceMap: true,
-      debug: true
+      debug: true,
+      includeConcerns: true
     })
   ],
   server: {
