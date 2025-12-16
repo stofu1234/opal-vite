@@ -2,6 +2,8 @@
 
 # Clipboard controller demonstrating DOM manipulation
 class ClipboardController < StimulusController
+  include JsProxyEx
+
   self.targets = ["source", "button"]
   self.classes = ["supported"]
 
@@ -12,20 +14,22 @@ class ClipboardController < StimulusController
   end
 
   def copy
-    # Select the text in the input field and copy using JavaScript directly
     `
+      const ctrl = this;
+      if (!this.hasSourceTarget || !this.hasButtonTarget) return;
+
       this.sourceTarget.select();
-
       const text = this.sourceTarget.value;
-      navigator.clipboard.writeText(text).then(() => {
-        console.log('Text copied to clipboard');
-        this.buttonTarget.textContent = "Copied!";
 
-        setTimeout(() => {
-          this.buttonTarget.textContent = "Copy to Clipboard";
+      navigator.clipboard.writeText(text).then(function() {
+        console.log('Text copied to clipboard');
+        ctrl.buttonTarget.textContent = "Copied!";
+
+        setTimeout(function() {
+          ctrl.buttonTarget.textContent = "Copy to Clipboard";
         }, 2000);
-      }).catch((err) => {
-        console.error('Failed to copy text: ', err);
+      }).catch(function(err) {
+        console.log('Failed to copy text:', err);
       });
     `
   end
@@ -33,7 +37,6 @@ class ClipboardController < StimulusController
   private
 
   def supported?
-    # Check if clipboard API is available
     `navigator.clipboard !== undefined`
   end
 end

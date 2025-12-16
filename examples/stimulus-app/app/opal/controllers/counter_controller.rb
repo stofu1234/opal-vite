@@ -1,5 +1,9 @@
+# backtick_javascript: true
+
 # Counter controller demonstrating Stimulus Values API
 class CounterController < StimulusController
+  include JsProxyEx
+
   self.values = { count: :number }
   self.targets = ["display"]
 
@@ -30,7 +34,11 @@ class CounterController < StimulusController
   private
 
   def update_display
-    display_target.text_content = count_value.to_s
+    `
+      if (this.hasDisplayTarget) {
+        this.displayTarget.textContent = #{count_value.to_s};
+      }
+    `
   end
 
   def count_value_changed

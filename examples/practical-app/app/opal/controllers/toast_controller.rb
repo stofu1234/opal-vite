@@ -2,73 +2,73 @@
 
 # Toast notification controller
 class ToastController < StimulusController
+  include JsProxyEx
+
   self.targets = ["container"]
 
+  ICONS = {
+    'info' => 'ℹ️',
+    'success' => '✅',
+    'error' => '❌',
+    'warning' => '⚠️'
+  }.freeze
+
   def connect
-    # Listen for show-toast event
+    # Listen for show-toast event using backtick for direct JS callback
     `
-      window.addEventListener('show-toast', (e) => {
-        this.show(e.detail.message, e.detail.type || 'info');
+      const ctrl = this;
+      window.addEventListener('show-toast', function(e) {
+        ctrl.$show(e.detail.message, e.detail.type || 'info');
       });
     `
   end
 
   # Show toast notification
-  def show
-    `
-      const message = arguments[0];
-      const type = arguments[1] || 'info';
+  def show(message, type = 'info')
+    # Find or create toast container
+    container = if has_container_target
+                  container_target
+                else
+                  document.query_selector('.toast-container[data-toast-target="container"]')
+                end
 
-      // Find or create toast container
-      let container = this.hasContainerTarget ? this.containerTarget : null;
+    unless container.to_n
+      puts "No toast container found"
+      return
+    end
 
-      if (!container) {
-        // Find the global toast container
-        container = document.querySelector('.toast-container[data-toast-target="container"]');
-      }
+    # Create toast element
+    toast = document.create_element('div')
+    toast.class_name = "toast toast-#{type}"
 
-      if (!container) {
-        console.warn('No toast container found');
-        return;
-      }
+    # Add icon based on type
+    icon = ICONS[type] || ICONS['info']
 
-      const toast = document.createElement('div');
-      toast.className = 'toast toast-' + type;
+    toast.inner_html = "<span class=\"toast-icon\">#{icon}</span>" \
+                       "<span class=\"toast-message\">#{message}</span>"
 
-      // Add icon based on type
-      let icon = 'ℹ️';
-      if (type === 'success') icon = '✅';
-      else if (type === 'error') icon = '❌';
-      else if (type === 'warning') icon = '⚠️';
+    container.append_child(toast)
 
-      toast.innerHTML = '<span class="toast-icon">' + icon + '</span>' +
-                        '<span class="toast-message">' + message + '</span>';
+    # Animate in
+    window.set_timeout(-> { toast.class_list.add('show') }, 10)
 
-      container.appendChild(toast);
-
-      // Animate in
-      setTimeout(() => toast.classList.add('show'), 10);
-
-      // Auto remove after 3 seconds
-      setTimeout(() => {
-        toast.classList.remove('show');
-        setTimeout(() => toast.remove(), 300);
-      }, 3000);
-    `
+    # Auto remove after 3 seconds
+    window.set_timeout(-> {
+      toast.class_list.remove('show')
+      window.set_timeout(-> { toast.remove }, 300)
+    }, 3000)
   end
 
   # Manually show toast (for testing)
   def show_test
-    `
-      const messages = [
-        { text: 'Success message!', type: 'success' },
-        { text: 'Error message!', type: 'error' },
-        { text: 'Warning message!', type: 'warning' },
-        { text: 'Info message!', type: 'info' }
-      ];
+    messages = [
+      { text: 'Success message!', type: 'success' },
+      { text: 'Error message!', type: 'error' },
+      { text: 'Warning message!', type: 'warning' },
+      { text: 'Info message!', type: 'info' }
+    ]
 
-      const random = messages[Math.floor(Math.random() * messages.length)];
-      this.show(random.text, random.type);
-    `
+    random = messages.sample
+    show(random[:text], random[:type])
   end
 end

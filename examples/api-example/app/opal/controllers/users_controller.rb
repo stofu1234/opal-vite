@@ -1,175 +1,177 @@
 # backtick_javascript: true
+require 'opal_stimulus/stimulus_controller'
 
 # Users controller demonstrating API integration with fetch
 class UsersController < StimulusController
-  self.targets = ["list", "loading", "error"]
+  include JsProxyEx
+  include DomHelpers
+
+  self.targets = %w[list loading error]
+
+  API_BASE = 'https://jsonplaceholder.typicode.com'.freeze
 
   def connect
-    puts "Users controller connected!"
-
-    # Set up helper methods and fetch users
-    `
-      const ctrl = this;
-
-      // Define addUserToDOM helper
-      this.addUserToDOM = function(user) {
-        const card = document.createElement('div');
-        card.className = 'user-card';
-        card.setAttribute('data-user-id', user.id);
-        card.onclick = () => ctrl.$show_user.call(ctrl, { currentTarget: card });
-
-        card.innerHTML = '<div class="user-header">' +
-          '<div class="user-avatar">' + user.name.charAt(0) + '</div>' +
-          '<div class="user-info">' +
-            '<h3>' + user.name + '</h3>' +
-            '<p class="user-email">' + user.email + '</p>' +
-          '</div>' +
-        '</div>' +
-        '<div class="user-details">' +
-          '<div class="detail-item">' +
-            '<span class="detail-label">Company:</span>' +
-            '<span class="detail-value">' + user.company.name + '</span>' +
-          '</div>' +
-          '<div class="detail-item">' +
-            '<span class="detail-label">City:</span>' +
-            '<span class="detail-value">' + user.address.city + '</span>' +
-          '</div>' +
-          '<div class="detail-item">' +
-            '<span class="detail-label">Phone:</span>' +
-            '<span class="detail-value">' + user.phone + '</span>' +
-          '</div>' +
-        '</div>';
-
-        ctrl.listTarget.appendChild(card);
-      };
-
-      // Fetch users immediately on connect
-      // Show loading state
-      if (ctrl.hasLoadingTarget) {
-        ctrl.loadingTarget.style.display = 'block';
-      }
-      if (ctrl.hasErrorTarget) {
-        ctrl.errorTarget.style.display = 'none';
-      }
-      if (ctrl.hasListTarget) {
-        ctrl.listTarget.innerHTML = '';
-      }
-
-      // Fetch data from JSONPlaceholder API
-      fetch('https://jsonplaceholder.typicode.com/users')
-        .then(response => {
-          if (!response.ok) {
-            throw new Error('Network response was not ok');
-          }
-          return response.json();
-        })
-        .then(users => {
-          // Hide loading
-          if (ctrl.hasLoadingTarget) {
-            ctrl.loadingTarget.style.display = 'none';
-          }
-
-          // Display users
-          users.forEach(user => {
-            ctrl.addUserToDOM(user);
-          });
-        })
-        .catch(error => {
-          console.error('Error fetching users:', error);
-
-          // Hide loading
-          if (ctrl.hasLoadingTarget) {
-            ctrl.loadingTarget.style.display = 'none';
-          }
-
-          // Show error
-          if (ctrl.hasErrorTarget) {
-            ctrl.errorTarget.textContent = 'Failed to load users. Please try again.';
-            ctrl.errorTarget.style.display = 'block';
-          }
-        });
-    `
+    puts 'Users controller connected!'
+    fetch_users
   end
 
-  # Fetch users from API
-  def fetch_users
-    `
-      const ctrl = this;
-
-      // Show loading state
-      if (ctrl.hasLoadingTarget) {
-        ctrl.loadingTarget.style.display = 'block';
-      }
-      if (ctrl.hasErrorTarget) {
-        ctrl.errorTarget.style.display = 'none';
-      }
-      if (ctrl.hasListTarget) {
-        ctrl.listTarget.innerHTML = '';
-      }
-
-      // Fetch data from JSONPlaceholder API
-      fetch('https://jsonplaceholder.typicode.com/users')
-        .then(response => {
-          if (!response.ok) {
-            throw new Error('Network response was not ok');
-          }
-          return response.json();
-        })
-        .then(users => {
-          // Hide loading
-          if (ctrl.hasLoadingTarget) {
-            ctrl.loadingTarget.style.display = 'none';
-          }
-
-          // Display users
-          users.forEach(user => {
-            ctrl.addUserToDOM(user);
-          });
-        })
-        .catch(error => {
-          console.error('Error fetching users:', error);
-
-          // Hide loading
-          if (ctrl.hasLoadingTarget) {
-            ctrl.loadingTarget.style.display = 'none';
-          }
-
-          // Show error
-          if (ctrl.hasErrorTarget) {
-            ctrl.errorTarget.textContent = 'Failed to load users. Please try again.';
-            ctrl.errorTarget.style.display = 'block';
-          }
-        });
-    `
-  end
-
-  # Reload users
+  # Stimulus action: Reload users
   def reload
-    `this.$fetch_users()`
+    fetch_users
   end
 
-  # Show user details
-  def show_user
-    `
-      const userId = parseInt(event.currentTarget.getAttribute('data-user-id'));
+  # Stimulus action: Show user details (called via onclick)
+  def show_user(event)
+    user_id = event.current_target.get_attribute('data-user-id').to_i
 
-      // Fetch user details and posts
-      Promise.all([
-        fetch('https://jsonplaceholder.typicode.com/users/' + userId).then(r => r.json()),
-        fetch('https://jsonplaceholder.typicode.com/posts?userId=' + userId).then(r => r.json())
-      ])
-        .then(([user, posts]) => {
-          // Dispatch event to show modal with user details
-          const modalEvent = new CustomEvent('show-user-modal', {
-            detail: { user, posts }
-          });
-          window.dispatchEvent(modalEvent);
+    show_loading
+    fetch_user_with_posts(user_id)
+  end
+
+  private
+
+  def fetch_users
+    show_loading
+    hide_error
+    clear_list
+
+    `
+      const ctrl = this;
+      fetch(#{API_BASE} + '/users')
+        .then(function(response) {
+          if (!response.ok) throw new Error('Network response was not ok');
+          return response.json();
         })
-        .catch(error => {
+        .then(function(users) {
+          ctrl.$hide_loading();
+          users.forEach(function(user) {
+            ctrl.$add_user_to_dom(user);
+          });
+        })
+        .catch(function(error) {
+          console.error('Error fetching users:', error);
+          ctrl.$hide_loading();
+          ctrl.$show_error_message('Failed to load users. Please try again.');
+        });
+    `
+  end
+
+  def fetch_user_with_posts(user_id)
+    `
+      const ctrl = this;
+      Promise.all([
+        fetch(#{API_BASE} + '/users/' + #{user_id}).then(function(r) { return r.json(); }),
+        fetch(#{API_BASE} + '/posts?userId=' + #{user_id}).then(function(r) { return r.json(); })
+      ])
+        .then(function(results) {
+          const user = results[0];
+          const posts = results[1];
+          ctrl.$hide_loading();
+          ctrl.$dispatch_user_modal(user, posts);
+        })
+        .catch(function(error) {
           console.error('Error fetching user details:', error);
+          ctrl.$hide_loading();
           alert('Failed to load user details');
         });
     `
   end
 
+  def dispatch_user_modal(user, posts)
+    `
+      const modalEvent = new CustomEvent('show-user-modal', {
+        detail: { user: user, posts: posts }
+      });
+      window.dispatchEvent(modalEvent);
+    `
+  end
+
+  def add_user_to_dom(js_user)
+    return unless `this.hasListTarget`
+
+    card = create_user_card(js_user)
+    `this.listTarget.appendChild(#{card.to_n})`
+  end
+
+  def create_user_card(user)
+    card = document.create_element('div')
+    card.class_name = 'user-card'
+    card.set_attribute('data-user-id', `#{user}.id`)
+    card.set_attribute('data-action', 'click->users#show_user')
+
+    name = `#{user}.name`
+    email = `#{user}.email`
+    company = `#{user}.company.name`
+    city = `#{user}.address.city`
+    phone = `#{user}.phone`
+    initial = `#{user}.name.charAt(0)`
+
+    card.inner_html = build_user_card_html(initial, name, email, company, city, phone)
+    card
+  end
+
+  def build_user_card_html(initial, name, email, company, city, phone)
+    "<div class=\"user-header\">" \
+      "<div class=\"user-avatar\">#{initial}</div>" \
+      "<div class=\"user-info\">" \
+        "<h3>#{name}</h3>" \
+        "<p class=\"user-email\">#{email}</p>" \
+      "</div>" \
+    "</div>" \
+    "<div class=\"user-details\">" \
+      "<div class=\"detail-item\">" \
+        "<span class=\"detail-label\">Company:</span>" \
+        "<span class=\"detail-value\">#{company}</span>" \
+      "</div>" \
+      "<div class=\"detail-item\">" \
+        "<span class=\"detail-label\">City:</span>" \
+        "<span class=\"detail-value\">#{city}</span>" \
+      "</div>" \
+      "<div class=\"detail-item\">" \
+        "<span class=\"detail-label\">Phone:</span>" \
+        "<span class=\"detail-value\">#{phone}</span>" \
+      "</div>" \
+    "</div>"
+  end
+
+  def show_loading
+    `
+      if (this.hasLoadingTarget) {
+        this.loadingTarget.style.display = 'block';
+      }
+    `
+  end
+
+  def hide_loading
+    `
+      if (this.hasLoadingTarget) {
+        this.loadingTarget.style.display = 'none';
+      }
+    `
+  end
+
+  def show_error_message(message)
+    `
+      if (this.hasErrorTarget) {
+        this.errorTarget.textContent = #{message};
+        this.errorTarget.style.display = 'block';
+      }
+    `
+  end
+
+  def hide_error
+    `
+      if (this.hasErrorTarget) {
+        this.errorTarget.style.display = 'none';
+      }
+    `
+  end
+
+  def clear_list
+    `
+      if (this.hasListTarget) {
+        this.listTarget.innerHTML = '';
+      }
+    `
+  end
 end

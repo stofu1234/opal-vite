@@ -1,5 +1,9 @@
+# backtick_javascript: true
+
 # Simple Hello World controller demonstrating basic Stimulus features
 class HelloController < StimulusController
+  include JsProxyEx
+
   self.targets = ["name", "output"]
 
   def connect
@@ -7,7 +11,7 @@ class HelloController < StimulusController
   end
 
   def greet
-    name = name_target.value
-    output_target.text_content = "Hello, #{name}! (from Ruby)"
+    name = `this.nameTarget.value`
+    `this.outputTarget.textContent = #{"Hello, #{name}! (from Ruby)"}`
   end
 end
