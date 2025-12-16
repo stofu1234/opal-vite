@@ -1,0 +1,101 @@
+name: Deploy
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  deploy-docs:
+    name: Deploy Documentation
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs
+          publish_branch: gh-pages
+          cname: opal-vite.example.com  # Optional: your custom domain
+
+  deploy-examples:
+    name: Deploy Examples
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+
+    strategy:
+      matrix:
+        example:
+          - name: practical-app
+            subdomain: practical
+          - name: chart-app
+            subdomain: charts
+          - name: chat-app
+            subdomain: chat
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+          working-directory: examples/${{ matrix.example.name }}
+
+      - name: Install dependencies
+        run: |
+          pnpm install
+          cd examples/${{ matrix.example.name }} && bundle install
+
+      - name: Build
+        run: pnpm build
+        working-directory: examples/${{ matrix.example.name }}
+        env:
+          NODE_ENV: production
+
+      - name: Deploy to Vercel
+        if: vars.VERCEL_TOKEN != ''
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          working-directory: examples/${{ matrix.example.name }}/dist
+          vercel-args: '--prod'
+          alias-domains: ${{ matrix.example.subdomain }}.opal-vite.example.com
+
+      - name: Deploy to Netlify
+        if: vars.NETLIFY_AUTH_TOKEN != ''
+        uses: nwtgck/actions-netlify@v2
+        with:
+          publish-dir: examples/${{ matrix.example.name }}/dist
+          production-branch: master
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          deploy-message: 'Deploy from GitHub Actions'
+          enable-pull-request-comment: true
+          enable-commit-comment: true
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
