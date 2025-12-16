@@ -17,7 +17,7 @@ Gem::Specification.new do |spec|
   spec.metadata["changelog_uri"] = "#{spec.homepage}/blob/main/CHANGELOG.md"
 
   spec.files = Dir.chdir(__dir__) do
-    Dir["lib/**/*", "bin/*", "README.md", "LICENSE"]
+    Dir["lib/**/*", "opal/**/*", "bin/*", "README.md", "LICENSE"]
   end
   spec.bindir        = "bin"
   spec.executables   = ["opal-vite"]

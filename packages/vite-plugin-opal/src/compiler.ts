@@ -18,13 +18,15 @@ export class OpalCompiler {
       arityCheck: options.arityCheck || false,
       freezing: options.freezing !== false,
       debug: options.debug || false,
-      useBundler: options.useBundler !== undefined ? options.useBundler : this.detectGemfile()
+      useBundler: options.useBundler !== undefined ? options.useBundler : this.detectGemfile(),
+      includeConcerns: options.includeConcerns !== false
     }
     this.useBundler = this.options.useBundler
 
     if (this.options.debug) {
       console.log(`[vite-plugin-opal] Using bundler: ${this.useBundler}`)
       console.log(`[vite-plugin-opal] Working directory: ${process.cwd()}`)
+      console.log(`[vite-plugin-opal] Include concerns: ${this.options.includeConcerns}`)
     }
   }
 
@@ -208,10 +210,11 @@ export class OpalCompiler {
   }
 
   private getCompilerScript(): string {
+    const includeConcerns = this.options.includeConcerns
     return `
       require 'opal-vite'
       file_path = ARGV[0]
-      Opal::Vite.compile_for_vite(file_path)
+      Opal::Vite.compile_for_vite(file_path, include_concerns: ${includeConcerns})
     `.trim()
   }
 
