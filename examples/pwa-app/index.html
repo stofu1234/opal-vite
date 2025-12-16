@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Progressive Web App example with offline support" />
+    <meta name="theme-color" content="#667eea" />
+    <title>PWA Example - Opal + Stimulus</title>
+    <link rel="stylesheet" href="/app/styles.css" />
+  </head>
+  <body>
+    <div class="container" data-controller="pwa offline-detector">
+      <!-- Header -->
+      <header class="header">
+        <h1>📱 Progressive Web App Example</h1>
+        <p class="subtitle">Offline support with Service Workers + Stimulus + Opal</p>
+      </header>
+
+      <!-- Online/Offline Status -->
+      <div class="status-banner" data-offline-detector-target="banner" data-status="online">
+        <span data-offline-detector-target="statusText">🟢 You are online</span>
+      </div>
+
+      <!-- Install Prompt -->
+      <div class="install-prompt" data-pwa-target="installPrompt" style="display: none;">
+        <div class="install-card">
+          <h3>📲 Install App</h3>
+          <p>Add this app to your home screen for a better experience!</p>
+          <div class="install-actions">
+            <button class="btn btn-primary" data-action="click->pwa#install">
+              Install
+            </button>
+            <button class="btn btn-secondary" data-action="click->pwa#dismiss_install_prompt">
+              Later
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PWA Status -->
+      <div class="content-card">
+        <h2>📊 PWA Status</h2>
+        <div class="status-grid">
+          <div class="status-item">
+            <span class="status-label">Service Worker:</span>
+            <span class="status-value" data-pwa-target="swStatus">Checking...</span>
+          </div>
+          <div class="status-item">
+            <span class="status-label">Install Status:</span>
+            <span class="status-value" data-pwa-target="installStatus">Not installed</span>
+          </div>
+          <div class="status-item">
+            <span class="status-label">Online Status:</span>
+            <span class="status-value" data-offline-detector-target="onlineStatus">Online</span>
+          </div>
+          <div class="status-item">
+            <span class="status-label">Last Update:</span>
+            <span class="status-value" data-pwa-target="lastUpdate">Never</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Note Taking App (Offline-capable) -->
+      <div class="content-card">
+        <h2>📝 Offline Notes</h2>
+        <p class="card-description">
+          Create notes that work offline! Your notes are saved to localStorage and will sync when online.
+        </p>
+
+        <form data-action="submit->pwa#add_note">
+          <div class="form-group">
+            <input
+              type="text"
+              data-pwa-target="noteInput"
+              placeholder="Enter a new note..."
+              required
+            />
+          </div>
+          <button type="submit" class="btn btn-primary">Add Note</button>
+        </form>
+
+        <div class="notes-list" data-pwa-target="notesList">
+          <!-- Notes will be added here -->
+        </div>
+      </div>
+
+      <!-- Cache Information -->
+      <div class="content-card">
+        <h2>💾 Cache Management</h2>
+        <p class="card-description">
+          The app caches resources for offline use. Clear the cache to download fresh content.
+        </p>
+
+        <div class="cache-info">
+          <div class="cache-stat">
+            <span class="cache-label">Cached Resources:</span>
+            <span class="cache-value" data-pwa-target="cacheCount">0</span>
+          </div>
+        </div>
+
+        <div class="cache-actions">
+          <button class="btn btn-secondary" data-action="click->pwa#update_cache">
+            Update Cache
+          </button>
+          <button class="btn btn-secondary" data-action="click->pwa#clear_cache">
+            Clear Cache
+          </button>
+        </div>
+      </div>
+
+      <!-- Features Info -->
+      <div class="info-card">
+        <h3>✨ PWA Features Demonstrated</h3>
+        <div class="features-grid">
+          <div class="feature-item">
+            <h4>🔄 Service Worker</h4>
+            <p>Background script for offline functionality and caching</p>
+          </div>
+          <div class="feature-item">
+            <h4>📲 Installable</h4>
+            <p>Add to home screen for app-like experience</p>
+          </div>
+          <div class="feature-item">
+            <h4>⚡ Offline Support</h4>
+            <p>Works without internet connection using cached resources</p>
+          </div>
+          <div class="feature-item">
+            <h4>💾 Local Storage</h4>
+            <p>Notes persist across sessions in localStorage</p>
+          </div>
+          <div class="feature-item">
+            <h4>🔔 Status Detection</h4>
+            <p>Real-time online/offline status monitoring</p>
+          </div>
+          <div class="feature-item">
+            <h4>🎨 Native Feel</h4>
+            <p>Theme color, splash screen, standalone display mode</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Instructions -->
+      <div class="content-card">
+        <h2>🎯 How to Test PWA Features</h2>
+        <ol class="instructions-list">
+          <li>
+            <strong>Install the app:</strong> Click the install button that appears in the browser or use the browser's install option
+          </li>
+          <li>
+            <strong>Test offline mode:</strong> Open DevTools → Network tab → Set throttling to "Offline"
+          </li>
+          <li>
+            <strong>Check Service Worker:</strong> Open DevTools → Application tab → Service Workers
+          </li>
+          <li>
+            <strong>View cached resources:</strong> Open DevTools → Application tab → Cache Storage
+          </li>
+          <li>
+            <strong>Add notes offline:</strong> Go offline and add notes - they'll still work!
+          </li>
+          <li>
+            <strong>Test on mobile:</strong> Open on mobile device for the best PWA experience
+          </li>
+        </ol>
+      </div>
+
+      <!-- Footer -->
+      <footer class="footer">
+        <p>
+          Built with
+          <a href="https://opalrb.com/" target="_blank">Opal</a>,
+          <a href="https://stimulus.hotwired.dev/" target="_blank">Stimulus</a>,
+          <a href="https://vitejs.dev/" target="_blank">Vite</a>, and
+          <a href="https://vite-pwa-org.netlify.app/" target="_blank">vite-plugin-pwa</a>
+        </p>
+      </footer>
+    </div>
+
+    <script type="module" src="/app/javascript/application.js"></script>
+  </body>
+</html>
