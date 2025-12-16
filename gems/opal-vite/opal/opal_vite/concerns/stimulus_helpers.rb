@@ -1048,7 +1048,8 @@ module OpalVite
         if args.empty?
           `new klass()`
         else
-          native_args = args.map { |a| a.respond_to?(:to_n) ? a.to_n : a }
+          # Convert Ruby objects to native, pass JS objects as-is
+          native_args = args.map { |a| `#{a} != null && typeof #{a}.$to_n === 'function' ? #{a}.$to_n() : #{a}` }
           # Use Reflect.construct for dynamic argument passing
           `Reflect.construct(#{klass}, #{native_args})`
         end
