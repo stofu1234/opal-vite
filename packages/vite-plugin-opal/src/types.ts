@@ -122,6 +122,24 @@ export interface OpalPluginOptions {
    * ```
    */
   useBundler?: boolean
+
+  /**
+   * Include built-in concerns (JsProxyEx, DomHelpers, Toastable, Storable).
+   * When enabled, these modules are automatically available via:
+   * - `require 'opal_vite/concerns/js_proxy_ex'`
+   * - `require 'opal_vite/concerns/dom_helpers'`
+   * - `require 'opal_vite/concerns/toastable'`
+   * - `require 'opal_vite/concerns/storable'`
+   *
+   * @default true
+   * @example
+   * ```ts
+   * {
+   *   includeConcerns: true // Enable built-in concerns
+   * }
+   * ```
+   */
+  includeConcerns?: boolean
 }
 
 /**
