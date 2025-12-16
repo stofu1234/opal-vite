@@ -1,149 +1,100 @@
 # backtick_javascript: true
 
-# Users controller demonstrating API integration with fetch
+# UsersController - UI coordination for user list
+#
+# This controller is responsible for:
+# - UI state management (loading, error states)
+# - Coordinating between UserService and UserPresenter
+# - Handling user interactions (reload, show user)
+#
+# API communication is delegated to UserService
+# HTML rendering is delegated to UserPresenter
+#
 class UsersController < StimulusController
   include StimulusHelpers
 
   self.targets = ["list", "loading", "error"]
 
-  API_BASE = 'https://jsonplaceholder.typicode.com'
-
   def connect
     puts "Users controller connected!"
-    fetch_users
+    @user_service = UserService.new
+    @user_presenter = UserPresenter.new
+    load_users
   end
 
-  # Fetch users from API
-  def fetch_users
-    show_loading
-    hide_error
-    target_set_html(:list, '') if has_target?(:list)
-
-    # Fetch data from JSONPlaceholder API using Ruby-style helpers
-    promise = fetch_json_safe("#{API_BASE}/users")
-
-    promise = js_then(promise) do |users|
-      hide_loading
-      js_each(users) { |user| add_user_to_dom(user) }
-    end
-
-    js_catch(promise) do |error|
-      console_error('Error fetching users:', error)
-      hide_loading
-      show_error('Failed to load users. Please try again.')
-    end
-  end
-
-  # Reload users
+  # Reload users list
   def reload
-    fetch_users
+    load_users
   end
 
-  # Show user details
+  # Show user details (triggered by data-action)
   def show_user
     user_id = event_data_int('user-id')
-
-    # Fetch user details and posts in parallel using Ruby-style helpers
-    urls = [
-      "#{API_BASE}/users/#{user_id}",
-      "#{API_BASE}/posts?userId=#{user_id}"
-    ]
-
-    promise = fetch_all_json(urls)
-
-    promise = js_then(promise) do |results|
-      user = js_array_at(results, 0)
-      posts = js_array_at(results, 1)
-
-      dispatch_window_event('show-user-modal', {
-        user: user,
-        posts: posts
-      })
-    end
-
-    js_catch(promise) do |error|
-      console_error('Error fetching user details:', error)
-      `alert('Failed to load user details')`
-    end
+    fetch_and_show_user(user_id)
   end
 
   private
 
-  def add_user_to_dom(user)
-    list = get_target(:list)
+  # Load and display all users
+  def load_users
+    show_loading
+    hide_error
+    clear_list
 
-    card = create_element('div')
-    add_class(card, 'user-card')
-
-    user_id = js_get(user, :id)
-    set_attr(card, 'data-user-id', user_id)
-
-    # Set click handler using Ruby block
-    js_define_method_on(card, :onclick) do
-      show_user_by_id(user_id)
-    end
-
-    # Extract user properties
-    name = js_get(user, :name)
-    email = js_get(user, :email)
-    company = js_get(js_get(user, :company), :name)
-    address = js_get(user, :address)
-    city = js_get(address, :city)
-    phone = js_get(user, :phone)
-    initial = js_string_char_at(name, 0)
-
-    html = <<~HTML
-      <div class="user-header">
-        <div class="user-avatar">#{initial}</div>
-        <div class="user-info">
-          <h3>#{name}</h3>
-          <p class="user-email">#{email}</p>
-        </div>
-      </div>
-      <div class="user-details">
-        <div class="detail-item">
-          <span class="detail-label">Company:</span>
-          <span class="detail-value">#{company}</span>
-        </div>
-        <div class="detail-item">
-          <span class="detail-label">City:</span>
-          <span class="detail-value">#{city}</span>
-        </div>
-        <div class="detail-item">
-          <span class="detail-label">Phone:</span>
-          <span class="detail-value">#{phone}</span>
-        </div>
-      </div>
-    HTML
-
-    set_html(card, html)
-    append_child(list, card)
+    @user_service.fetch_all(
+      on_success: ->(users) { handle_users_loaded(users) },
+      on_error: ->(error) { handle_load_error(error) }
+    )
   end
 
-  # Helper method for onclick handler
-  def show_user_by_id(user_id)
-    # Fetch user details and posts in parallel
-    urls = [
-      "#{API_BASE}/users/#{user_id}",
-      "#{API_BASE}/posts?userId=#{user_id}"
-    ]
+  # Handle successful user list load
+  def handle_users_loaded(users)
+    hide_loading
+    render_users(users)
+  end
 
-    promise = fetch_all_json(urls)
+  # Handle user list load error
+  def handle_load_error(error)
+    console_error('Error fetching users:', error)
+    hide_loading
+    show_error('Failed to load users. Please try again.')
+  end
 
-    promise = js_then(promise) do |results|
-      user = js_array_at(results, 0)
-      posts = js_array_at(results, 1)
+  # Render users using presenter
+  def render_users(users)
+    return unless has_target?(:list)
 
-      dispatch_window_event('show-user-modal', {
-        user: user,
-        posts: posts
-      })
+    list = get_target(:list)
+    @user_presenter.render_list(list, users) do |user_id|
+      fetch_and_show_user(user_id)
     end
+  end
 
-    js_catch(promise) do |error|
-      console_error('Error fetching user details:', error)
-      `alert('Failed to load user details')`
-    end
+  # Fetch user with posts and dispatch modal event
+  def fetch_and_show_user(user_id)
+    @user_service.fetch_with_posts(user_id,
+      on_success: ->(data) { show_user_modal(data) },
+      on_error: ->(error) { handle_user_fetch_error(error) }
+    )
+  end
+
+  # Show user modal with fetched data
+  def show_user_modal(data)
+    dispatch_window_event('show-user-modal', {
+      user: data[:user],
+      posts: data[:posts]
+    })
+  end
+
+  # Handle user fetch error
+  def handle_user_fetch_error(error)
+    console_error('Error fetching user details:', error)
+    `alert('Failed to load user details')`
+  end
+
+  # UI helper methods
+  def clear_list
+    target_set_html(:list, '') if has_target?(:list)
   end
 
   def show_loading
