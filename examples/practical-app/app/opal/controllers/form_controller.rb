@@ -2,108 +2,99 @@
 
 # Form validation controller with real-time feedback
 class FormController < StimulusController
+  include JsProxyEx
+  include Toastable
+  include DomHelpers
+
   self.targets = ["input", "error"]
 
   def connect
   end
 
-  # Validate on input
-  def validate
-    `
-      const input = event.currentTarget;
-      const errorEl = input.nextElementSibling;
-      const value = input.value.trim();
+  # Validate on input - event is passed by Stimulus action
+  def validate(event)
+    input = event.current_target
+    error_el = input.next_element_sibling
+    value = input.value.strip
 
-      // Get validation rules from data attributes
-      const required = input.hasAttribute('data-required');
-      const minLength = parseInt(input.getAttribute('data-min-length') || '0');
-      const maxLength = parseInt(input.getAttribute('data-max-length') || '1000');
-      const pattern = input.getAttribute('data-pattern');
+    # Get validation rules from data attributes
+    required = input.has_attribute('data-required')
+    min_length = (input.get_attribute('data-min-length') || '0').to_i
+    max_length = (input.get_attribute('data-max-length') || '1000').to_i
+    pattern = input.get_attribute('data-pattern')
 
-      let errorMessage = '';
+    error_message = validate_value(value, required, min_length, max_length, pattern)
 
-      // Required validation
-      if (required && value === '') {
-        errorMessage = 'This field is required';
-      }
-      // Min length validation
-      else if (minLength > 0 && value.length < minLength) {
-        errorMessage = 'Must be at least ' + minLength + ' characters';
-      }
-      // Max length validation
-      else if (maxLength > 0 && value.length > maxLength) {
-        errorMessage = 'Must be at most ' + maxLength + ' characters';
-      }
-      // Pattern validation
-      else if (pattern && value !== '') {
-        const regex = new RegExp(pattern);
-        if (!regex.test(value)) {
-          errorMessage = 'Invalid format';
-        }
-      }
-
-      // Show/hide error
-      if (errorMessage) {
-        input.classList.add('error');
-        if (errorEl && errorEl.classList.contains('error-message')) {
-          errorEl.textContent = errorMessage;
-          errorEl.style.display = 'block';
-        }
-      } else {
-        input.classList.remove('error');
-        if (errorEl && errorEl.classList.contains('error-message')) {
-          errorEl.style.display = 'none';
-        }
-      }
-    `
+    # Show/hide error
+    show_field_error(input, error_el, error_message)
   end
 
   # Submit with validation
-  def submit
-    `
-      event.preventDefault();
+  def submit(event)
+    event.prevent_default
 
-      // Validate form inline
-      const form = this.element;
-      const inputs = form.querySelectorAll('[data-form-target="input"]');
-      let isValid = true;
+    inputs = query_all('[data-form-target="input"]')
+    is_valid = true
 
-      inputs.forEach(input => {
-        // Trigger validation for each input
-        const validateEvent = new Event('input', { bubbles: true });
-        input.dispatchEvent(validateEvent);
+    # Validate all inputs
+    inputs.each do |input|
+      # Trigger validation event
+      input.dispatch_event(create_event('input'))
 
-        // Check if has error class
-        if (input.classList.contains('error')) {
-          isValid = false;
-        }
-      });
+      # Check if has error class
+      is_valid = false if has_class?(input, 'error')
+    end
 
-      if (!isValid) {
-        const toastEvent = new CustomEvent('show-toast', {
-          detail: { message: 'Please fix validation errors', type: 'error' }
-        });
-        window.dispatchEvent(toastEvent);
-        return;
-      }
+    unless is_valid
+      show_error('Please fix validation errors')
+      return
+    end
 
-      // Form is valid, show success toast
-      const successEvent = new CustomEvent('show-toast', {
-        detail: { message: 'Form submitted successfully!', type: 'success' }
-      });
-      window.dispatchEvent(successEvent);
+    # Form is valid
+    show_success('Form submitted successfully!')
 
-      // Reset form
-      this.element.reset();
+    # Reset form
+    element.reset
 
-      // Clear all error states
-      inputs.forEach(input => {
-        input.classList.remove('error');
-        const errorEl = input.nextElementSibling;
-        if (errorEl && errorEl.classList.contains('error-message')) {
-          errorEl.style.display = 'none';
-        }
-      });
-    `
+    # Clear all error states
+    inputs.each do |input|
+      remove_class(input, 'error')
+      error_el = input.next_element_sibling
+      if element_exists?(error_el) && has_class?(error_el, 'error-message')
+        error_el.style.display = 'none'
+      end
+    end
+  end
+
+  private
+
+  def validate_value(value, required, min_length, max_length, pattern)
+    if required && value.empty?
+      'This field is required'
+    elsif min_length > 0 && value.length < min_length
+      "Must be at least #{min_length} characters"
+    elsif max_length > 0 && value.length > max_length
+      "Must be at most #{max_length} characters"
+    elsif pattern && !value.empty?
+      regex = `new RegExp(#{pattern})`
+      unless `#{regex}.test(#{value})`
+        'Invalid format'
+      end
+    end
+  end
+
+  def show_field_error(input, error_el, error_message)
+    if error_message
+      add_class(input, 'error')
+      if element_exists?(error_el) && has_class?(error_el, 'error-message')
+        error_el.text_content = error_message
+        error_el.style.display = 'block'
+      end
+    else
+      remove_class(input, 'error')
+      if element_exists?(error_el) && has_class?(error_el, 'error-message')
+        error_el.style.display = 'none'
+      end
+    end
   end
 end
