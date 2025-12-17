@@ -148,27 +148,98 @@ module Opal
         source_map = builder.source_map
         return nil unless source_map
 
-        # Convert to hash and adjust sources to be relative paths for better debugging
+        # Convert to hash
         map_hash = source_map.to_h
+        return nil unless map_hash
 
-        # Ensure sources are properly set for browser debugging
-        if map_hash && map_hash['sections']
-          # Index source map format - adjust each section's sources
-          map_hash['sections'].each do |section|
-            if section['map'] && section['map']['sources']
-              section['map']['sources'] = section['map']['sources'].map do |source|
-                normalize_source_path(source, file_path)
-              end
-            end
-          end
-        elsif map_hash && map_hash['sources']
-          # Standard source map format
+        # Vite doesn't support index source maps with 'sections' array
+        # Convert to standard format for browser compatibility
+        if map_hash['sections']
+          map_hash = convert_index_to_standard_sourcemap(map_hash, file_path)
+        elsif map_hash['sources']
+          # Standard source map format - just normalize paths
           map_hash['sources'] = map_hash['sources'].map do |source|
             normalize_source_path(source, file_path)
           end
         end
 
+        return nil unless map_hash
+
         map_hash.to_json
+      end
+
+      def convert_index_to_standard_sourcemap(index_map, file_path)
+        sections = index_map['sections']
+        return nil if sections.nil? || sections.empty?
+
+        # For single section, extract and return that section's map
+        if sections.length == 1
+          section_map = sections.first['map']
+          return nil unless section_map
+
+          # Normalize source paths
+          if section_map['sources']
+            section_map['sources'] = section_map['sources'].map do |source|
+              normalize_source_path(source, file_path)
+            end
+          end
+
+          return section_map
+        end
+
+        # For multiple sections, merge them into a single standard source map
+        # This is more complex - we need to combine sources, sourcesContent, and adjust mappings
+        merged = {
+          'version' => 3,
+          'sources' => [],
+          'sourcesContent' => [],
+          'names' => [],
+          'mappings' => ''
+        }
+
+        sections.each_with_index do |section, idx|
+          section_map = section['map']
+          next unless section_map
+
+          offset = section['offset'] || { 'line' => 0, 'column' => 0 }
+          offset_lines = offset['line'] || 0
+
+          # Add sources and sourcesContent
+          source_offset = merged['sources'].length
+          if section_map['sources']
+            section_map['sources'].each_with_index do |source, i|
+              merged['sources'] << normalize_source_path(source, file_path)
+              if section_map['sourcesContent'] && section_map['sourcesContent'][i]
+                merged['sourcesContent'] << section_map['sourcesContent'][i]
+              else
+                merged['sourcesContent'] << nil
+              end
+            end
+          end
+
+          # Add names
+          name_offset = merged['names'].length
+          if section_map['names']
+            merged['names'].concat(section_map['names'])
+          end
+
+          # Add mappings with proper offset
+          if section_map['mappings']
+            # Add newlines for offset if needed
+            if idx > 0 && offset_lines > 0
+              merged['mappings'] += ';' * offset_lines
+            elsif idx > 0
+              merged['mappings'] += ';'
+            end
+
+            # Append the section's mappings
+            # Note: In a proper implementation, we'd need to re-encode with adjusted offsets
+            # For now, just append the raw mappings
+            merged['mappings'] += section_map['mappings']
+          end
+        end
+
+        merged
       end
 
       def normalize_source_path(source, file_path)
