@@ -35,13 +35,11 @@ module StableHelpers
 
     loop do
       begin
-        # First wait for element to be visible via JS
-        js_wait_for_element(selector, timeout: 2, visible: true)
-        # Then use Capybara's native click
-        element = find(selector, wait: 1)
+        # Use Capybara's find with wait, then click
+        element = find(selector, wait: 2, visible: true)
         element.click
         return true
-      rescue Capybara::ElementNotFound, Ferrum::NodeNotFoundError => e
+      rescue Capybara::ElementNotFound, Ferrum::NodeNotFoundError, Ferrum::TimeoutError => e
         elapsed = Time.now - start_time
         raise e if elapsed > timeout
         sleep(DEFAULT_INTERVAL / 1000.0)
