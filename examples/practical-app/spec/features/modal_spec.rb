@@ -6,11 +6,15 @@ RSpec.describe 'Modal Functionality', type: :feature do
   let(:list_selector) { '[data-todo-target="list"]' }
 
   before do
+    # Wait for list container to be ready before adding todo
+    js_wait_for("document.querySelector('#{list_selector}') !== null", timeout: 10)
+    wait_for_dom_stable
+
     # Add a todo so we can edit it to trigger the modal
     stable_input(input_selector, 'Test todo for modal', submit_key: :enter)
     # Wait for todo to be added using JS polling with longer timeout
     wait_for_count("#{list_selector} .todo-item", 1, timeout: 15)
-    wait_for_text(list_selector, 'Test todo for modal')
+    wait_for_text(list_selector, 'Test todo for modal', timeout: 10)
     wait_for_dom_stable
   end
 
