@@ -6,14 +6,17 @@ RSpec.describe 'Todo Functionality', type: :feature do
 
   # Add todo using stable helpers with explicit count verification
   def add_todo(text)
+    # Wait for list to be ready before checking count
+    js_wait_for("document.querySelector('#{list_selector}') !== null", timeout: 5)
+
     # Get current count before adding
-    current_count = all("#{list_selector} .todo-item", wait: 0).count
+    current_count = all("#{list_selector} .todo-item", wait: 1).count
 
     stable_input(input_selector, text, submit_key: :enter)
 
     # Wait for the new todo item to appear (count should increase by 1)
-    wait_for_count("#{list_selector} .todo-item", current_count + 1)
-    wait_for_text(list_selector, text)
+    wait_for_count("#{list_selector} .todo-item", current_count + 1, timeout: 15)
+    wait_for_text(list_selector, text, timeout: 10)
     wait_for_dom_stable
   end
 
@@ -48,8 +51,10 @@ RSpec.describe 'Todo Functionality', type: :feature do
 
   describe 'toggling todos' do
     before do
+      # Wait for list container to be ready
+      wait_for_dom_stable
       add_todo('Test todo')
-      expect(page).to have_css("#{list_selector} .todo-item", count: 1, wait: 5)
+      expect(page).to have_css("#{list_selector} .todo-item", count: 1, wait: 10)
     end
 
     it 'toggles todo completion' do
