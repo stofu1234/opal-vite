@@ -3,6 +3,9 @@
 require 'capybara/rspec'
 require 'capybara/cuprite'
 
+# Load support files
+Dir[File.join(__dir__, 'support', '**', '*.rb')].each { |f| require f }
+
 # Find browser path (system Chrome, Playwright Chromium, or CI Chrome)
 def find_browser_path
   paths = []
@@ -77,23 +80,43 @@ RSpec.configure do |config|
   config.order = :random
   Kernel.srand config.seed
 
-  # Include Capybara DSL
+  # Include Capybara DSL and StableHelpers
   config.include Capybara::DSL, type: :feature
+  config.include StableHelpers, type: :feature
 
   # Reset state before each test
   config.before(:each, type: :feature) do
     # Clear localStorage
     visit '/'
-    # Wait for Opal/Stimulus to load - wait for key controllers
-    expect(page).to have_css('[data-controller~="todo"]', wait: 10)
-    expect(page).to have_css('[data-controller~="theme"]', wait: 10)
+    # Wait for Opal/Stimulus controllers to initialize using JS polling
+    wait_for_element_ready('[data-controller~="todo"]')
+    wait_for_element_ready('[data-controller~="theme"]')
     page.execute_script('localStorage.clear()')
     visit '/'
-    # Wait for Opal/Stimulus to load again - wait for key elements to be ready
-    expect(page).to have_css('[data-controller~="todo"]', wait: 10)
-    expect(page).to have_css('[data-controller~="theme"]', wait: 10)
-    expect(page).to have_css('[data-todo-target="input"]', wait: 10)
-    # Additional wait to ensure Opal controllers are fully initialized
-    sleep 0.5
+    # Wait for Opal/Stimulus to load again
+    wait_for_element_ready('[data-controller~="todo"]')
+    wait_for_element_ready('[data-controller~="theme"]')
+    wait_for_element_ready('[data-todo-target="input"]')
+    # Wait for DOM to stabilize after Opal initialization
+    wait_for_dom_stable
+  end
+
+  # Helper to wait for element with JS polling
+  def wait_for_element_ready(selector, timeout: 10)
+    start_time = Time.now
+    loop do
+      result = page.evaluate_script(<<~JS)
+        (function() {
+          var el = document.querySelector('#{selector}');
+          return el !== null && el.offsetParent !== null;
+        })()
+      JS
+      return if result
+
+      elapsed = Time.now - start_time
+      raise Capybara::ElementNotFound, "Timeout waiting for: #{selector}" if elapsed > timeout
+
+      sleep 0.1
+    end
   end
 end
