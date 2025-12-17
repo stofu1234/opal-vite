@@ -177,14 +177,29 @@ module Opal
           section_map = sections.first['map']
           return nil unless section_map
 
-          # Normalize source paths
-          if section_map['sources']
-            section_map['sources'] = section_map['sources'].map do |source|
+          # Ensure all required fields exist for Vite compatibility
+          # Vite's _getCombinedSourcemap expects 'sources' array with 'length' property
+          result = {
+            'version' => section_map['version'] || 3,
+            'sources' => [],
+            'sourcesContent' => [],
+            'names' => section_map['names'] || [],
+            'mappings' => section_map['mappings'] || ''
+          }
+
+          # Copy and normalize source paths
+          if section_map['sources'] && section_map['sources'].is_a?(Array)
+            result['sources'] = section_map['sources'].map do |source|
               normalize_source_path(source, file_path)
             end
           end
 
-          return section_map
+          # Copy sourcesContent if available
+          if section_map['sourcesContent'] && section_map['sourcesContent'].is_a?(Array)
+            result['sourcesContent'] = section_map['sourcesContent']
+          end
+
+          return result
         end
 
         # For multiple sections, merge them into a single standard source map
