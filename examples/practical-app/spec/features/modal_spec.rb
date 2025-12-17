@@ -6,22 +6,21 @@ RSpec.describe 'Modal Functionality', type: :feature do
   let(:list_selector) { '[data-todo-target="list"]' }
 
   before do
+    # Wait for list container to be ready before adding todo
+    js_wait_for("document.querySelector('#{list_selector}') !== null", timeout: 10)
+    wait_for_dom_stable
+
     # Add a todo so we can edit it to trigger the modal
-    input = find(input_selector, wait: 10)
-    input.set('Test todo for modal')
-    # Give browser time to process the input value
-    sleep 0.3
-    input.native.send_keys(:enter)
-    # Wait for Opal to process the event
-    sleep 1.0
-    # Wait for todo to be added
-    expect(page).to have_css("#{list_selector} .todo-item", wait: 10)
-    expect(page).to have_content('Test todo for modal')
+    stable_input(input_selector, 'Test todo for modal', submit_key: :enter)
+    # Wait for todo to be added using JS polling with longer timeout
+    wait_for_count("#{list_selector} .todo-item", 1, timeout: 15)
+    wait_for_text(list_selector, 'Test todo for modal', timeout: 10)
+    wait_for_dom_stable
   end
 
   def open_modal
-    find('[data-action*="todo#edit_todo"]', match: :first).click
-    expect(page).to have_css('.modal.active', wait: 5)
+    stable_click('[data-action*="todo#edit_todo"]')
+    wait_for_class(modal_selector, 'active')
   end
 
   def modal_element
@@ -98,8 +97,11 @@ RSpec.describe 'Modal Functionality', type: :feature do
     it 'focuses input within modal' do
       open_modal
 
-      # Wait for focus to be set
-      sleep 0.2
+      # Wait for focus to be set using JS polling
+      js_wait_for(
+        "document.activeElement?.closest('.modal[data-controller=\"modal\"]') !== null",
+        timeout: 5
+      )
 
       focused_in_modal = page.evaluate_script(
         "document.activeElement?.closest('.modal[data-controller=\"modal\"]') !== null"

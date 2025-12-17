@@ -4,19 +4,24 @@ RSpec.describe 'Todo Functionality', type: :feature do
   let(:input_selector) { '[data-todo-target="input"]' }
   let(:list_selector) { '[data-todo-target="list"]' }
 
+  # Add todo using stable helpers with explicit count verification
   def add_todo(text)
-    # Wait for input to be ready
-    input = find(input_selector, wait: 10)
-    input.set(text)
-    # Give browser time to process the input value
-    sleep 0.3
-    input.native.send_keys(:enter)
-    # Wait for Opal to process the event and DOM to update
-    sleep 1.0
+    # Wait for list to be ready before checking count
+    js_wait_for("document.querySelector('#{list_selector}') !== null", timeout: 5)
+
+    # Get current count before adding
+    current_count = all("#{list_selector} .todo-item", wait: 1).count
+
+    stable_input(input_selector, text, submit_key: :enter)
+
+    # Wait for the new todo item to appear (count should increase by 1)
+    wait_for_count("#{list_selector} .todo-item", current_count + 1, timeout: 15)
+    wait_for_text(list_selector, text, timeout: 10)
+    wait_for_dom_stable
   end
 
   def fill_in_todo_input(text)
-    find(input_selector, wait: 5).set(text)
+    stable_set(input_selector, text)
   end
 
   describe 'adding todos' do
@@ -46,8 +51,10 @@ RSpec.describe 'Todo Functionality', type: :feature do
 
   describe 'toggling todos' do
     before do
+      # Wait for list container to be ready
+      wait_for_dom_stable
       add_todo('Test todo')
-      expect(page).to have_css("#{list_selector} .todo-item", count: 1, wait: 5)
+      expect(page).to have_css("#{list_selector} .todo-item", count: 1, wait: 10)
     end
 
     it 'toggles todo completion' do

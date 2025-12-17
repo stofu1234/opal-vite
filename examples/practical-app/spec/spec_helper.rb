@@ -2,6 +2,10 @@
 
 require 'capybara/rspec'
 require 'capybara/cuprite'
+require 'opal/vite/testing/stable_helpers'
+
+# Load support files (if any additional helpers exist)
+Dir[File.join(__dir__, 'support', '**', '*.rb')].each { |f| require f }
 
 # Find browser path (system Chrome, Playwright Chromium, or CI Chrome)
 def find_browser_path
@@ -77,23 +81,72 @@ RSpec.configure do |config|
   config.order = :random
   Kernel.srand config.seed
 
-  # Include Capybara DSL
+  # Include Capybara DSL and StableHelpers
   config.include Capybara::DSL, type: :feature
+  config.include StableHelpers, type: :feature
 
   # Reset state before each test
   config.before(:each, type: :feature) do
     # Clear localStorage
     visit '/'
-    # Wait for Opal/Stimulus to load - wait for key controllers
-    expect(page).to have_css('[data-controller~="todo"]', wait: 10)
-    expect(page).to have_css('[data-controller~="theme"]', wait: 10)
+    # Wait for Opal/Stimulus controllers to initialize
+    wait_for_stimulus_ready
     page.execute_script('localStorage.clear()')
     visit '/'
-    # Wait for Opal/Stimulus to load again - wait for key elements to be ready
-    expect(page).to have_css('[data-controller~="todo"]', wait: 10)
-    expect(page).to have_css('[data-controller~="theme"]', wait: 10)
-    expect(page).to have_css('[data-todo-target="input"]', wait: 10)
-    # Additional wait to ensure Opal controllers are fully initialized
-    sleep 0.5
+    # Wait for Opal/Stimulus to load again
+    wait_for_stimulus_ready
+    # Wait for DOM to stabilize after Opal initialization
+    wait_for_dom_stable
+  end
+
+  # Wait for Stimulus controllers to be fully connected
+  def wait_for_stimulus_ready(timeout: 15)
+    start_time = Time.now
+    loop do
+      result = page.evaluate_script(<<~JS)
+        (function() {
+          // Check if Stimulus application exists
+          if (typeof Stimulus === 'undefined') return false;
+
+          // Check if controllers are connected by verifying their targets
+          var todoEl = document.querySelector('[data-controller~="todo"]');
+          var themeEl = document.querySelector('[data-controller~="theme"]');
+          var inputEl = document.querySelector('[data-todo-target="input"]');
+
+          if (!todoEl || !themeEl || !inputEl) return false;
+
+          // Check if theme button has been initialized (has Dark Mode text)
+          var themeBtn = document.querySelector('[data-action*="theme#toggle"]');
+          if (!themeBtn || !themeBtn.textContent.includes('Mode')) return false;
+
+          return true;
+        })()
+      JS
+      return if result
+
+      elapsed = Time.now - start_time
+      raise Capybara::ElementNotFound, "Stimulus controllers not ready within #{timeout}s" if elapsed > timeout
+
+      sleep 0.1
+    end
+  end
+
+  # Helper to wait for element with JS polling
+  def wait_for_element_ready(selector, timeout: 10)
+    start_time = Time.now
+    loop do
+      result = page.evaluate_script(<<~JS)
+        (function() {
+          var el = document.querySelector('#{selector}');
+          return el !== null && el.offsetParent !== null;
+        })()
+      JS
+      return if result
+
+      elapsed = Time.now - start_time
+      raise Capybara::ElementNotFound, "Timeout waiting for: #{selector}" if elapsed > timeout
+
+      sleep 0.1
+    end
   end
 end
