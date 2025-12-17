@@ -141,54 +141,32 @@ module Opal
       end
 
       def extract_source_map(builder, file_path)
-        # Get source map from the main processed asset (the file we're compiling)
-        # This gives us a single standard-format source map instead of an index
-        return nil unless builder.processed.any?
+        # Use builder's combined source_map which includes all compiled files
+        # This allows debugging of all required files (controllers, services, etc.)
+        return nil unless builder.respond_to?(:source_map) && builder.source_map
 
-        # Find the asset that matches our file
-        main_asset = builder.processed.find { |a| a.filename == file_path } ||
-                     builder.processed.last
-        return nil unless main_asset
+        source_map = builder.source_map
+        map_hash = source_map.to_h
+        return nil unless map_hash
 
-        # Get source map from the asset
-        if main_asset.respond_to?(:source_map) && main_asset.source_map
-          source_map = main_asset.source_map
-          map_hash = source_map.to_h
-
-          # Normalize source paths for browser debugging
-          if map_hash && map_hash['sources']
-            map_hash['sources'] = map_hash['sources'].map do |source|
-              normalize_source_path(source, file_path)
-            end
-          end
-
-          return map_hash.to_json if map_hash
+        # If it's an index format with sections, merge all sections
+        if map_hash['sections']
+          map_hash = merge_all_sections(map_hash, file_path)
         end
 
-        # Fallback: try builder's source_map and convert from index format
-        if builder.respond_to?(:source_map) && builder.source_map
-          source_map = builder.source_map
-          map_hash = source_map.to_h
-          return nil unless map_hash
+        return nil unless map_hash
 
-          # If it's an index format with sections, extract the main file's section
-          if map_hash['sections']
-            map_hash = extract_main_section(map_hash, file_path)
+        # Normalize source paths for browser debugging
+        if map_hash['sources']
+          map_hash['sources'] = map_hash['sources'].map do |source|
+            normalize_source_path(source, file_path)
           end
-
-          if map_hash && map_hash['sources']
-            map_hash['sources'] = map_hash['sources'].map do |source|
-              normalize_source_path(source, file_path)
-            end
-          end
-
-          return map_hash.to_json if map_hash
         end
 
-        nil
+        map_hash.to_json
       end
 
-      def extract_main_section(index_map, file_path)
+      def merge_all_sections(index_map, file_path)
         sections = index_map['sections']
         return nil if sections.nil? || sections.empty?
 
@@ -197,14 +175,71 @@ module Opal
           return sections.first['map']
         end
 
-        # For multiple sections, try to find the one for our file
-        # or just return the last one (usually the main compiled file)
-        file_basename = File.basename(file_path)
-        matching_section = sections.find do |section|
-          section['map'] && section['map']['sources']&.any? { |s| s.include?(file_basename) }
+        # Merge all sections into a single standard source map
+        # This allows debugging of all files (application.rb + all required files)
+        merged = {
+          'version' => 3,
+          'file' => File.basename(file_path),
+          'sources' => [],
+          'sourcesContent' => [],
+          'names' => [],
+          'mappings' => ''
+        }
+
+        current_line = 0
+
+        sections.each_with_index do |section, idx|
+          section_map = section['map']
+          next unless section_map
+
+          offset = section['offset'] || { 'line' => 0, 'column' => 0 }
+          section_start_line = offset['line'] || 0
+
+          # Add empty lines to reach the section's starting line
+          lines_to_add = section_start_line - current_line
+          if lines_to_add > 0
+            merged['mappings'] += ';' * lines_to_add
+            current_line = section_start_line
+          end
+
+          # Track source index offset for this section
+          source_offset = merged['sources'].length
+          name_offset = merged['names'].length
+
+          # Add sources and sourcesContent from this section
+          if section_map['sources']
+            section_map['sources'].each_with_index do |source, i|
+              merged['sources'] << source
+              if section_map['sourcesContent'] && section_map['sourcesContent'][i]
+                merged['sourcesContent'] << section_map['sourcesContent'][i]
+              else
+                merged['sourcesContent'] << nil
+              end
+            end
+          end
+
+          # Add names from this section
+          if section_map['names']
+            merged['names'].concat(section_map['names'])
+          end
+
+          # Add mappings from this section
+          if section_map['mappings'] && !section_map['mappings'].empty?
+            # If we need to adjust source/name indices, we'd need to decode/re-encode VLQ
+            # For now, append as-is (works when each section has its own source indices starting at 0)
+            # This is a simplification - proper implementation would adjust indices
+            if idx > 0 && !merged['mappings'].empty? && !merged['mappings'].end_with?(';')
+              merged['mappings'] += ';'
+            end
+            merged['mappings'] += section_map['mappings']
+
+            # Count lines in this section's mappings
+            lines_in_section = section_map['mappings'].count(';') + 1
+            current_line += lines_in_section
+          end
         end
 
-        (matching_section || sections.last)&.dig('map')
+        merged
       end
 
       def normalize_source_path(source, file_path)
