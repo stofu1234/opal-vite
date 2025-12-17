@@ -14,6 +14,8 @@ RSpec.describe 'Theme Toggle', type: :feature do
 
   def click_toggle
     stable_click(toggle_button_selector)
+    # Give Stimulus time to process the click and update DOM
+    sleep 0.1
     wait_for_dom_stable
   end
 

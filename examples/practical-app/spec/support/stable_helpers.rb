@@ -27,10 +27,11 @@ module StableHelpers
   end
 
   # Click element with retry logic
-  # Uses Capybara native click for proper Stimulus event handling
+  # Uses Capybara native click with JS fallback for reliability
   # @param selector [String] CSS selector
   # @param timeout [Integer] Maximum wait time in seconds
   def stable_click(selector, timeout: DEFAULT_TIMEOUT)
+    escaped_selector = escape_js(selector)
     start_time = Time.now
 
     loop do
@@ -38,8 +39,24 @@ module StableHelpers
         # Use Capybara's find with wait, then click
         element = find(selector, wait: 2, visible: true)
         element.click
+        # Small delay to allow event processing
+        sleep(0.05)
         return true
-      rescue Capybara::ElementNotFound, Ferrum::NodeNotFoundError, Ferrum::TimeoutError => e
+      rescue Capybara::ElementNotFound, Ferrum::NodeNotFoundError, Ferrum::TimeoutError,
+             Capybara::Cuprite::MouseEventFailed => e
+        # If native click fails, try JavaScript click
+        js_clicked = page.evaluate_script(<<~JS)
+          (function() {
+            var el = document.querySelector('#{escaped_selector}');
+            if (el && el.offsetParent !== null) {
+              el.click();
+              return true;
+            }
+            return false;
+          })()
+        JS
+        return true if js_clicked
+
         elapsed = Time.now - start_time
         raise e if elapsed > timeout
         sleep(DEFAULT_INTERVAL / 1000.0)
