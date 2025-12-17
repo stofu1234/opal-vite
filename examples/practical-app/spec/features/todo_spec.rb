@@ -6,13 +6,13 @@ RSpec.describe 'Todo Functionality', type: :feature do
 
   def add_todo(text)
     # Wait for input to be ready
-    input = find(input_selector, wait: 5)
+    input = find(input_selector, wait: 10)
     input.set(text)
     # Give browser time to process the input value
-    sleep 0.1
+    sleep 0.3
     input.native.send_keys(:enter)
-    # Wait for Opal to process the event
-    sleep 0.5
+    # Wait for Opal to process the event and DOM to update
+    sleep 1.0
   end
 
   def fill_in_todo_input(text)

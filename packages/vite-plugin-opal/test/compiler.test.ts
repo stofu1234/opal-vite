@@ -69,8 +69,20 @@ puts calc.add(2, 3)
       if (result.map) {
         const map = JSON.parse(result.map)
         expect(map.version).toBe(3)
-        expect(map.sources).toBeDefined()
-        expect(map.mappings).toBeDefined()
+        // Opal generates index source maps with sections array
+        // Check for either standard format (sources at top level) or index format (sections)
+        if (map.sections) {
+          // Index source map format
+          expect(map.sections).toBeInstanceOf(Array)
+          expect(map.sections.length).toBeGreaterThan(0)
+          expect(map.sections[0].map).toBeDefined()
+          expect(map.sections[0].map.sources).toBeDefined()
+          expect(map.sections[0].map.mappings).toBeDefined()
+        } else {
+          // Standard source map format
+          expect(map.sources).toBeDefined()
+          expect(map.mappings).toBeDefined()
+        }
       }
     })
 

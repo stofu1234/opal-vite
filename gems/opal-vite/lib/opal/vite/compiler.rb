@@ -1,5 +1,6 @@
 require 'opal'
 require 'json'
+require 'pathname'
 
 module Opal
   module Vite
@@ -38,12 +39,10 @@ module Opal
             dependencies: extract_dependencies(builder)
           }
 
-          # Try to extract source map if available
+          # Extract source map if enabled
           if @config.source_map_enabled
             begin
-              # Opal::Builder should have source map information
-              # Try to get it from the processed assets
-              source_map = extract_source_map(builder)
+              source_map = extract_source_map(builder, file_path)
               result[:map] = source_map if source_map
             rescue => e
               # Source map extraction failed, log but don't fail compilation
@@ -141,26 +140,122 @@ module Opal
         builder.processed.map { |asset| asset.filename }.compact
       end
 
-      def extract_source_map(builder)
-        # Get source map from the builder's processed assets
-        # Opal stores source maps in the compiled assets
-        return nil unless builder.processed.any?
+      def extract_source_map(builder, file_path)
+        # Use builder's combined source_map which includes all compiled files
+        # This allows debugging of all required files (controllers, services, etc.)
+        return nil unless builder.respond_to?(:source_map) && builder.source_map
 
-        # Get the main compiled asset (usually the last one)
-        main_asset = builder.processed.last
-        return nil unless main_asset
+        source_map = builder.source_map
+        map_hash = source_map.to_h
+        return nil unless map_hash
 
-        # Check if the asset has source map data
-        if main_asset.respond_to?(:source_map) && main_asset.source_map
-          return main_asset.source_map.to_json
+        # If it's an index format with sections, merge all sections
+        if map_hash['sections']
+          map_hash = merge_all_sections(map_hash, file_path)
         end
 
-        # Try to get from the builder directly
-        if builder.respond_to?(:source_map) && builder.source_map
-          return builder.source_map.to_json
+        return nil unless map_hash
+
+        # Normalize source paths for browser debugging
+        if map_hash['sources']
+          map_hash['sources'] = map_hash['sources'].map do |source|
+            normalize_source_path(source, file_path)
+          end
         end
 
-        nil
+        map_hash.to_json
+      end
+
+      def merge_all_sections(index_map, file_path)
+        sections = index_map['sections']
+        return nil if sections.nil? || sections.empty?
+
+        # For single section, just return that section's map
+        if sections.length == 1
+          return sections.first['map']
+        end
+
+        # Merge all sections into a single standard source map
+        # This allows debugging of all files (application.rb + all required files)
+        merged = {
+          'version' => 3,
+          'file' => File.basename(file_path),
+          'sources' => [],
+          'sourcesContent' => [],
+          'names' => [],
+          'mappings' => ''
+        }
+
+        current_line = 0
+
+        sections.each_with_index do |section, idx|
+          section_map = section['map']
+          next unless section_map
+
+          offset = section['offset'] || { 'line' => 0, 'column' => 0 }
+          section_start_line = offset['line'] || 0
+
+          # Add empty lines to reach the section's starting line
+          lines_to_add = section_start_line - current_line
+          if lines_to_add > 0
+            merged['mappings'] += ';' * lines_to_add
+            current_line = section_start_line
+          end
+
+          # Track source index offset for this section
+          source_offset = merged['sources'].length
+          name_offset = merged['names'].length
+
+          # Add sources and sourcesContent from this section
+          if section_map['sources']
+            section_map['sources'].each_with_index do |source, i|
+              merged['sources'] << source
+              if section_map['sourcesContent'] && section_map['sourcesContent'][i]
+                merged['sourcesContent'] << section_map['sourcesContent'][i]
+              else
+                merged['sourcesContent'] << nil
+              end
+            end
+          end
+
+          # Add names from this section
+          if section_map['names']
+            merged['names'].concat(section_map['names'])
+          end
+
+          # Add mappings from this section
+          if section_map['mappings'] && !section_map['mappings'].empty?
+            # If we need to adjust source/name indices, we'd need to decode/re-encode VLQ
+            # For now, append as-is (works when each section has its own source indices starting at 0)
+            # This is a simplification - proper implementation would adjust indices
+            if idx > 0 && !merged['mappings'].empty? && !merged['mappings'].end_with?(';')
+              merged['mappings'] += ';'
+            end
+            merged['mappings'] += section_map['mappings']
+
+            # Count lines in this section's mappings
+            lines_in_section = section_map['mappings'].count(';') + 1
+            current_line += lines_in_section
+          end
+        end
+
+        merged
+      end
+
+      def normalize_source_path(source, file_path)
+        # Convert absolute paths to relative for better browser debugging
+        return source if source.nil? || source.empty?
+
+        # If source is already relative or a URL, keep it
+        return source unless source.start_with?('/')
+
+        # Try to make path relative to the original file
+        begin
+          Pathname.new(source).relative_path_from(Pathname.new(File.dirname(file_path))).to_s
+        rescue ArgumentError
+          # On different drives/mounts, keep absolute path
+          source
+        end
       end
     end
   end

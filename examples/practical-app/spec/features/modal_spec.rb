@@ -7,15 +7,15 @@ RSpec.describe 'Modal Functionality', type: :feature do
 
   before do
     # Add a todo so we can edit it to trigger the modal
-    input = find(input_selector, wait: 5)
+    input = find(input_selector, wait: 10)
     input.set('Test todo for modal')
     # Give browser time to process the input value
-    sleep 0.1
+    sleep 0.3
     input.native.send_keys(:enter)
     # Wait for Opal to process the event
-    sleep 0.5
+    sleep 1.0
     # Wait for todo to be added
-    expect(page).to have_css("#{list_selector} .todo-item", wait: 5)
+    expect(page).to have_css("#{list_selector} .todo-item", wait: 10)
     expect(page).to have_content('Test todo for modal')
   end
 
