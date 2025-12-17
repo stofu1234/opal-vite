@@ -2,8 +2,9 @@
 
 require 'capybara/rspec'
 require 'capybara/cuprite'
+require 'opal/vite/testing/stable_helpers'
 
-# Load support files
+# Load support files (if any additional helpers exist)
 Dir[File.join(__dir__, 'support', '**', '*.rb')].each { |f| require f }
 
 # Find browser path (system Chrome, Playwright Chromium, or CI Chrome)
