@@ -6,10 +6,14 @@ export default defineConfig({
     opal({
       loadPaths: ['./app/opal/controllers'],
       sourceMap: true,
-      includeConcerns: true
+      includeConcerns: true,
+      debug: process.env.DEBUG === '1'
     })
   ],
   server: {
     port: 3001
+  },
+  build: {
+    sourcemap: true
   }
 })

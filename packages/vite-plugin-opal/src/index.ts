@@ -89,10 +89,15 @@ export default function opalPlugin(options: OpalPluginOptions = {}): Plugin {
           const result = await compiler.compile(id)
           if (options.debug) {
             console.log(`[vite-plugin-opal] load: Compiled ${id} -> ${result.code.length} bytes`)
+            console.log(`[vite-plugin-opal] load: Source map: ${result.map ? 'yes' : 'no'}`)
+          }
+          const sourceMap = result.map ? JSON.parse(result.map) : null
+          if (options.debug && sourceMap) {
+            console.log(`[vite-plugin-opal] load: Source map version: ${sourceMap.version}, sections: ${sourceMap.sections?.length || 0}`)
           }
           return {
             code: result.code,
-            map: result.map ? JSON.parse(result.map) : null
+            map: sourceMap
           }
         } catch (error) {
           console.error(`[vite-plugin-opal] Compilation error for ${id}:`, error)

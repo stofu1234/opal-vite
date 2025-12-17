@@ -1,5 +1,6 @@
 require 'opal'
 require 'json'
+require 'pathname'
 
 module Opal
   module Vite
@@ -38,12 +39,10 @@ module Opal
             dependencies: extract_dependencies(builder)
           }
 
-          # Try to extract source map if available
+          # Extract source map if enabled
           if @config.source_map_enabled
             begin
-              # Opal::Builder should have source map information
-              # Try to get it from the processed assets
-              source_map = extract_source_map(builder)
+              source_map = extract_source_map(builder, file_path)
               result[:map] = source_map if source_map
             rescue => e
               # Source map extraction failed, log but don't fail compilation
@@ -141,26 +140,51 @@ module Opal
         builder.processed.map { |asset| asset.filename }.compact
       end
 
-      def extract_source_map(builder)
-        # Get source map from the builder's processed assets
-        # Opal stores source maps in the compiled assets
-        return nil unless builder.processed.any?
+      def extract_source_map(builder, file_path)
+        # Use Builder's source_map method which returns an Opal::SourceMap::Index
+        # This combines all processed source maps into a single index
+        return nil unless builder.respond_to?(:source_map)
 
-        # Get the main compiled asset (usually the last one)
-        main_asset = builder.processed.last
-        return nil unless main_asset
+        source_map = builder.source_map
+        return nil unless source_map
 
-        # Check if the asset has source map data
-        if main_asset.respond_to?(:source_map) && main_asset.source_map
-          return main_asset.source_map.to_json
+        # Convert to hash and adjust sources to be relative paths for better debugging
+        map_hash = source_map.to_h
+
+        # Ensure sources are properly set for browser debugging
+        if map_hash && map_hash['sections']
+          # Index source map format - adjust each section's sources
+          map_hash['sections'].each do |section|
+            if section['map'] && section['map']['sources']
+              section['map']['sources'] = section['map']['sources'].map do |source|
+                normalize_source_path(source, file_path)
+              end
+            end
+          end
+        elsif map_hash && map_hash['sources']
+          # Standard source map format
+          map_hash['sources'] = map_hash['sources'].map do |source|
+            normalize_source_path(source, file_path)
+          end
         end
 
-        # Try to get from the builder directly
-        if builder.respond_to?(:source_map) && builder.source_map
-          return builder.source_map.to_json
-        end
+        map_hash.to_json
+      end
 
-        nil
+      def normalize_source_path(source, file_path)
+        # Convert absolute paths to relative for better browser debugging
+        return source if source.nil? || source.empty?
+
+        # If source is already relative or a URL, keep it
+        return source unless source.start_with?('/')
+
+        # Try to make path relative to the original file
+        begin
+          Pathname.new(source).relative_path_from(Pathname.new(File.dirname(file_path))).to_s
+        rescue ArgumentError
+          # On different drives/mounts, keep absolute path
+          source
+        end
       end
     end
   end
