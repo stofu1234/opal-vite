@@ -30,12 +30,20 @@ module Opal
       # CLI entry point for compilation
       # @param file_path [String] The path to the Ruby file to compile
       # @param include_concerns [Boolean] Whether to include built-in concerns
-      def compile_for_vite(file_path, include_concerns: true)
+      # @param source_map [Boolean] Whether to generate source maps
+      def compile_for_vite(file_path, include_concerns: true, source_map: true)
+        # Temporarily override source map setting if specified
+        original_source_map = config.source_map_enabled
+        config.source_map_enabled = source_map
+
         compiler = Compiler.new(include_concerns: include_concerns)
         result = compiler.compile_file(file_path)
 
         # Output JSON to stdout for the Vite plugin to consume
         puts JSON.generate(result)
+
+        # Restore original setting
+        config.source_map_enabled = original_source_map
       rescue Compiler::CompilationError => e
         STDERR.puts e.message
         exit 1

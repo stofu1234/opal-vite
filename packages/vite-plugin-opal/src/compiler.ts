@@ -211,10 +211,11 @@ export class OpalCompiler {
 
   private getCompilerScript(): string {
     const includeConcerns = this.options.includeConcerns
+    const sourceMap = this.options.sourceMap
     return `
       require 'opal-vite'
       file_path = ARGV[0]
-      Opal::Vite.compile_for_vite(file_path, include_concerns: ${includeConcerns})
+      Opal::Vite.compile_for_vite(file_path, include_concerns: ${includeConcerns}, source_map: ${sourceMap})
     `.trim()
   }
 
