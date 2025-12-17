@@ -64,11 +64,15 @@ RSpec.describe 'Todo Functionality', type: :feature do
     it 'deletes a todo' do
       add_todo('Todo to delete')
 
+      # Wait for the todo item to appear
+      expect(page).to have_css("#{list_selector} .todo-item", wait: 5)
       expect(page).to have_content('Todo to delete')
 
       # Click delete button
       find("#{list_selector} button[data-action*='delete']", match: :first).click
 
+      # Wait for deletion to complete
+      expect(page).not_to have_css("#{list_selector} .todo-item", wait: 5)
       expect(page).not_to have_content('Todo to delete')
     end
   end
