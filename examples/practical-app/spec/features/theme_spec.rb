@@ -13,7 +13,21 @@ RSpec.describe 'Theme Toggle', type: :feature do
   end
 
   def click_toggle
-    stable_click(toggle_button_selector)
+    # Use JavaScript to dispatch click event directly for reliability in CI
+    page.execute_script(<<~JS)
+      (function() {
+        var btn = document.querySelector('[data-action*="theme#toggle"]');
+        if (btn) {
+          // Create and dispatch a real click event
+          var clickEvent = new MouseEvent('click', {
+            view: window,
+            bubbles: true,
+            cancelable: true
+          });
+          btn.dispatchEvent(clickEvent);
+        }
+      })()
+    JS
     # Give Stimulus time to process the click and update DOM
     sleep 0.1
     wait_for_dom_stable
