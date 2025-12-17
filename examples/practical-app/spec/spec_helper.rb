@@ -55,7 +55,8 @@ Capybara.app_host = ENV.fetch('APP_HOST', 'http://localhost:3001')
 Capybara.run_server = false  # Don't start a server, use external Vite dev server
 
 # Default max wait time for async operations
-Capybara.default_max_wait_time = 5
+# Increase to handle Opal compilation time
+Capybara.default_max_wait_time = 10
 
 RSpec.configure do |config|
   config.expect_with :rspec do |expectations|
@@ -83,11 +84,16 @@ RSpec.configure do |config|
   config.before(:each, type: :feature) do
     # Clear localStorage
     visit '/'
-    # Wait for Opal/Stimulus to load
-    expect(page).to have_css('[data-controller]', wait: 10)
+    # Wait for Opal/Stimulus to load - wait for key controllers
+    expect(page).to have_css('[data-controller~="todo"]', wait: 10)
+    expect(page).to have_css('[data-controller~="theme"]', wait: 10)
     page.execute_script('localStorage.clear()')
     visit '/'
-    # Wait for Opal/Stimulus to load again
-    expect(page).to have_css('[data-controller]', wait: 10)
+    # Wait for Opal/Stimulus to load again - wait for key elements to be ready
+    expect(page).to have_css('[data-controller~="todo"]', wait: 10)
+    expect(page).to have_css('[data-controller~="theme"]', wait: 10)
+    expect(page).to have_css('[data-todo-target="input"]', wait: 10)
+    # Additional wait to ensure Opal controllers are fully initialized
+    sleep 0.5
   end
 end

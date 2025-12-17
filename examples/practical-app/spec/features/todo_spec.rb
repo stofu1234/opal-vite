@@ -5,12 +5,18 @@ RSpec.describe 'Todo Functionality', type: :feature do
   let(:list_selector) { '[data-todo-target="list"]' }
 
   def add_todo(text)
-    fill_in_todo_input(text)
-    find(input_selector).native.send_keys(:enter)
+    # Wait for input to be ready
+    input = find(input_selector, wait: 5)
+    input.set(text)
+    # Give browser time to process the input value
+    sleep 0.1
+    input.native.send_keys(:enter)
+    # Wait for Opal to process the event
+    sleep 0.5
   end
 
   def fill_in_todo_input(text)
-    find(input_selector).set(text)
+    find(input_selector, wait: 5).set(text)
   end
 
   describe 'adding todos' do
@@ -41,10 +47,11 @@ RSpec.describe 'Todo Functionality', type: :feature do
   describe 'toggling todos' do
     before do
       add_todo('Test todo')
+      expect(page).to have_css("#{list_selector} .todo-item", count: 1, wait: 5)
     end
 
     it 'toggles todo completion' do
-      checkbox = find("#{list_selector} input[type='checkbox']", match: :first)
+      checkbox = find("#{list_selector} input[type='checkbox']", match: :first, wait: 5)
       todo_item = find("#{list_selector} .todo-item", match: :first)
 
       # Initially unchecked
@@ -80,10 +87,14 @@ RSpec.describe 'Todo Functionality', type: :feature do
   describe 'filtering todos' do
     before do
       add_todo('Todo 1')
+      expect(page).to have_css("#{list_selector} .todo-item", count: 1, wait: 5)
+
       add_todo('Todo 2')
+      expect(page).to have_css("#{list_selector} .todo-item", count: 2, wait: 5)
 
       # Complete first todo
       find("#{list_selector} input[type='checkbox']", match: :first).click
+      expect(page).to have_css("#{list_selector} .todo-item.completed", count: 1, wait: 5)
     end
 
     it 'filters completed todos' do
@@ -122,11 +133,14 @@ RSpec.describe 'Todo Functionality', type: :feature do
   describe 'persistence' do
     it 'persists todos in localStorage' do
       add_todo('Persistent todo')
+      # Wait for todo to be added to DOM and localStorage
+      expect(page).to have_css("#{list_selector} .todo-item", count: 1, wait: 5)
 
       # Reload page
       visit '/'
+      expect(page).to have_css('[data-controller]', wait: 10)
 
-      expect(page).to have_content('Persistent todo')
+      expect(page).to have_content('Persistent todo', wait: 5)
     end
   end
 
@@ -135,14 +149,19 @@ RSpec.describe 'Todo Functionality', type: :feature do
 
     it 'shows todo count' do
       add_todo('Todo 1')
-      add_todo('Todo 2')
+      expect(page).to have_css("#{list_selector} .todo-item", count: 1, wait: 5)
 
-      expect(find(count_selector)).to have_content('2')
+      add_todo('Todo 2')
+      expect(page).to have_css("#{list_selector} .todo-item", count: 2, wait: 5)
+
+      # Wait for count to update
+      expect(page).to have_css(count_selector, text: /2/, wait: 5)
 
       # Complete one todo
       find("#{list_selector} input[type='checkbox']", match: :first).click
 
-      expect(find(count_selector)).to have_content('1')
+      # Wait for count to update after completion
+      expect(page).to have_css(count_selector, text: /1/, wait: 5)
     end
   end
 
@@ -158,17 +177,20 @@ RSpec.describe 'Todo Functionality', type: :feature do
       add_todo("Todo 3")
       expect(page).to have_css("#{list_selector} .todo-item", count: 3, wait: 5)
 
-      # Complete first two using fresh element references
+      # Complete first checkbox - get fresh reference
       all("#{list_selector} input[type='checkbox']")[0].click
-      sleep 0.3  # Wait for state update
+      # Wait for completion state to be applied
+      expect(page).to have_css("#{list_selector} .todo-item.completed", count: 1, wait: 5)
 
+      # Complete second checkbox - get fresh reference again
       all("#{list_selector} input[type='checkbox']")[1].click
-      sleep 0.3
+      # Wait for completion state
+      expect(page).to have_css("#{list_selector} .todo-item.completed", count: 2, wait: 5)
 
       # Click "Clear Completed" button
       click_button 'Clear Completed'
 
-      # Wait for clearing to complete
+      # Wait for clearing to complete - should have 1 remaining
       expect(page).to have_css("#{list_selector} .todo-item", count: 1, wait: 5)
 
       within(list_selector) do
