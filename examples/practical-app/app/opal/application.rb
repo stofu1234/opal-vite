@@ -5,6 +5,10 @@ require 'opal_stimulus/stimulus_controller'
 # Load StimulusHelpers from opal-vite gem
 require 'opal_vite/concerns/stimulus_helpers'
 
+# Load services
+require 'services/todo_storage_service'
+require 'services/todo_presenter'
+
 # Load controllers
 require 'controllers/todo_controller'
 require 'controllers/form_controller'

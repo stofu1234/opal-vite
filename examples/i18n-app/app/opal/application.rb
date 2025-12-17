@@ -2,6 +2,12 @@
 require 'native'
 require 'opal_stimulus/stimulus_controller'
 
+# Load data modules
+require 'data/translations'
+
+# Load services
+require 'services/i18n_service'
+
 # Load controllers
 require 'controllers/i18n_controller'
 
