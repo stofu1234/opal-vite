@@ -1274,12 +1274,23 @@ module OpalVite
 
       private
 
-      # Convert snake_case to camelCase
+      # Convert snake_case to camelCase, preserving existing camelCase
       # @param name [Symbol, String] The name to convert
       # @param capitalize_first [Boolean] Whether to capitalize first letter
       # @return [String] camelCase string
       def camelize(name, capitalize_first = true)
         str = name.to_s
+
+        # If no underscores, assume already camelCase - just adjust first letter
+        unless str.include?('_')
+          if capitalize_first
+            return str[0].upcase + str[1..-1].to_s
+          else
+            return str[0].downcase + str[1..-1].to_s
+          end
+        end
+
+        # Convert snake_case to camelCase
         parts = str.split('_')
         if capitalize_first
           parts.map(&:capitalize).join

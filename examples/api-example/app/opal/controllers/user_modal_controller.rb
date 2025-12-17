@@ -1,22 +1,25 @@
 # backtick_javascript: true
 
-# User modal controller for displaying user details
+# UserModalController - UI coordination for user detail modal
+#
+# This controller is responsible for:
+# - Modal open/close state management
+# - Body scroll lock management
+# - Coordinating with presenters for content display
+#
+# HTML rendering is delegated to UserPresenter and PostPresenter
+#
 class UserModalController < StimulusController
   include StimulusHelpers
 
-  self.targets = ["overlay", "content", "userName", "userEmail", "userCompany", "userAddress", "userPhone", "userWebsite", "postsList"]
+  self.targets = ["overlay", "content", "userName", "userEmail", "userCompany",
+                  "userAddress", "userPhone", "userWebsite", "postsList"]
 
   def connect
     puts "User modal controller connected!"
-
-    # Listen for show-user-modal event
-    on_window_event('show-user-modal') do |e|
-      detail = js_get(e, :detail)
-      user = js_get(detail, :user)
-      posts = js_get(detail, :posts)
-      display_user(user, posts)
-      open
-    end
+    @user_presenter = UserPresenter.new
+    @post_presenter = PostPresenter.new
+    setup_event_listener
   end
 
   # Open modal
@@ -49,57 +52,41 @@ class UserModalController < StimulusController
 
   private
 
-  def display_user(user, posts)
-    # Update user info
-    target_set_text(:userName, js_get(user, :name)) if has_target?(:userName)
-    target_set_text(:userEmail, js_get(user, :email)) if has_target?(:userEmail)
-    target_set_text(:userCompany, js_get(js_get(user, :company), :name)) if has_target?(:userCompany)
-    target_set_text(:userPhone, js_get(user, :phone)) if has_target?(:userPhone)
-    target_set_text(:userWebsite, js_get(user, :website)) if has_target?(:userWebsite)
-
-    if has_target?(:userAddress)
-      user_address = js_get(user, :address)
-      street = js_get(user_address, :street)
-      city = js_get(user_address, :city)
-      address = "#{street}, #{city}"
-      target_set_text(:userAddress, address)
+  def setup_event_listener
+    on_window_event('show-user-modal') do |e|
+      detail = js_get(e, :detail)
+      user = js_get(detail, :user)
+      posts = js_get(detail, :posts)
+      display_user(user, posts)
+      open
     end
-
-    # Display posts
-    display_posts(posts) if has_target?(:postsList)
   end
 
-  def display_posts(posts)
-    posts_list = get_target(:postsList)
-    set_html(posts_list, '')
+  def display_user(user, posts)
+    display_user_info(user)
+    display_user_posts(posts)
+  end
 
-    length = js_length(posts)
+  def display_user_info(user)
+    # Use presenter to extract display data
+    data = @user_presenter.extract_display_data(user)
 
-    if length == 0
-      set_html(posts_list, '<p class="no-posts">No posts yet</p>')
-    else
-      # Show first 5 posts
-      limit = js_min(length, 5)
+    target_set_text(:userName, data[:name]) if has_target?(:userName)
+    target_set_text(:userEmail, data[:email]) if has_target?(:userEmail)
+    target_set_text(:userCompany, data[:company]) if has_target?(:userCompany)
+    target_set_text(:userPhone, data[:phone]) if has_target?(:userPhone)
+    target_set_text(:userWebsite, data[:website]) if has_target?(:userWebsite)
 
-      limit.times do |i|
-        post = js_array_at(posts, i)
-        post_item = create_element('div')
-        add_class(post_item, 'post-item')
-
-        title = js_get(post, :title)
-        body = js_get(post, :body)
-        set_html(post_item, "<h4>#{title}</h4><p>#{body}</p>")
-        append_child(posts_list, post_item)
-      end
-
-      # Show "more posts" indicator if needed
-      if length > 5
-        more = create_element('p')
-        add_class(more, 'more-posts')
-        remaining = length - 5
-        set_text(more, "+ #{remaining} more posts")
-        append_child(posts_list, more)
-      end
+    if has_target?(:userAddress)
+      address = @user_presenter.format_address(user)
+      target_set_text(:userAddress, address)
     end
+  end
+
+  def display_user_posts(posts)
+    return unless has_target?(:postsList)
+
+    posts_list = get_target(:postsList)
+    @post_presenter.render_list(posts_list, posts, max: 5)
   end
 end

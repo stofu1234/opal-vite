@@ -1,6 +1,15 @@
 # backtick_javascript: true
 
-# Main Todo controller with CRUD operations and LocalStorage persistence
+# TodoController - UI coordination for todo management
+#
+# This controller is responsible for:
+# - Handling user actions (add, toggle, delete, edit, filter)
+# - Coordinating between storage service and presenter
+# - Managing toast notifications
+#
+# Storage operations are in TodoStorageService
+# DOM rendering is in TodoPresenter
+#
 class TodoController < StimulusController
   include StimulusHelpers
 
@@ -14,85 +23,56 @@ class TodoController < StimulusController
   end
 
   def connect
+    @storage = TodoStorageService.new(@storage_key_value)
+    @presenter = TodoPresenter.new(self)
+
     # Listen for update-todo event from modal
     on_window_event('update-todo') do |e|
       detail = `#{e}.detail`
       todo_id = parse_int(`#{detail}.todoId`)
       new_text = `#{detail}.text`
-
-      update_todo_text(todo_id, new_text)
+      handle_update_todo(todo_id, new_text)
     end
 
-    load_todos
-    update_count
+    render_todos
   end
 
-  # Add new todo
+  # Action: Add new todo
   def add_todo
     text = target_value(:input)
     text = `#{text}.trim()`
 
     if `#{text} === ''`
-      dispatch_window_event('show-toast', {
-        message: 'Please enter a todo item',
-        type: 'error'
-      })
+      show_toast('Please enter a todo item', 'error')
       return
     end
 
-    todo = {
-      id: js_timestamp,
-      text: text,
-      completed: false,
-      createdAt: js_iso_date
-    }
-
-    todos = get_todos
-    `#{todos}.push(#{todo.to_n})`
-    save_todos(todos)
-
+    @storage.add(text)
     target_set_value(:input, '')
     render_todos
-
-    dispatch_window_event('show-toast', {
-      message: 'Todo added!',
-      type: 'success'
-    })
+    show_toast('Todo added!', 'success')
   end
 
-  # Toggle todo completion
+  # Action: Toggle todo completion
   def toggle_todo
     todo_id = event_data_int('todo-id')
-    todos = get_todos
-    todo = `#{todos}.find(function(t) { return t.id === #{todo_id} })`
-
-    if todo
-      `#{todo}.completed = !#{todo}.completed`
-      save_todos(todos)
+    if @storage.toggle(todo_id)
       render_todos
     end
   end
 
-  # Delete todo
+  # Action: Delete todo
   def delete_todo
     todo_id = event_data_int('todo-id')
-    todos = get_todos
-    filtered = `#{todos}.filter(function(t) { return t.id !== #{todo_id} })`
-
-    save_todos(filtered)
+    @storage.delete(todo_id)
     render_todos
-
-    dispatch_window_event('show-toast', {
-      message: 'Todo deleted',
-      type: 'info'
-    })
+    show_toast('Todo deleted', 'info')
   end
 
-  # Edit todo (show modal)
+  # Action: Edit todo (show modal)
   def edit_todo
     todo_id = event_data_int('todo-id')
-    todos = get_todos
-    todo = `#{todos}.find(function(t) { return t.id === #{todo_id} })`
+    todo = @storage.find(todo_id)
 
     if todo
       dispatch_window_event('open-modal', {
@@ -103,30 +83,20 @@ class TodoController < StimulusController
     end
   end
 
-  # Clear completed todos
+  # Action: Clear completed todos
   def clear_completed
-    todos = get_todos
-    completed_count = `#{todos}.filter(function(t) { return t.completed }).length`
+    cleared_count = @storage.clear_completed
 
-    if `#{completed_count} === 0`
-      dispatch_window_event('show-toast', {
-        message: 'No completed todos to clear',
-        type: 'info'
-      })
+    if cleared_count == 0
+      show_toast('No completed todos to clear', 'info')
       return
     end
 
-    active_todos = `#{todos}.filter(function(t) { return !t.completed })`
-    save_todos(active_todos)
     render_todos
-
-    dispatch_window_event('show-toast', {
-      message: 'Completed todos cleared',
-      type: 'success'
-    })
+    show_toast('Completed todos cleared', 'success')
   end
 
-  # Set filter and update display
+  # Action: Set filter and update display
   def set_filter
     filter = event_data('filter')
     `this.filterValue = #{filter}`
@@ -141,117 +111,24 @@ class TodoController < StimulusController
 
   private
 
-  def get_todos
-    storage_get_json(@storage_key_value, `[]`)
-  end
-
-  def save_todos(todos)
-    `localStorage.setItem(#{@storage_key_value}, JSON.stringify(#{todos}))`
-  end
-
-  def update_todo_text(todo_id, new_text)
-    todos = get_todos
-    todo = `#{todos}.find(function(t) { return t.id === #{todo_id} })`
-
-    if todo
-      `#{todo}.text = #{new_text}`
-      save_todos(todos)
-
-      # Update DOM
-      todo_el = query("[data-todo-id=\"#{todo_id}\"]")
-      if todo_el
-        text_el = `#{todo_el}.querySelector('.todo-text')`
-        set_text(text_el, new_text) if text_el
-      end
-
-      dispatch_window_event('show-toast', {
-        message: 'Todo updated!',
-        type: 'success'
-      })
+  def handle_update_todo(todo_id, new_text)
+    if @storage.update_text(todo_id, new_text)
+      @presenter.update_todo_text(todo_id, new_text)
+      show_toast('Todo updated!', 'success')
     end
-  end
-
-  def add_todo_to_dom(todo)
-    clone = clone_template(:template)
-    todo_item = template_first_child(clone)
-
-    return unless todo_item
-
-    set_attr(todo_item, 'data-todo-id', `#{todo}.id`)
-    add_class(todo_item, 'completed') if `#{todo}.completed`
-
-    checkbox = `#{todo_item}.querySelector('.todo-checkbox')`
-    if checkbox
-      set_attr(checkbox, 'data-todo-id', `#{todo}.id`)
-      `#{checkbox}.checked = #{todo}.completed`
-    end
-
-    text_el = `#{todo_item}.querySelector('.todo-text')`
-    set_text(text_el, `#{todo}.text`) if text_el
-
-    edit_btn = `#{todo_item}.querySelector('.edit-btn')`
-    set_attr(edit_btn, 'data-todo-id', `#{todo}.id`) if edit_btn
-
-    delete_btn = `#{todo_item}.querySelector('.delete-btn')`
-    set_attr(delete_btn, 'data-todo-id', `#{todo}.id`) if delete_btn
-
-    list = get_target(:list)
-    append_child(list, clone)
-    hide_empty_state
   end
 
   def render_todos
-    list = get_target(:list)
-    set_html(list, '')
-
-    todos = get_todos
     filter = `this.filterValue || 'all'`
-
-    # Filter todos
-    filtered_todos = case `#{filter}`
-                     when 'active'
-                       `#{todos}.filter(function(t) { return !t.completed })`
-                     when 'completed'
-                       `#{todos}.filter(function(t) { return t.completed })`
-                     else
-                       todos
-                     end
-
-    # Render each todo
-    length = `#{filtered_todos}.length`
-    `for (var i = 0; i < #{length}; i++) {`
-      todo = `#{filtered_todos}[i]`
-      add_todo_to_dom(todo)
-    `}`
-
-    if `#{length} === 0`
-      show_empty_state
-    else
-      hide_empty_state
-    end
-
-    update_count
+    todos = @storage.filter(`#{filter}`)
+    @presenter.render_all(todos)
+    @presenter.update_count(@storage.counts)
   end
 
-  def update_count
-    todos = get_todos
-    active = `#{todos}.filter(function(t) { return !t.completed }).length`
-    completed = `#{todos}.filter(function(t) { return t.completed }).length`
-
-    target_set_html(:count, "#{active} active, #{completed} completed") if has_target?(:count)
-
-    show_empty_state if `#{todos}.length === 0`
-  end
-
-  def show_empty_state
-    show_target(:emptyState) if has_target?(:emptyState)
-  end
-
-  def hide_empty_state
-    hide_target(:emptyState) if has_target?(:emptyState)
-  end
-
-  def load_todos
-    render_todos
+  def show_toast(message, type)
+    dispatch_window_event('show-toast', {
+      message: message,
+      type: type
+    })
   end
 end
