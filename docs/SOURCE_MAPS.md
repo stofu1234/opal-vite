@@ -2,9 +2,11 @@
 
 Source maps allow you to debug your Ruby code directly in browser DevTools, even though it's compiled to JavaScript.
 
+> **⚠️ Experimental Feature**: Source maps are currently experimental. There are known compatibility issues with Vite's source map chain processing when compiling files with multiple `require` statements. Single-file compilation works, but complex applications may encounter errors.
+
 ## Overview
 
-When source maps are enabled (default), opal-vite generates Source Map v3 compatible mappings that:
+When source maps are enabled, opal-vite generates Source Map v3 compatible mappings that:
 
 1. **Map JavaScript back to Ruby** - Click on errors in DevTools to see the original Ruby line
 2. **Include original source** - The Ruby source code is embedded in the source map
@@ -94,6 +96,18 @@ export default defineConfig({
 })
 ```
 
+## Known Limitations
+
+### Vite Source Map Chain Compatibility
+
+When a Ruby file uses multiple `require` statements, Opal generates an "index source map" with multiple sections (one per file). Vite's internal `_getCombinedSourcemap` function has compatibility issues with this format.
+
+**Workaround**: For complex applications, keep `sourceMap: false` until this is resolved. Single-file Ruby scripts should work fine with source maps enabled.
+
+### Multiple File Debugging
+
+Currently, only the main entry point file appears in browser DevTools. Required files (controllers, services, etc.) may not be visible for debugging.
+
 ## Troubleshooting
 
 ### Source maps not appearing in DevTools
@@ -101,6 +115,15 @@ export default defineConfig({
 1. Ensure `sourceMap: true` in plugin options
 2. Check Vite's `build.sourcemap` setting
 3. Verify DevTools has "Enable JavaScript source maps" checked
+
+### "Cannot read properties of undefined" error
+
+This error occurs when Vite's source map chain processing fails. Disable source maps:
+```typescript
+opal({
+  sourceMap: false
+})
+```
 
 ### Incorrect line mappings
 
