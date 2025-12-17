@@ -141,120 +141,70 @@ module Opal
       end
 
       def extract_source_map(builder, file_path)
-        # Use Builder's source_map method which returns an Opal::SourceMap::Index
-        # This combines all processed source maps into a single index
-        return nil unless builder.respond_to?(:source_map)
+        # Get source map from the main processed asset (the file we're compiling)
+        # This gives us a single standard-format source map instead of an index
+        return nil unless builder.processed.any?
 
-        source_map = builder.source_map
-        return nil unless source_map
+        # Find the asset that matches our file
+        main_asset = builder.processed.find { |a| a.filename == file_path } ||
+                     builder.processed.last
+        return nil unless main_asset
 
-        # Convert to hash
-        map_hash = source_map.to_h
-        return nil unless map_hash
+        # Get source map from the asset
+        if main_asset.respond_to?(:source_map) && main_asset.source_map
+          source_map = main_asset.source_map
+          map_hash = source_map.to_h
 
-        # Vite doesn't support index source maps with 'sections' array
-        # Convert to standard format for browser compatibility
-        if map_hash['sections']
-          map_hash = convert_index_to_standard_sourcemap(map_hash, file_path)
-        elsif map_hash['sources']
-          # Standard source map format - just normalize paths
-          map_hash['sources'] = map_hash['sources'].map do |source|
-            normalize_source_path(source, file_path)
-          end
-        end
-
-        return nil unless map_hash
-
-        map_hash.to_json
-      end
-
-      def convert_index_to_standard_sourcemap(index_map, file_path)
-        sections = index_map['sections']
-        return nil if sections.nil? || sections.empty?
-
-        # For single section, extract and return that section's map
-        if sections.length == 1
-          section_map = sections.first['map']
-          return nil unless section_map
-
-          # Ensure all required fields exist for Vite compatibility
-          # Vite's _getCombinedSourcemap expects 'sources' array with 'length' property
-          result = {
-            'version' => section_map['version'] || 3,
-            'sources' => [],
-            'sourcesContent' => [],
-            'names' => section_map['names'] || [],
-            'mappings' => section_map['mappings'] || ''
-          }
-
-          # Copy and normalize source paths
-          if section_map['sources'] && section_map['sources'].is_a?(Array)
-            result['sources'] = section_map['sources'].map do |source|
+          # Normalize source paths for browser debugging
+          if map_hash && map_hash['sources']
+            map_hash['sources'] = map_hash['sources'].map do |source|
               normalize_source_path(source, file_path)
             end
           end
 
-          # Copy sourcesContent if available
-          if section_map['sourcesContent'] && section_map['sourcesContent'].is_a?(Array)
-            result['sourcesContent'] = section_map['sourcesContent']
-          end
-
-          return result
+          return map_hash.to_json if map_hash
         end
 
-        # For multiple sections, merge them into a single standard source map
-        # This is more complex - we need to combine sources, sourcesContent, and adjust mappings
-        merged = {
-          'version' => 3,
-          'sources' => [],
-          'sourcesContent' => [],
-          'names' => [],
-          'mappings' => ''
-        }
+        # Fallback: try builder's source_map and convert from index format
+        if builder.respond_to?(:source_map) && builder.source_map
+          source_map = builder.source_map
+          map_hash = source_map.to_h
+          return nil unless map_hash
 
-        sections.each_with_index do |section, idx|
-          section_map = section['map']
-          next unless section_map
+          # If it's an index format with sections, extract the main file's section
+          if map_hash['sections']
+            map_hash = extract_main_section(map_hash, file_path)
+          end
 
-          offset = section['offset'] || { 'line' => 0, 'column' => 0 }
-          offset_lines = offset['line'] || 0
-
-          # Add sources and sourcesContent
-          source_offset = merged['sources'].length
-          if section_map['sources']
-            section_map['sources'].each_with_index do |source, i|
-              merged['sources'] << normalize_source_path(source, file_path)
-              if section_map['sourcesContent'] && section_map['sourcesContent'][i]
-                merged['sourcesContent'] << section_map['sourcesContent'][i]
-              else
-                merged['sourcesContent'] << nil
-              end
+          if map_hash && map_hash['sources']
+            map_hash['sources'] = map_hash['sources'].map do |source|
+              normalize_source_path(source, file_path)
             end
           end
 
-          # Add names
-          name_offset = merged['names'].length
-          if section_map['names']
-            merged['names'].concat(section_map['names'])
-          end
-
-          # Add mappings with proper offset
-          if section_map['mappings']
-            # Add newlines for offset if needed
-            if idx > 0 && offset_lines > 0
-              merged['mappings'] += ';' * offset_lines
-            elsif idx > 0
-              merged['mappings'] += ';'
-            end
-
-            # Append the section's mappings
-            # Note: In a proper implementation, we'd need to re-encode with adjusted offsets
-            # For now, just append the raw mappings
-            merged['mappings'] += section_map['mappings']
-          end
+          return map_hash.to_json if map_hash
         end
 
-        merged
+        nil
+      end
+
+      def extract_main_section(index_map, file_path)
+        sections = index_map['sections']
+        return nil if sections.nil? || sections.empty?
+
+        # For single section, just return that section's map
+        if sections.length == 1
+          return sections.first['map']
+        end
+
+        # For multiple sections, try to find the one for our file
+        # or just return the last one (usually the main compiled file)
+        file_basename = File.basename(file_path)
+        matching_section = sections.find do |section|
+          section['map'] && section['map']['sources']&.any? { |s| s.include?(file_basename) }
+        end
+
+        (matching_section || sections.last)&.dig('map')
       end
 
       def normalize_source_path(source, file_path)

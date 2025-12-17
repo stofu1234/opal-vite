@@ -5,15 +5,12 @@ export default defineConfig({
   plugins: [
     opal({
       loadPaths: ['./app/opal/controllers'],
-      sourceMap: true,
+      sourceMap: false,  // Disabled due to Vite source map chain compatibility issues
       includeConcerns: true,
       debug: process.env.DEBUG === '1'
     })
   ],
   server: {
     port: 3001
-  },
-  build: {
-    sourcemap: true
   }
 })
