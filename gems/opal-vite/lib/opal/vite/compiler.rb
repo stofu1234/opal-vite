@@ -146,7 +146,7 @@ module Opal
         return nil unless builder.respond_to?(:source_map) && builder.source_map
 
         source_map = builder.source_map
-        map_hash = source_map.to_h
+        map_hash = deep_stringify_keys(source_map.to_h)
         return nil unless map_hash
 
         # If it's an index format with sections, merge all sections
@@ -164,6 +164,20 @@ module Opal
         end
 
         map_hash.to_json
+      end
+
+      # Recursively convert all hash keys to strings
+      def deep_stringify_keys(obj)
+        case obj
+        when Hash
+          obj.each_with_object({}) do |(key, value), result|
+            result[key.to_s] = deep_stringify_keys(value)
+          end
+        when Array
+          obj.map { |item| deep_stringify_keys(item) }
+        else
+          obj
+        end
       end
 
       def merge_all_sections(index_map, file_path)
