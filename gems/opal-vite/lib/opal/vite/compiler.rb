@@ -186,6 +186,13 @@ module Opal
           'mappings' => ''
         }
 
+        # Track cumulative state for VLQ relative encoding
+        # These track the "previous" values across all sections
+        prev_source = 0
+        prev_orig_line = 0
+        prev_orig_col = 0
+        prev_name = 0
+
         current_line = 0
 
         sections.each_with_index do |section, idx|
@@ -202,7 +209,7 @@ module Opal
             current_line = section_start_line
           end
 
-          # Track source index offset for this section
+          # Track source and name index offsets for this section
           source_offset = merged['sources'].length
           name_offset = merged['names'].length
 
@@ -223,23 +230,182 @@ module Opal
             merged['names'].concat(section_map['names'])
           end
 
-          # Add mappings from this section
+          # Process mappings from this section with index adjustment
           if section_map['mappings'] && !section_map['mappings'].empty?
-            # If we need to adjust source/name indices, we'd need to decode/re-encode VLQ
-            # For now, append as-is (works when each section has its own source indices starting at 0)
-            # This is a simplification - proper implementation would adjust indices
+            adjusted_mappings, prev_source, prev_orig_line, prev_orig_col, prev_name =
+              adjust_section_mappings(
+                section_map['mappings'],
+                source_offset,
+                name_offset,
+                prev_source,
+                prev_orig_line,
+                prev_orig_col,
+                prev_name
+              )
+
             if idx > 0 && !merged['mappings'].empty? && !merged['mappings'].end_with?(';')
               merged['mappings'] += ';'
             end
-            merged['mappings'] += section_map['mappings']
+            merged['mappings'] += adjusted_mappings
 
-            # Count lines in this section's mappings
-            lines_in_section = section_map['mappings'].count(';') + 1
-            current_line += lines_in_section
+            # Update current_line to the last line we wrote to
+            # section_start_line + number of semicolons in this section's mappings
+            current_line = section_start_line + section_map['mappings'].count(';')
           end
         end
 
         merged
+      end
+
+      # Adjust mappings from a section by adding offsets to source/name indices
+      # VLQ mappings use relative deltas. When merging sections:
+      # - First section: no adjustment, just track final absolute state
+      # - Later sections: adjust first segment's source/name delta to bridge from previous section's end state
+      #
+      # Returns: [adjusted_mappings, new_prev_source, new_prev_orig_line, new_prev_orig_col, new_prev_name]
+      def adjust_section_mappings(mappings, source_offset, name_offset, prev_source, prev_orig_line, prev_orig_col, prev_name)
+        return ['', prev_source, prev_orig_line, prev_orig_col, prev_name] if mappings.nil? || mappings.empty?
+
+        result_lines = []
+        lines = mappings.split(';', -1)
+
+        # Track absolute state within this section (section-local, starting from 0)
+        section_abs_source = 0
+        section_abs_orig_line = 0
+        section_abs_orig_col = 0
+        section_abs_name = 0
+
+        first_segment_processed = false
+
+        lines.each do |line|
+          if line.empty?
+            result_lines << ''
+            next
+          end
+
+          result_segments = []
+          segments = line.split(',')
+
+          segments.each do |segment|
+            values = decode_vlq(segment)
+            next if values.empty?
+
+            # values[0] = generated column delta (always present, relative within line)
+            # values[1] = source index delta
+            # values[2] = original line delta
+            # values[3] = original column delta
+            # values[4] = name index delta
+
+            gen_col_delta = values[0]
+
+            if values.length > 1
+              # Update section-local absolute positions
+              section_abs_source += values[1]
+              section_abs_orig_line += values[2] if values.length > 2
+              section_abs_orig_col += values[3] if values.length > 3
+              section_abs_name += values[4] if values.length > 4
+
+              # Calculate global absolute positions (with offset)
+              global_abs_source = section_abs_source + source_offset
+              global_abs_name = section_abs_name + name_offset
+
+              if !first_segment_processed
+                # First segment: calculate delta from previous section's end state to this segment's global position
+                new_source_delta = global_abs_source - prev_source
+                new_orig_line_delta = section_abs_orig_line - prev_orig_line
+                new_orig_col_delta = section_abs_orig_col - prev_orig_col
+                new_name_delta = global_abs_name - prev_name
+
+                new_values = [gen_col_delta, new_source_delta, new_orig_line_delta, new_orig_col_delta]
+                new_values << new_name_delta if values.length > 4
+
+                first_segment_processed = true
+              else
+                # Subsequent segments: deltas are already correct (relative within section = relative within merged)
+                new_values = values.dup
+              end
+
+              result_segments << encode_vlq(new_values)
+
+              # Update tracking for next section
+              prev_source = global_abs_source
+              prev_orig_line = section_abs_orig_line
+              prev_orig_col = section_abs_orig_col
+              prev_name = global_abs_name if values.length > 4
+            else
+              # Only generated column, no source mapping
+              result_segments << encode_vlq([gen_col_delta])
+            end
+          end
+
+          result_lines << result_segments.join(',')
+        end
+
+        [result_lines.join(';'), prev_source, prev_orig_line, prev_orig_col, prev_name]
+      end
+
+      # VLQ Base64 character set
+      VLQ_BASE64_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'.freeze
+      VLQ_BASE64_VALUES = VLQ_BASE64_CHARS.each_char.with_index.to_h.freeze
+      VLQ_BASE_SHIFT = 5
+      VLQ_BASE = 1 << VLQ_BASE_SHIFT  # 32
+      VLQ_BASE_MASK = VLQ_BASE - 1     # 31
+      VLQ_CONTINUATION_BIT = VLQ_BASE  # 32
+
+      # Decode a VLQ-encoded segment into an array of integers
+      def decode_vlq(segment)
+        return [] if segment.nil? || segment.empty?
+
+        values = []
+        shift = 0
+        value = 0
+
+        segment.each_char do |char|
+          digit = VLQ_BASE64_VALUES[char]
+          return values if digit.nil?  # Invalid character
+
+          continuation = (digit & VLQ_CONTINUATION_BIT) != 0
+          digit &= VLQ_BASE_MASK
+          value += digit << shift
+
+          if continuation
+            shift += VLQ_BASE_SHIFT
+          else
+            # Convert from VLQ signed representation
+            negative = (value & 1) == 1
+            value >>= 1
+            value = -value if negative
+            values << value
+
+            # Reset for next value
+            value = 0
+            shift = 0
+          end
+        end
+
+        values
+      end
+
+      # Encode an array of integers into a VLQ-encoded string
+      def encode_vlq(values)
+        return '' if values.nil? || values.empty?
+
+        result = ''
+
+        values.each do |value|
+          # Convert to VLQ signed representation
+          vlq = value < 0 ? ((-value) << 1) + 1 : value << 1
+
+          loop do
+            digit = vlq & VLQ_BASE_MASK
+            vlq >>= VLQ_BASE_SHIFT
+            digit |= VLQ_CONTINUATION_BIT if vlq > 0
+            result += VLQ_BASE64_CHARS[digit]
+            break if vlq == 0
+          end
+        end
+
+        result
       end
 
       def normalize_source_path(source, file_path)
