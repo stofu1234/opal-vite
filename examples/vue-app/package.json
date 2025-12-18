@@ -1,0 +1,19 @@
+{
+  "name": "opal-vite-vue-example",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "vite": "^5.0.0",
+    "vite-plugin-opal": "workspace:*",
+    "vue": "^3.4.0"
+  },
+  "devDependencies": {
+    "playwright": "^1.57.0"
+  }
+}
