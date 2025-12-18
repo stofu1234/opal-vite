@@ -156,10 +156,15 @@ module Opal
 
         return nil unless map_hash
 
+        # Add sourceRoot for proper browser debugging
+        # This helps DevTools organize source files in a logical tree
+        map_hash['sourceRoot'] = ''
+
         # Normalize source paths for browser debugging
+        # Prefix with /opal-sources/ so they appear in a dedicated folder in DevTools
         if map_hash['sources']
           map_hash['sources'] = map_hash['sources'].map do |source|
-            normalize_source_path(source, file_path)
+            normalize_source_path_for_devtools(source, file_path)
           end
         end
 
@@ -435,6 +440,39 @@ module Opal
         rescue ArgumentError
           # On different drives/mounts, keep absolute path
           source
+        end
+      end
+
+      def normalize_source_path_for_devtools(source, file_path)
+        # Format source paths so they appear properly in browser DevTools
+        # Chrome DevTools uses the source path to build the file tree
+        return source if source.nil? || source.empty?
+
+        # Remove any leading ./ for consistency
+        source = source.sub(/^\.\//, '')
+
+        # Handle absolute paths - make them relative to show properly
+        if source.start_with?('/')
+          # Extract just the relevant path (last few components)
+          parts = source.split('/')
+          # Keep last 3 path components for context (e.g., app/opal/controllers/...)
+          source = parts.last(3).join('/')
+        end
+
+        # Prefix paths for user code (controllers, services, etc.) to group them
+        # This ensures they appear under a dedicated folder in DevTools
+        if source.include?('controllers/') || source.include?('services/')
+          # Already has recognizable path, prefix with opal-sources for visibility
+          "/opal-sources/#{source}"
+        elsif source.start_with?('corelib/') || source.start_with?('opal/')
+          # Opal core library files - put under opal-core
+          "/opal-core/#{source}"
+        elsif source.include?('opal_stimulus/') || source.include?('opal_vite/')
+          # Opal library files
+          "/opal-libs/#{source}"
+        else
+          # Other files (native.rb, js/proxy.rb, etc.)
+          "/opal-other/#{source}"
         end
       end
     end
