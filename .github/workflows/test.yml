@@ -177,6 +177,63 @@ jobs:
           path: examples/chart-app/playwright-report/
           retention-days: 30
 
+  test-vue-app:
+    name: Test Vue App (E2E)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+          working-directory: examples/vue-app
+
+      - name: Install Chrome for Cuprite
+        uses: browser-actions/setup-chrome@v1
+        with:
+          chrome-version: stable
+
+      - name: Build and install opal-vite gem
+        run: |
+          cd gems/opal-vite
+          bundle install
+          gem build opal-vite.gemspec
+          gem install opal-vite-*.gem
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build vite-plugin-opal
+        run: pnpm build
+        working-directory: packages/vite-plugin-opal
+
+      - name: Install example dependencies
+        run: bundle install
+        working-directory: examples/vue-app
+
+      - name: Run E2E tests (Capybara + Cuprite)
+        run: |
+          pnpm dev &
+          sleep 10
+          bundle exec rspec
+        working-directory: examples/vue-app
+        env:
+          CI: true
+
   build-examples:
     name: Build All Examples
     runs-on: ubuntu-latest
@@ -189,6 +246,7 @@ jobs:
           - chart-app
           - chat-app
           - api-example
+          - vue-app
 
     steps:
       - name: Checkout code

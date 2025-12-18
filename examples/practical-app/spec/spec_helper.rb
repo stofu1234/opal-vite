@@ -149,4 +149,28 @@ RSpec.configure do |config|
       sleep 0.1
     end
   end
+
+  # Retry helper for flaky operations with browser reload
+  # Usage: with_browser_retry(max_attempts: 5) { your_code_here }
+  def with_browser_retry(max_attempts: 5, &block)
+    attempts = 0
+    begin
+      attempts += 1
+      block.call
+    rescue Capybara::ElementNotFound, Ferrum::TimeoutError, Timeout::Error => e
+      if attempts < max_attempts
+        warn "[Retry #{attempts}/#{max_attempts}] #{e.class}: #{e.message.lines.first.chomp}"
+        # Reload browser and wait for Stimulus ready
+        visit '/'
+        wait_for_stimulus_ready
+        page.execute_script('localStorage.clear()')
+        visit '/'
+        wait_for_stimulus_ready
+        wait_for_dom_stable
+        retry
+      else
+        raise
+      end
+    end
+  end
 end
