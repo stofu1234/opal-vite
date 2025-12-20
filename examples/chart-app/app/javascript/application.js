@@ -1,3 +1,6 @@
+// Import Opal runtime first (required for production builds)
+import '/@opal-runtime'
+
 // Import Stimulus
 import { Application, Controller } from "@hotwired/stimulus"
 
