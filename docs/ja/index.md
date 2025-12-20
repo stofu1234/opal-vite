@@ -97,9 +97,9 @@ Greeter.new("World").greet
 
 ライブデモでopal-viteを体験：
 
-- [Practical App](/playground/practical-app/) - フル機能Todoアプリ
-- [Chart App](/playground/chart-app/) - チャート可視化
-- [Stimulus App](/playground/stimulus-app/) - Stimulusコントローラー基本
-- [API Example](/playground/api-example/) - API連携パターン
+- <a href="/opal-vite/playground/practical-app/" target="_self" rel="external">Practical App</a> - フル機能Todoアプリ
+- <a href="/opal-vite/playground/chart-app/" target="_self" rel="external">Chart App</a> - チャート可視化
+- <a href="/opal-vite/playground/stimulus-app/" target="_self" rel="external">Stimulus App</a> - Stimulusコントローラー基本
+- <a href="/opal-vite/playground/api-example/" target="_self" rel="external">API Example</a> - API連携パターン
 
 すべてのデモは[Playground](/ja/playground)ページで確認できます。
