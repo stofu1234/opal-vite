@@ -1,31 +1,7 @@
 # backtick_javascript: true
+# Backward compatibility wrapper - delegates to v1
+require 'opal_vite/concerns/v1/storable'
 
-module OpalVite
-  module Concerns
-    # Storable concern - provides LocalStorage functionality
-    module Storable
-      def storage_get(key)
-        stored = `localStorage.getItem(#{key})`
-        return nil unless stored
+`console.warn("[DEPRECATION] require 'opal_vite/concerns/storable' is deprecated. Please use require 'opal_vite/concerns/v1/storable' instead.")`
 
-        begin
-          `JSON.parse(stored)`
-        rescue
-          nil
-        end
-      end
-
-      def storage_set(key, data)
-        json = `JSON.stringify(#{data.to_n})`
-        `localStorage.setItem(#{key}, json)`
-      end
-
-      def storage_remove(key)
-        `localStorage.removeItem(#{key})`
-      end
-    end
-  end
-end
-
-# Alias for backward compatibility
-Storable = OpalVite::Concerns::Storable
+# Module is already defined by v1, re-exported for backward compatibility

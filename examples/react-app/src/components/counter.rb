@@ -2,7 +2,7 @@
 require 'native'
 
 # Load ReactHelpers from opal-vite gem
-require 'opal_vite/concerns/react_helpers'
+require 'opal_vite/concerns/v1/react_helpers'
 
 class Counter
   extend ReactHelpers

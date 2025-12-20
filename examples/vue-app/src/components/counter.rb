@@ -1,6 +1,6 @@
 # backtick_javascript: true
 require 'native'
-require 'opal_vite/concerns/vue_helpers'
+require 'opal_vite/concerns/v1/vue_helpers'
 
 # Counter App - Vue.js component defined in Ruby
 class CounterApp
