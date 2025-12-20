@@ -97,9 +97,9 @@ Greeter.new("World").greet
 
 Try opal-vite with live demo applications:
 
-- <a href="/opal-vite/playground/practical-app/" target="_self" rel="external">Practical App</a> - Full-featured Todo app
-- <a href="/opal-vite/playground/chart-app/" target="_self" rel="external">Chart App</a> - Chart visualization
-- <a href="/opal-vite/playground/stimulus-app/" target="_self" rel="external">Stimulus App</a> - Stimulus controller basics
-- <a href="/opal-vite/playground/api-example/" target="_self" rel="external">API Example</a> - API integration patterns
+- [Practical App](https://stofu1234.github.io/opal-vite/playground/practical-app/) - Full-featured Todo app
+- [Chart App](https://stofu1234.github.io/opal-vite/playground/chart-app/) - Chart visualization
+- [Stimulus App](https://stofu1234.github.io/opal-vite/playground/stimulus-app/) - Stimulus controller basics
+- [API Example](https://stofu1234.github.io/opal-vite/playground/api-example/) - API integration patterns
 
 See all demos on the [Playground](/playground) page.
