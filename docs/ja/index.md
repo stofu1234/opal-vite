@@ -95,8 +95,11 @@ Greeter.new("World").greet
 
 ## Playground
 
-::: warning 準備中
-インタラクティブなPlaygroundは現在開発中です。お楽しみに！
-:::
+ライブデモでopal-viteを体験：
 
-詳しくは[Playground](/ja/playground)をご覧ください。
+- [Practical App](../playground/practical-app/) - フル機能Todoアプリ
+- [Chart App](../playground/chart-app/) - チャート可視化
+- [Stimulus App](../playground/stimulus-app/) - Stimulusコントローラー基本
+- [API Example](../playground/api-example/) - API連携パターン
+
+すべてのデモは[Playground](/ja/playground)ページで確認できます。

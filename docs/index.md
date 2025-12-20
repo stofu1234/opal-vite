@@ -95,8 +95,11 @@ Greeter.new("World").greet
 
 ## Playground
 
-::: warning Coming Soon
-The interactive playground is currently under development. Stay tuned!
-:::
+Try opal-vite with live demo applications:
 
-Visit [Playground](/playground) for more information.
+- [Practical App](./playground/practical-app/) - Full-featured Todo app
+- [Chart App](./playground/chart-app/) - Chart visualization
+- [Stimulus App](./playground/stimulus-app/) - Stimulus controller basics
+- [API Example](./playground/api-example/) - API integration patterns
+
+See all demos on the [Playground](/playground) page.
