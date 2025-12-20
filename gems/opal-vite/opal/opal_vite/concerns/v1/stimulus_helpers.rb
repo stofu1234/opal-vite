@@ -2,23 +2,24 @@
 
 module OpalVite
   module Concerns
-    # StimulusHelpers - DSL macros for reducing JavaScript backticks in Stimulus controllers
-    #
-    # This module provides Ruby-friendly methods for common Stimulus patterns,
-    # reducing the need for raw JavaScript backticks.
-    #
-    # Usage:
-    #   class MyController < StimulusController
-    #     include StimulusHelpers
-    #
-    #     def connect
-    #       if has_target?(:input)
-    #         value = target_value(:input)
-    #         target_set_html(:output, "Value: #{value}")
-    #       end
-    #     end
-    #   end
-    module StimulusHelpers
+    module V1
+      # StimulusHelpers - DSL macros for reducing JavaScript backticks in Stimulus controllers
+      #
+      # This module provides Ruby-friendly methods for common Stimulus patterns,
+      # reducing the need for raw JavaScript backticks.
+      #
+      # Usage:
+      #   class MyController < StimulusController
+      #     include OpalVite::Concerns::V1::StimulusHelpers
+      #
+      #     def connect
+      #       if has_target?(:input)
+      #         value = target_value(:input)
+      #         target_set_html(:output, "Value: #{value}")
+      #       end
+      #     end
+      #   end
+      module StimulusHelpers
       # ===== Target Access Methods =====
 
       # Check if a Stimulus target exists
@@ -1298,9 +1299,10 @@ module OpalVite
           ([parts.first] + parts[1..-1].map(&:capitalize)).join
         end
       end
+      end
     end
   end
 end
 
 # Alias for backward compatibility
-StimulusHelpers = OpalVite::Concerns::StimulusHelpers
+StimulusHelpers = OpalVite::Concerns::V1::StimulusHelpers

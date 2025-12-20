@@ -2,27 +2,28 @@
 
 module OpalVite
   module Concerns
-    # JS::ProxyEx - Extended JS proxy utilities for Ruby-like JavaScript interop
-    #
-    # This module provides Ruby-friendly wrappers around JavaScript objects and APIs
-    # that opal_stimulus's JS::Proxy doesn't fully cover yet.
-    #
-    # Usage:
-    #   include OpalVite::Concerns::JsProxyEx
-    #
-    #   # Global objects
-    #   local_storage.get_item('key')
-    #   json.parse(data)
-    #
-    #   # Object creation
-    #   new_event('click', bubbles: true)
-    #   new_url('https://example.com')
-    #   new_regexp('[a-z]+')
-    #
-    #   # Event listeners with proper block handling
-    #   window.add_event_listener('click') { |event| ... }
-    #
-    module JsProxyEx
+    module V1
+      # JS::ProxyEx - Extended JS proxy utilities for Ruby-like JavaScript interop
+      #
+      # This module provides Ruby-friendly wrappers around JavaScript objects and APIs
+      # that opal_stimulus's JS::Proxy doesn't fully cover yet.
+      #
+      # Usage:
+      #   include OpalVite::Concerns::V1::JsProxyEx
+      #
+      #   # Global objects
+      #   local_storage.get_item('key')
+      #   json.parse(data)
+      #
+      #   # Object creation
+      #   new_event('click', bubbles: true)
+      #   new_url('https://example.com')
+      #   new_regexp('[a-z]+')
+      #
+      #   # Event listeners with proper block handling
+      #   window.add_event_listener('click') { |event| ... }
+      #
+      module JsProxyEx
       # ============================================
       # Global JavaScript Objects
       # ============================================
@@ -406,9 +407,10 @@ module OpalVite
         return str if parts.length == 1
         parts[0] + parts[1..-1].map(&:capitalize).join
       end
+      end
     end
   end
 end
 
 # Alias for backward compatibility
-JsProxyEx = OpalVite::Concerns::JsProxyEx
+JsProxyEx = OpalVite::Concerns::V1::JsProxyEx

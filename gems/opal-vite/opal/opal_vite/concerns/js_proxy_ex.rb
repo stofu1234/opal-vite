@@ -4,4 +4,9 @@ require 'opal_vite/concerns/v1/js_proxy_ex'
 
 `console.warn("[DEPRECATION] require 'opal_vite/concerns/js_proxy_ex' is deprecated. Please use require 'opal_vite/concerns/v1/js_proxy_ex' instead.")`
 
-# Module is already defined by v1, re-exported for backward compatibility
+# Alias old module path for backward compatibility
+module OpalVite
+  module Concerns
+    JsProxyEx = V1::JsProxyEx
+  end
+end
