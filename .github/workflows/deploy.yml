@@ -64,12 +64,21 @@ jobs:
           bundler-cache: true
           working-directory: examples/${{ matrix.example.name }}
 
+      - name: Install opal and opal-vite gems
+        run: |
+          gem install opal
+          cd gems/opal-vite && gem build opal-vite.gemspec && gem install *.gem
+
       - name: Install dependencies
         run: |
           pnpm install
           cd examples/${{ matrix.example.name }} && bundle install
 
-      - name: Build
+      - name: Build vite-plugin-opal
+        run: pnpm build
+        working-directory: packages/vite-plugin-opal
+
+      - name: Build example
         run: pnpm build
         working-directory: examples/${{ matrix.example.name }}
         env:

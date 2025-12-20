@@ -27,6 +27,16 @@ jobs:
         with:
           version: 8
 
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+
+      - name: Install opal and opal-vite gems
+        run: |
+          gem install opal
+          cd gems/opal-vite && gem build opal-vite.gemspec && gem install *.gem
+
       - name: Install dependencies
         run: pnpm install
 
