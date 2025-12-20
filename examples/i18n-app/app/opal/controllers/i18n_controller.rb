@@ -11,6 +11,7 @@
 # Formatting logic is in I18nService
 #
 class I18nController < StimulusController
+  include JsProxyEx
   include StimulusHelpers
 
   self.targets = %w[
@@ -40,10 +41,10 @@ class I18nController < StimulusController
   end
 
   # Action: Switch language
-  def switch_language
-    current_target = event_target
-    dataset = js_get(current_target, :dataset)
-    locale = js_get(dataset, :locale)
+  def switch_language(event)
+    current_target = event.current_target
+    dataset = wrap_js(current_target.dataset)
+    locale = dataset[:locale]
 
     return unless @i18n_service.valid_locale?(locale)
 
@@ -54,8 +55,8 @@ class I18nController < StimulusController
   end
 
   # Action: Handle form submit
-  def handle_submit
-    `event.preventDefault()`
+  def handle_submit(event)
+    event.prevent_default
     message = @i18n_service.success_message
     `alert(#{message})`
   end

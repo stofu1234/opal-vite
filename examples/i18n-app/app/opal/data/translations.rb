@@ -12,8 +12,10 @@ module Translations
   DEFAULT_LOCALE = 'en'.freeze
 
   # Returns translation data as a JavaScript object
+  # Note: The backtick expression must be assigned to a variable and explicitly returned
+  # for Opal to properly return the JavaScript object
   def self.data
-    `({
+    data = `({
       en: {
         title: '🌍 Internationalization Example',
         subtitle: 'Multi-language support with Stimulus + Opal',
@@ -285,6 +287,7 @@ module Translations
         }
       }
     })`
+    data
   end
 
   # Success messages for form submission
