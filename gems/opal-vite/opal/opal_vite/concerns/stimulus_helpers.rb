@@ -4,4 +4,9 @@ require 'opal_vite/concerns/v1/stimulus_helpers'
 
 `console.warn("[DEPRECATION] require 'opal_vite/concerns/stimulus_helpers' is deprecated. Please use require 'opal_vite/concerns/v1/stimulus_helpers' instead.")`
 
-# Module is already defined by v1, re-exported for backward compatibility
+# Alias old module path for backward compatibility
+module OpalVite
+  module Concerns
+    StimulusHelpers = V1::StimulusHelpers
+  end
+end

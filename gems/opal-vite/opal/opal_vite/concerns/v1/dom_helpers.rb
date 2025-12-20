@@ -2,8 +2,9 @@
 
 module OpalVite
   module Concerns
-    # DomHelpers concern - provides common DOM manipulation methods
-    module DomHelpers
+    module V1
+      # DomHelpers concern - provides common DOM manipulation methods
+      module DomHelpers
       # Create a custom event and dispatch it on a target
       def dispatch_custom_event(event_name, detail = {}, target = nil)
         target ||= window
@@ -81,9 +82,10 @@ module OpalVite
       def hide_element(el)
         set_style(el, 'display', 'none')
       end
+      end
     end
   end
 end
 
 # Alias for backward compatibility
-DomHelpers = OpalVite::Concerns::DomHelpers
+DomHelpers = OpalVite::Concerns::V1::DomHelpers

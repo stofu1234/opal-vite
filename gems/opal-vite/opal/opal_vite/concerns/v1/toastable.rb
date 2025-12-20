@@ -2,8 +2,9 @@
 
 module OpalVite
   module Concerns
-    # Toastable concern - provides toast notification functionality
-    module Toastable
+    module V1
+      # Toastable concern - provides toast notification functionality
+      module Toastable
       def dispatch_toast(message, type = 'info')
         `
           const event = new CustomEvent('show-toast', {
@@ -28,9 +29,10 @@ module OpalVite
       def show_info(message)
         dispatch_toast(message, 'info')
       end
+      end
     end
   end
 end
 
 # Alias for backward compatibility
-Toastable = OpalVite::Concerns::Toastable
+Toastable = OpalVite::Concerns::V1::Toastable

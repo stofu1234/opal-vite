@@ -2,8 +2,9 @@
 
 module OpalVite
   module Concerns
-    # Storable concern - provides LocalStorage functionality
-    module Storable
+    module V1
+      # Storable concern - provides LocalStorage functionality
+      module Storable
       def storage_get(key)
         stored = `localStorage.getItem(#{key})`
         return nil unless stored
@@ -23,9 +24,10 @@ module OpalVite
       def storage_remove(key)
         `localStorage.removeItem(#{key})`
       end
+      end
     end
   end
 end
 
 # Alias for backward compatibility
-Storable = OpalVite::Concerns::Storable
+Storable = OpalVite::Concerns::V1::Storable
