@@ -1,21 +1,51 @@
 # Playground
 
-::: warning Coming Soon
-The interactive playground is currently under development.
-:::
+opal-viteのサンプルアプリケーションを実際に試すことができます。
 
-## What will be available
+## Live Demos
 
-The opal-vite Playground will allow you to:
+<div class="playground-grid">
 
-- Write Ruby code in the browser
-- See compiled JavaScript output in real-time
-- Test Stimulus controllers interactively
-- Share code snippets with others
+### Practical App
+フル機能のTodoアプリケーション。CRUD操作、モーダル、トースト通知、LocalStorage永続化など。
 
-## In the meantime
+[**Open Demo**](/opal-vite/playground/practical-app/)
 
-You can try opal-vite locally by cloning the repository:
+---
+
+### Chart App
+Chart.jsを使用したチャート可視化のサンプル。
+
+[**Open Demo**](/opal-vite/playground/chart-app/)
+
+---
+
+### Stimulus App
+Stimulusコントローラーの基本的な使い方を示すサンプル。
+
+[**Open Demo**](/opal-vite/playground/stimulus-app/)
+
+---
+
+### API Example
+外部APIとの連携パターンを示すサンプル。
+
+[**Open Demo**](/opal-vite/playground/api-example/)
+
+</div>
+
+## Source Code
+
+各サンプルのソースコードはGitHubリポジトリで確認できます：
+
+- [practical-app](https://github.com/stofu1234/opal-vite/tree/master/examples/practical-app)
+- [chart-app](https://github.com/stofu1234/opal-vite/tree/master/examples/chart-app)
+- [stimulus-app](https://github.com/stofu1234/opal-vite/tree/master/examples/stimulus-app)
+- [api-example](https://github.com/stofu1234/opal-vite/tree/master/examples/api-example)
+
+## Run Locally
+
+ローカル環境で実行する場合：
 
 ```bash
 git clone https://github.com/stofu1234/opal-vite.git
@@ -23,16 +53,3 @@ cd opal-vite/examples/practical-app
 pnpm install && bundle install
 pnpm dev
 ```
-
-## Example Applications
-
-Check out our example applications to see opal-vite in action:
-
-| Example | Description |
-|---------|-------------|
-| practical-app | Full-featured Todo application with CRUD, modals, toasts |
-| stimulus-app | Stimulus controller integration example |
-| chart-app | Chart visualization with Opal |
-| api-example | API integration patterns |
-
-Stay tuned for the interactive playground!

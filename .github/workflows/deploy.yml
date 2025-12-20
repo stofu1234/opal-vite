@@ -10,52 +10,10 @@ permissions:
   pages: write
 
 jobs:
-  deploy-docs:
-    name: Deploy Documentation
+  deploy:
+    name: Deploy Documentation & Playground
     runs-on: ubuntu-latest
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 8
-
-      - name: Install dependencies
-        run: pnpm install
-
-      - name: Build VitePress documentation
-        run: pnpm docs:build
-
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./docs/.vitepress/dist
-          publish_branch: gh-pages
-
-  deploy-examples:
-    name: Deploy Examples
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-
-    strategy:
-      matrix:
-        example:
-          - name: practical-app
-            subdomain: practical
-          - name: chart-app
-            subdomain: charts
-          - name: chat-app
-            subdomain: chat
 
     steps:
       - name: Checkout code
@@ -75,8 +33,6 @@ jobs:
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.2'
-          bundler-cache: true
-          working-directory: examples/${{ matrix.example.name }}
 
       - name: Install opal and opal-vite gems
         run: |
@@ -84,41 +40,38 @@ jobs:
           cd gems/opal-vite && gem build opal-vite.gemspec && gem install *.gem
 
       - name: Install dependencies
-        run: |
-          pnpm install
-          cd examples/${{ matrix.example.name }} && bundle install
+        run: pnpm install
 
       - name: Build vite-plugin-opal
         run: pnpm build
         working-directory: packages/vite-plugin-opal
 
-      - name: Build example
-        run: pnpm build
-        working-directory: examples/${{ matrix.example.name }}
-        env:
-          NODE_ENV: production
+      - name: Build VitePress documentation
+        run: pnpm docs:build
 
-      - name: Deploy to Vercel
-        if: vars.VERCEL_TOKEN != ''
-        uses: amondnet/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          working-directory: examples/${{ matrix.example.name }}/dist
-          vercel-args: '--prod'
-          alias-domains: ${{ matrix.example.subdomain }}.opal-vite.example.com
+      - name: Build examples for playground
+        run: |
+          EXAMPLES="practical-app chart-app stimulus-app api-example"
+          for app in $EXAMPLES; do
+            echo "Building $app..."
+            cd examples/$app
+            bundle install
+            # Set base path for GitHub Pages subdirectory
+            VITE_BASE=/opal-vite/playground/$app/ pnpm build
+            cd ../..
+          done
 
-      - name: Deploy to Netlify
-        if: vars.NETLIFY_AUTH_TOKEN != ''
-        uses: nwtgck/actions-netlify@v2
+      - name: Copy examples to playground directory
+        run: |
+          mkdir -p docs/.vitepress/dist/playground
+          EXAMPLES="practical-app chart-app stimulus-app api-example"
+          for app in $EXAMPLES; do
+            cp -r examples/$app/dist docs/.vitepress/dist/playground/$app
+          done
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
         with:
-          publish-dir: examples/${{ matrix.example.name }}/dist
-          production-branch: master
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          deploy-message: 'Deploy from GitHub Actions'
-          enable-pull-request-comment: true
-          enable-commit-comment: true
-        env:
-          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs/.vitepress/dist
+          publish_branch: gh-pages
