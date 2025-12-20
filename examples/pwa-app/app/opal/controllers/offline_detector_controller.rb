@@ -36,12 +36,15 @@ class OfflineDetectorController < StimulusController
 
     # Set status text
     status_text = is_online ? '🟢 You are online' : '🔴 You are offline'
-    set_target_text(:status_text, status_text)
+    target_set_text(:statusText, status_text)
 
     # Set online status indicator
     online_text = is_online ? 'Online' : 'Offline'
     online_class = is_online ? 'status-value success' : 'status-value warning'
-    set_target_text(:online_status, online_text)
-    set_target_class(:online_status, online_class)
+    target_set_text(:onlineStatus, online_text)
+    if has_target?(:onlineStatus)
+      online_status_el = get_target(:onlineStatus)
+      js_set(online_status_el, :className, online_class)
+    end
   end
 end

@@ -86,9 +86,9 @@ end
 
 # Initialize when DOM is ready
 AppOrchestrator.on_dom_ready do
-  console_log('✅ DOM ready, initializing from Ruby...')
+  puts '✅ DOM ready, initializing from Ruby...'
   AppOrchestrator.initialize_app
-  console_log('✅ Ruby initialization complete!')
+  puts '✅ Ruby initialization complete!'
 end
 
 puts "✅ Ruby code loaded successfully!"

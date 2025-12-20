@@ -41,7 +41,7 @@ class I18nController < StimulusController
 
   # Action: Switch language
   def switch_language
-    current_target = event_current_target
+    current_target = event_target
     dataset = js_get(current_target, :dataset)
     locale = js_get(dataset, :locale)
 

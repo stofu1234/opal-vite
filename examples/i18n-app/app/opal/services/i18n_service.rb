@@ -24,6 +24,7 @@ class I18nService
   def initialize
     @translations = Translations.data
     @current_locale = load_saved_locale || Translations::DEFAULT_LOCALE
+    puts "I18nService initialized with locale: #{@current_locale}"
   end
 
   # Get/set current locale
@@ -40,11 +41,15 @@ class I18nService
 
   # Get translation for current locale
   def t
-    `#{@translations}[#{@current_locale}]`
+    return nil unless @translations
+    result = `#{@translations}[#{@current_locale}]`
+    return nil if `#{result} === undefined`
+    result
   end
 
   # Check if locale is valid
   def valid_locale?(locale)
+    return false unless @translations
     `#{@translations}[#{locale}] !== undefined`
   end
 
