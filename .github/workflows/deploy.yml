@@ -24,13 +24,24 @@ jobs:
         with:
           node-version: '18'
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build VitePress documentation
+        run: pnpm docs:build
+
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./docs
+          publish_dir: ./docs/.vitepress/dist
           publish_branch: gh-pages
-          cname: opal-vite.example.com  # Optional: your custom domain
+          cname: docs.opal-vite.dev
 
   deploy-examples:
     name: Deploy Examples
