@@ -4,12 +4,15 @@ export default defineConfig({
   title: 'opal-vite',
   description: 'Ruby in the Browser with Vite',
 
+  // Base URL for GitHub Pages (stofu1234.github.io/opal-vite/)
+  base: '/opal-vite/',
+
   // Ignore dead links during build (some documents are WIP)
   ignoreDeadLinks: true,
 
   // Custom domain
   head: [
-    ['link', { rel: 'icon', href: '/favicon.ico' }]
+    ['link', { rel: 'icon', href: '/opal-vite/favicon.ico' }]
   ],
 
   // i18n configuration
