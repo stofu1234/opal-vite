@@ -1,0 +1,1 @@
+if('serviceWorker' in navigator) {window.addEventListener('load', () => {navigator.serviceWorker.register('/opal-vite/playground/pwa-app/sw.js', { scope: '/opal-vite/playground/pwa-app/' })})}

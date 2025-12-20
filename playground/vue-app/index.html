@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Opal + Vue.js 3 + Vite Example</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: linear-gradient(135deg, #42b883 0%, #35495e 100%);
+      min-height: 100vh;
+      padding: 2rem;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      color: white;
+      margin-bottom: 2rem;
+    }
+
+    header h1 {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    header p {
+      opacity: 0.9;
+      font-size: 1.1rem;
+    }
+
+    .app-section {
+      background: white;
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .app-section h2 {
+      color: #35495e;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid #42b883;
+    }
+
+    /* Counter styles */
+    .counter-display {
+      text-align: center;
+      margin: 1.5rem 0;
+    }
+
+    .count-value {
+      font-size: 4rem;
+      font-weight: bold;
+      color: #42b883;
+    }
+
+    .counter-controls {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .btn {
+      padding: 0.75rem 1.5rem;
+      font-size: 1.25rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-increment {
+      background: #42b883;
+      color: white;
+    }
+
+    .btn-decrement {
+      background: #e74c3c;
+      color: white;
+    }
+
+    .btn-reset {
+      background: #95a5a6;
+      color: white;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .counter-info {
+      text-align: center;
+      color: #666;
+    }
+
+    .status {
+      margin-top: 0.5rem;
+      font-weight: bold;
+    }
+
+    .positive { color: #42b883; }
+    .negative { color: #e74c3c; }
+    .zero { color: #95a5a6; }
+
+    /* Todo styles */
+    .todo-input {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .todo-input input {
+      flex: 1;
+      padding: 0.75rem;
+      font-size: 1rem;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      transition: border-color 0.2s;
+    }
+
+    .todo-input input:focus {
+      outline: none;
+      border-color: #42b883;
+    }
+
+    .todo-input button {
+      padding: 0.75rem 1.5rem;
+      background: #42b883;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+
+    .todo-input button:hover {
+      background: #3aa876;
+    }
+
+    .todo-list {
+      list-style: none;
+    }
+
+    .todo-item {
+      display: flex;
+      align-items: center;
+      padding: 0.75rem;
+      background: #f8f9fa;
+      border-radius: 8px;
+      margin-bottom: 0.5rem;
+      transition: all 0.2s;
+    }
+
+    .todo-item:hover {
+      background: #e9ecef;
+    }
+
+    .todo-item.completed {
+      opacity: 0.6;
+    }
+
+    .todo-item.completed span {
+      text-decoration: line-through;
+    }
+
+    .todo-item input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      margin-right: 1rem;
+      cursor: pointer;
+    }
+
+    .todo-item span {
+      flex: 1;
+    }
+
+    .todo-item .delete-btn {
+      background: #e74c3c;
+      color: white;
+      border: none;
+      padding: 0.25rem 0.75rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.875rem;
+    }
+
+    .todo-item .delete-btn:hover {
+      background: #c0392b;
+    }
+
+    .todo-stats {
+      display: flex;
+      justify-content: space-between;
+      padding-top: 1rem;
+      border-top: 1px solid #ddd;
+      color: #666;
+      font-size: 0.9rem;
+    }
+
+    .clear-completed {
+      background: none;
+      border: none;
+      color: #e74c3c;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    .clear-completed:hover {
+      color: #c0392b;
+    }
+
+    .empty-state {
+      text-align: center;
+      color: #999;
+      padding: 2rem;
+    }
+
+    footer {
+      text-align: center;
+      color: white;
+      opacity: 0.8;
+      margin-top: 2rem;
+    }
+
+    footer a {
+      color: white;
+    }
+  </style>
+  <script type="module" crossorigin src="/opal-vite/playground/vue-app/assets/index-eO2Mh9js.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Opal + Vue.js 3 + Vite</h1>
+      <p>Ruby code compiled to JavaScript, powering Vue.js components</p>
+    </header>
+
+    <!-- Counter App -->
+    <div class="app-section">
+      <h2>Counter (Ruby + Vue.js)</h2>
+      <div id="counter-app"></div>
+    </div>
+
+    <!-- Todo App -->
+    <div class="app-section">
+      <h2>Todo List (Ruby + Vue.js)</h2>
+      <div id="todo-app"></div>
+    </div>
+
+    <footer>
+      <p>Built with <a href="https://opalrb.com">Opal</a>, <a href="https://vuejs.org">Vue.js 3</a>, and <a href="https://vitejs.dev">Vite</a></p>
+    </footer>
+  </div>
+
+  <!-- Todo Template (hidden) -->
+  <script type="text/x-template" id="todo-template">
+    <div>
+      <div class="todo-input">
+        <input
+          type="text"
+          v-model="newTodo"
+          @keyup.enter="addTodo"
+          placeholder="What needs to be done?"
+        />
+        <button @click="addTodo" :disabled="!newTodo.trim()">Add</button>
+      </div>
+
+      <div v-if="todos.length === 0" class="empty-state">
+        <p>No todos yet. Add one above!</p>
+      </div>
+
+      <ul v-else class="todo-list">
+        <li
+          v-for="todo in todos"
+          :key="todo.id"
+          class="todo-item"
+          :class="{ completed: todo.completed }"
+        >
+          <input
+            type="checkbox"
+            v-model="todo.completed"
+            @change="saveTodos"
+          />
+          <span>{{ todo.text }}</span>
+          <button class="delete-btn" @click="removeTodo(todo.id)">Delete</button>
+        </li>
+      </ul>
+
+      <div v-if="todos.length > 0" class="todo-stats">
+        <span>{{ remaining }} item{{ remaining === 1 ? '' : 's' }} left</span>
+        <button
+          v-if="completed > 0"
+          class="clear-completed"
+          @click="clearCompleted"
+        >
+          Clear completed ({{ completed }})
+        </button>
+      </div>
+    </div>
+  </script>
+
+  <!-- Vue.js 3 from CDN -->
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+  <!-- Opal Runtime and Application -->
+</body>
+</html>
