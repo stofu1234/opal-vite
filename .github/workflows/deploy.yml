@@ -5,6 +5,10 @@ on:
     branches: [ main, master ]
   workflow_dispatch:  # Allow manual trigger
 
+permissions:
+  contents: write
+  pages: write
+
 jobs:
   deploy-docs:
     name: Deploy Documentation
