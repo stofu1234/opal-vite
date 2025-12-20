@@ -9,28 +9,28 @@ opal-viteのサンプルアプリケーションを実際に試すことがで�
 ### Practical App
 フル機能のTodoアプリケーション。CRUD操作、モーダル、トースト通知、LocalStorage永続化など。
 
-[**Open Demo**](./playground/practical-app/)
+[**Open Demo**](/playground/practical-app/)
 
 ---
 
 ### Chart App
 Chart.jsを使用したチャート可視化のサンプル。
 
-[**Open Demo**](./playground/chart-app/)
+[**Open Demo**](/playground/chart-app/)
 
 ---
 
 ### Stimulus App
 Stimulusコントローラーの基本的な使い方を示すサンプル。
 
-[**Open Demo**](./playground/stimulus-app/)
+[**Open Demo**](/playground/stimulus-app/)
 
 ---
 
 ### API Example
 外部APIとの連携パターンを示すサンプル。
 
-[**Open Demo**](./playground/api-example/)
+[**Open Demo**](/playground/api-example/)
 
 </div>
 

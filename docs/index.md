@@ -97,9 +97,9 @@ Greeter.new("World").greet
 
 Try opal-vite with live demo applications:
 
-- [Practical App](./playground/practical-app/) - Full-featured Todo app
-- [Chart App](./playground/chart-app/) - Chart visualization
-- [Stimulus App](./playground/stimulus-app/) - Stimulus controller basics
-- [API Example](./playground/api-example/) - API integration patterns
+- [Practical App](/playground/practical-app/) - Full-featured Todo app
+- [Chart App](/playground/chart-app/) - Chart visualization
+- [Stimulus App](/playground/stimulus-app/) - Stimulus controller basics
+- [API Example](/playground/api-example/) - API integration patterns
 
 See all demos on the [Playground](/playground) page.
