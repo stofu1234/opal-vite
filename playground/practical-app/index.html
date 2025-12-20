@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Practical App - Todo with Opal + Vite</title>
+    <script type="module" crossorigin src="/opal-vite/playground/practical-app/assets/index-CQCCkagz.js"></script>
+    <link rel="stylesheet" crossorigin href="/opal-vite/playground/practical-app/assets/index-CYtDPx00.css">
+    <script type="module" src="/@opal-runtime"></script>
+</head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>📝 Todo App</h1>
+        <p class="subtitle">Built with Ruby (Opal) + Stimulus + Vite</p>
+        <div data-controller="theme" style="margin-top: 1rem;">
+          <button data-action="click->theme#toggle" class="theme-toggle">
+            🌙 Dark Mode
+          </button>
+        </div>
+      </header>
+
+      <main>
+        <!-- Todo Application -->
+        <div class="todo-card" data-controller="todo" data-todo-storage-key-value="opal_todos">
+          <div class="todo-input-group">
+            <input
+              type="text"
+              class="todo-input"
+              placeholder="What needs to be done?"
+              data-todo-target="input"
+              data-action="keydown.enter->todo#add_todo"
+            />
+            <button data-action="click->todo#add_todo">Add Todo</button>
+          </div>
+
+          <div class="todo-stats" data-todo-target="count">
+            0 active, 0 completed
+          </div>
+
+          <div class="filter-bar">
+            <button class="filter-btn active" data-filter="all" data-action="click->todo#set_filter">All</button>
+            <button class="filter-btn" data-filter="active" data-action="click->todo#set_filter">Active</button>
+            <button class="filter-btn" data-filter="completed" data-action="click->todo#set_filter">Completed</button>
+          </div>
+
+          <ul class="todo-list" data-todo-target="list"></ul>
+
+          <div class="empty-state" data-todo-target="emptyState">
+            <div class="empty-state-icon">📋</div>
+            <p>No todos yet. Add one above!</p>
+          </div>
+
+          <div class="actions-bar">
+            <button class="secondary" data-action="click->todo#clear_completed">
+              Clear Completed
+            </button>
+          </div>
+
+          <!-- Todo Template -->
+          <template data-todo-target="template">
+            <li class="todo-item">
+              <input
+                type="checkbox"
+                class="todo-checkbox"
+                data-action="change->todo#toggle_todo"
+              />
+              <span class="todo-text">Todo text</span>
+              <div class="todo-actions">
+                <button
+                  class="icon-btn edit-btn"
+                  data-action="click->todo#edit_todo"
+                  title="Edit"
+                >
+                  ✏️
+                </button>
+                <button
+                  class="icon-btn danger delete-btn"
+                  data-action="click->todo#delete_todo"
+                  title="Delete"
+                >
+                  🗑️
+                </button>
+              </div>
+            </li>
+          </template>
+        </div>
+
+        <!-- Form Validation Demo -->
+        <div class="demo-card">
+          <h2>📋 Form Validation Demo</h2>
+          <p>Real-time validation with Ruby controllers</p>
+
+          <form data-controller="form" data-action="submit->form#submit">
+            <div class="form-group">
+              <label class="form-label">Name (required, min 3 chars)</label>
+              <input
+                type="text"
+                class="form-input"
+                data-form-target="input"
+                data-required
+                data-min-length="3"
+                data-action="input->form#validate"
+                placeholder="Enter your name"
+              />
+              <div class="error-message"></div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Email (required, email format)</label>
+              <input
+                type="email"
+                class="form-input"
+                data-form-target="input"
+                data-required
+                data-pattern="^[^\s@]+@[^\s@]+\.[^\s@]+$"
+                data-action="input->form#validate"
+                placeholder="your@email.com"
+              />
+              <div class="error-message"></div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Message (max 100 chars)</label>
+              <input
+                type="text"
+                class="form-input"
+                data-form-target="input"
+                data-max-length="100"
+                data-action="input->form#validate"
+                placeholder="Enter a message"
+              />
+              <div class="error-message"></div>
+            </div>
+
+            <button type="submit">Submit Form</button>
+          </form>
+        </div>
+
+        <!-- Toast Test Demo -->
+        <div class="demo-card" data-controller="toast">
+          <h2>🍞 Toast Notifications</h2>
+          <p>Click to show random toast notifications</p>
+          <button data-action="click->toast#show_test">Show Random Toast</button>
+        </div>
+      </main>
+
+      <footer>
+        <p>
+          Features: ✅ CRUD Operations ✅ LocalStorage ✅ Form Validation ✅ Modals ✅ Toast Notifications ✅ Animations
+        </p>
+        <p style="margin-top: 1rem;">
+          Built with
+          <a href="https://opalrb.com/" target="_blank">Opal</a>,
+          <a href="https://stimulus.hotwired.dev/" target="_blank">Stimulus</a>, and
+          <a href="https://vitejs.dev/" target="_blank">Vite</a>
+        </p>
+      </footer>
+    </div>
+
+    <!-- Edit Todo Modal -->
+    <div class="modal" data-controller="modal" data-action="keydown.esc@window->modal#close_on_escape">
+      <div class="modal-overlay" data-modal-target="overlay" data-action="click->modal#close_on_overlay"></div>
+      <div class="modal-content" data-modal-target="content">
+        <div class="modal-header">
+          <h3 class="modal-title" data-modal-target="title">Edit Todo</h3>
+          <button class="modal-close" data-action="click->modal#close">×</button>
+        </div>
+        <div class="modal-body" data-modal-target="body">
+          <div class="form-group">
+            <input
+              type="text"
+              class="form-input"
+              data-modal-target="input"
+              placeholder="Todo text"
+            />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="secondary" data-action="click->modal#close">Cancel</button>
+          <button data-action="click->modal#save">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" data-controller="toast" data-toast-target="container"></div>
+
+  </body>
+</html>
