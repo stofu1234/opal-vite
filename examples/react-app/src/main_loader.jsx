@@ -1,3 +1,6 @@
+// Import Opal runtime first (required for production builds)
+import '/@opal-runtime'
+
 // Load React app
 import React from 'react'
 import ReactDOM from 'react-dom/client'

@@ -3,6 +3,7 @@ import opal from 'vite-plugin-opal';
 import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
+  base: process.env.VITE_BASE || '/',
   plugins: [
     opal(),
     VitePWA({

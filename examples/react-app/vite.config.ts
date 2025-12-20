@@ -4,6 +4,7 @@ import opal from 'vite-plugin-opal'
 import * as path from 'path'
 
 export default defineConfig({
+  base: process.env.VITE_BASE || '/',
   plugins: [
     react(),
     opal({

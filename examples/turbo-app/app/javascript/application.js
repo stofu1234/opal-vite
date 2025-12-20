@@ -1,3 +1,6 @@
+// Import Opal runtime first (required for production builds)
+import '/@opal-runtime'
+
 // Import Hotwire stack
 import { Application, Controller } from "@hotwired/stimulus"
 import * as Turbo from "@hotwired/turbo"

@@ -101,5 +101,10 @@ Try opal-vite with live demo applications:
 - [Chart App](https://stofu1234.github.io/opal-vite/playground/chart-app/) - Chart visualization
 - [Stimulus App](https://stofu1234.github.io/opal-vite/playground/stimulus-app/) - Stimulus controller basics
 - [API Example](https://stofu1234.github.io/opal-vite/playground/api-example/) - API integration patterns
+- [Form Validation](https://stofu1234.github.io/opal-vite/playground/form-validation-app/) - Real-time validation
+- [i18n App](https://stofu1234.github.io/opal-vite/playground/i18n-app/) - Internationalization
+- [PWA App](https://stofu1234.github.io/opal-vite/playground/pwa-app/) - Offline support
+- [Vue App](https://stofu1234.github.io/opal-vite/playground/vue-app/) - Vue.js integration
+- [React App](https://stofu1234.github.io/opal-vite/playground/react-app/) - React integration
 
 See all demos on the [Playground](/playground) page.

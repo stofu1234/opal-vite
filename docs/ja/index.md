@@ -101,5 +101,10 @@ Greeter.new("World").greet
 - [Chart App](https://stofu1234.github.io/opal-vite/playground/chart-app/) - チャート可視化
 - [Stimulus App](https://stofu1234.github.io/opal-vite/playground/stimulus-app/) - Stimulusコントローラー基本
 - [API Example](https://stofu1234.github.io/opal-vite/playground/api-example/) - API連携パターン
+- [Form Validation](https://stofu1234.github.io/opal-vite/playground/form-validation-app/) - リアルタイムバリデーション
+- [i18n App](https://stofu1234.github.io/opal-vite/playground/i18n-app/) - 多言語対応
+- [PWA App](https://stofu1234.github.io/opal-vite/playground/pwa-app/) - オフライン対応
+- [Vue App](https://stofu1234.github.io/opal-vite/playground/vue-app/) - Vue.js統合
+- [React App](https://stofu1234.github.io/opal-vite/playground/react-app/) - React統合
 
 すべてのデモは[Playground](/ja/playground)ページで確認できます。

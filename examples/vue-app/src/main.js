@@ -1,3 +1,6 @@
+// Import Opal runtime first (required for production builds)
+import '/@opal-runtime'
+
 // Vue.js 3 + Opal Loader
 // This file serves as the entry point that loads the Ruby code
 

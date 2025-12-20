@@ -32,6 +32,48 @@ Stimulusコントローラーの基本的な使い方を示すサンプル。
 
 [**デモを開く**](https://stofu1234.github.io/opal-vite/playground/api-example/)
 
+---
+
+### Form Validation App
+リアルタイムフォームバリデーションのサンプル。
+
+[**デモを開く**](https://stofu1234.github.io/opal-vite/playground/form-validation-app/)
+
+---
+
+### i18n App
+多言語対応（国際化）のサンプル。
+
+[**デモを開く**](https://stofu1234.github.io/opal-vite/playground/i18n-app/)
+
+---
+
+### PWA App
+Progressive Web Appのサンプル。オフライン対応。
+
+[**デモを開く**](https://stofu1234.github.io/opal-vite/playground/pwa-app/)
+
+---
+
+### Turbo App
+Hotwire Turboとの統合サンプル。
+
+[**デモを開く**](https://stofu1234.github.io/opal-vite/playground/turbo-app/)
+
+---
+
+### Vue App
+Vue.js 3との統合サンプル。Rubyでロジックを記述。
+
+[**デモを開く**](https://stofu1234.github.io/opal-vite/playground/vue-app/)
+
+---
+
+### React App
+Reactとの統合サンプル。Rubyでロジックを記述。
+
+[**デモを開く**](https://stofu1234.github.io/opal-vite/playground/react-app/)
+
 </div>
 
 ## ソースコード
@@ -42,6 +84,12 @@ Stimulusコントローラーの基本的な使い方を示すサンプル。
 - [chart-app](https://github.com/stofu1234/opal-vite/tree/master/examples/chart-app)
 - [stimulus-app](https://github.com/stofu1234/opal-vite/tree/master/examples/stimulus-app)
 - [api-example](https://github.com/stofu1234/opal-vite/tree/master/examples/api-example)
+- [form-validation-app](https://github.com/stofu1234/opal-vite/tree/master/examples/form-validation-app)
+- [i18n-app](https://github.com/stofu1234/opal-vite/tree/master/examples/i18n-app)
+- [pwa-app](https://github.com/stofu1234/opal-vite/tree/master/examples/pwa-app)
+- [turbo-app](https://github.com/stofu1234/opal-vite/tree/master/examples/turbo-app)
+- [vue-app](https://github.com/stofu1234/opal-vite/tree/master/examples/vue-app)
+- [react-app](https://github.com/stofu1234/opal-vite/tree/master/examples/react-app)
 
 ## ローカルで実行
 
