@@ -5,6 +5,9 @@ hero:
   name: opal-vite
   text: Ruby in the Browser with Vite
   tagline: Write Ruby code and run it in the browser with Vite's lightning-fast development experience
+  image:
+    src: /hero.png
+    alt: opal-vite logo
   actions:
     - theme: brand
       text: Get Started

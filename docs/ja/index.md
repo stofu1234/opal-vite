@@ -5,6 +5,9 @@ hero:
   name: opal-vite
   text: ブラウザでRubyを動かす
   tagline: Viteの高速な開発体験でRubyコードをブラウザ上で実行
+  image:
+    src: /hero.png
+    alt: opal-vite ロゴ
   actions:
     - theme: brand
       text: はじめる
