@@ -10,9 +10,11 @@ export default defineConfig({
   // Ignore dead links during build (some documents are WIP)
   ignoreDeadLinks: true,
 
-  // Custom domain
+  // Favicon and meta
   head: [
-    ['link', { rel: 'icon', href: '/opal-vite/favicon.ico' }]
+    ['link', { rel: 'icon', type: 'image/png', sizes: '16x16', href: '/opal-vite/opal_vite_speed_16.png' }],
+    ['link', { rel: 'icon', type: 'image/png', sizes: '48x48', href: '/opal-vite/opal_vite_speed_48.png' }],
+    ['link', { rel: 'apple-touch-icon', sizes: '128x128', href: '/opal-vite/opal_vite_speed_128.png' }]
   ],
 
   // i18n configuration
@@ -115,7 +117,7 @@ export default defineConfig({
   },
 
   themeConfig: {
-    logo: '/logo.svg',
+    logo: '/opal_vite_speed_48.png',
 
     socialLinks: [
       { icon: 'github', link: 'https://github.com/stofu1234/opal-vite' }
