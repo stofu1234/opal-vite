@@ -36,10 +36,16 @@ export default function opalPlugin(options: OpalPluginOptions = {}): Plugin {
   const resolver = new OpalResolver(options)
   let server: ViteDevServer | undefined
   let hmrManager: OpalHMRManager | undefined
+  let isBuild = false
 
   return {
     name: 'vite-plugin-opal',
     enforce: 'pre', // Run before other plugins
+
+    // Detect build vs serve mode
+    config(_config, { command }) {
+      isBuild = command === 'build'
+    },
 
     // Mark .rb files as valid imports
     async resolveId(id: string, importer?: string) {
@@ -108,9 +114,14 @@ export default function opalPlugin(options: OpalPluginOptions = {}): Plugin {
       return null
     },
 
-    // Auto-inject Opal runtime into HTML
+    // Auto-inject Opal runtime into HTML (development only)
     transformIndexHtml(html: string) {
-      // Inject runtime before closing </head> tag
+      // Skip injection during build - runtime is bundled into JS
+      if (isBuild) {
+        return html
+      }
+
+      // Inject runtime before closing </head> tag (development only)
       const runtimeScript = `<script type="module" src="${VIRTUAL_RUNTIME_ID}"></script>`
 
       if (html.includes('</head>')) {
