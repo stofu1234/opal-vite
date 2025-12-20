@@ -6,7 +6,6 @@ require 'opal_vite/concerns/v1/react_helpers'
 
 puts "🚀 Opal + React + Vite Example"
 puts "Ruby version: #{RUBY_VERSION}"
-puts "Opal version: #{Opal::VERSION}"
 puts "Platform: #{RUBY_PLATFORM}"
 
 # This Ruby code orchestrates the React app
@@ -65,7 +64,6 @@ class AppOrchestrator
   def self.get_info
     info = {
       ruby_version: RUBY_VERSION,
-      opal_version: Opal::VERSION,
       platform: RUBY_PLATFORM,
       time: Time.now.to_s
     }
@@ -79,7 +77,6 @@ class AppOrchestrator
     puts "Environment Information"
     puts "=" * 50
     puts "Ruby Version: #{RUBY_VERSION}"
-    puts "Opal Version: #{Opal::VERSION}"
     puts "Platform: #{RUBY_PLATFORM}"
     puts "Time: #{Time.now}"
     puts "=" * 50

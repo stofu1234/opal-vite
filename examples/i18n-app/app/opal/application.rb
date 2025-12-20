@@ -2,6 +2,10 @@
 require 'native'
 require 'opal_stimulus/stimulus_controller'
 
+# Load concerns from opal-vite gem
+require 'opal_vite/concerns/v1/stimulus_helpers'
+require 'opal_vite/concerns/v1/storable'
+
 # Load data modules
 require 'data/translations'
 
