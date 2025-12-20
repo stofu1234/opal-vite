@@ -2,7 +2,7 @@
 require 'native'
 
 # Load VueHelpers from opal-vite gem
-require 'opal_vite/concerns/vue_helpers'
+require 'opal_vite/concerns/v1/vue_helpers'
 
 # Load components
 require 'components/counter'

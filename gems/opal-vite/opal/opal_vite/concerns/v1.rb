@@ -1,0 +1,8 @@
+# Load all OpalVite concerns (v1)
+require 'opal_vite/concerns/v1/js_proxy_ex'
+require 'opal_vite/concerns/v1/dom_helpers'
+require 'opal_vite/concerns/v1/toastable'
+require 'opal_vite/concerns/v1/storable'
+require 'opal_vite/concerns/v1/stimulus_helpers'
+require 'opal_vite/concerns/v1/vue_helpers'
+require 'opal_vite/concerns/v1/react_helpers'

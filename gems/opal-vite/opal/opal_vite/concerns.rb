@@ -1,6 +1,6 @@
-# Load all OpalVite concerns
-require 'opal_vite/concerns/js_proxy_ex'
-require 'opal_vite/concerns/dom_helpers'
-require 'opal_vite/concerns/toastable'
-require 'opal_vite/concerns/storable'
-require 'opal_vite/concerns/stimulus_helpers'
+# backtick_javascript: true
+# Backward compatibility wrapper - delegates to v1
+# Load all OpalVite concerns (deprecated - use opal_vite/concerns/v1 instead)
+require 'opal_vite/concerns/v1'
+
+`console.warn("[DEPRECATION] require 'opal_vite/concerns' is deprecated. Please use require 'opal_vite/concerns/v1' instead.")`

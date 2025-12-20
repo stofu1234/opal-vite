@@ -1,36 +1,7 @@
 # backtick_javascript: true
+# Backward compatibility wrapper - delegates to v1
+require 'opal_vite/concerns/v1/toastable'
 
-module OpalVite
-  module Concerns
-    # Toastable concern - provides toast notification functionality
-    module Toastable
-      def dispatch_toast(message, type = 'info')
-        `
-          const event = new CustomEvent('show-toast', {
-            detail: { message: #{message}, type: #{type} }
-          });
-          window.dispatchEvent(event);
-        `
-      end
+`console.warn("[DEPRECATION] require 'opal_vite/concerns/toastable' is deprecated. Please use require 'opal_vite/concerns/v1/toastable' instead.")`
 
-      def show_success(message)
-        dispatch_toast(message, 'success')
-      end
-
-      def show_error(message)
-        dispatch_toast(message, 'error')
-      end
-
-      def show_warning(message)
-        dispatch_toast(message, 'warning')
-      end
-
-      def show_info(message)
-        dispatch_toast(message, 'info')
-      end
-    end
-  end
-end
-
-# Alias for backward compatibility
-Toastable = OpalVite::Concerns::Toastable
+# Module is already defined by v1, re-exported for backward compatibility
