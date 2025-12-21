@@ -11,7 +11,7 @@ Runs on every push and pull request to ensure code quality.
 **Jobs:**
 1. **test-plugin** - Tests the vite-plugin-opal package
 2. **test-practical-app** - Runs E2E tests for practical-app example
-3. **test-chart-app** - Runs E2E tests for chart-app example (when enabled)
+3. **test-chart-app** - Runs E2E tests for chart-app example (26 tests)
 4. **build-examples** - Builds all example applications to verify they compile
 
 **Triggers:**

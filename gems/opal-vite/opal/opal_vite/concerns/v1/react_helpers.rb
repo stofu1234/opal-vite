@@ -101,18 +101,24 @@ module OpalVite
         # ===================
 
         # Query single element
+        # Returns Native-wrapped element or nil
         def query(selector)
-          `document.querySelector(#{selector})`
+          el = `document.querySelector(#{selector})`
+          `#{el} === null` ? nil : Native(el)
         end
 
         # Query all elements
+        # Returns Ruby Array of Native-wrapped elements
         def query_all(selector)
-          `Array.from(document.querySelectorAll(#{selector}))`
+          elements = `Array.from(document.querySelectorAll(#{selector}))`
+          Native(elements).to_a.map { |el| Native(el) }
         end
 
         # Get element by ID
+        # Returns Native-wrapped element or nil
         def get_element_by_id(id)
-          `document.getElementById(#{id})`
+          el = `document.getElementById(#{id})`
+          `#{el} === null` ? nil : Native(el)
         end
 
         # ===================

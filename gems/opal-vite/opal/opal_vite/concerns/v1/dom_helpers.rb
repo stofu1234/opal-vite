@@ -22,13 +22,17 @@ module OpalVite
       end
 
       # Query selector shorthand on element
+      # Returns Native-wrapped element or nil
       def query(selector)
-        element.query_selector(selector)
+        el = element.query_selector(selector)
+        el.nil? ? nil : el
       end
 
       # Query selector all shorthand on element
+      # Returns Ruby Array of Native-wrapped elements
       def query_all(selector)
-        element.query_selector_all(selector)
+        node_list = element.query_selector_all(selector)
+        Native(`Array.from(#{node_list.to_n})`).to_a.map { |el| Native(el) }
       end
 
       # Add CSS class to element

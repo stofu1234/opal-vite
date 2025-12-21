@@ -60,7 +60,9 @@ class TodoPresenter
   def update_todo_text(todo_id, new_text)
     todo_el = query("[data-todo-id=\"#{todo_id}\"]")
     if todo_el
-      text_el = `#{todo_el}.querySelector('.todo-text')`
+      # Convert Native-wrapped element to raw JS element for querySelector
+      native_el = to_native_element(todo_el)
+      text_el = `#{native_el}.querySelector('.todo-text')`
       set_text(text_el, new_text) if text_el
     end
   end
