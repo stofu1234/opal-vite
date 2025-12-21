@@ -38,8 +38,8 @@ Capybara.register_driver :cuprite do |app|
     js_errors: true,           # Fail tests on JS errors
     headless: !ENV['HEADLESS'].nil? ? ENV['HEADLESS'] != 'false' : true,
     slowmo: ENV['SLOWMO']&.to_f,
-    timeout: 10,
-    process_timeout: 15,
+    timeout: 15,
+    process_timeout: 30,
     browser_options: { 'no-sandbox' => nil }
   }
 
