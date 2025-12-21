@@ -4,9 +4,13 @@
   "type": "module",
   "private": true,
   "scripts": {
+    "dev": "vite",
     "server": "node server.mjs",
     "client": "vite",
-    "build": "vite build"
+    "build": "vite build",
+    "test": "bundle exec rspec",
+    "test:headed": "HEADLESS=false bundle exec rspec",
+    "test:slowmo": "HEADLESS=false SLOWMO=0.5 bundle exec rspec"
   },
   "dependencies": {
     "@hotwired/stimulus": "^3.2.2",
