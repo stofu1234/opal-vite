@@ -120,7 +120,6 @@ jobs:
   test-chart-app:
     name: Test Chart App (E2E)
     runs-on: ubuntu-latest
-    if: false  # Disabled until chart-app has tests
 
     steps:
       - name: Checkout code
