@@ -7,8 +7,11 @@
     "dev": "vite",
     "build": "vite build"
   },
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "dependencies": {
     "vite": "^5.0.0",
-    "vite-plugin-opal": "workspace:*"
+    "vite-plugin-opal": "^0.2.11"
   }
 }

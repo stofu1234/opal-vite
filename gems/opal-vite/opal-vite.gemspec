@@ -8,7 +8,7 @@ Gem::Specification.new do |spec|
 
   spec.summary       = "Integrate Opal with Vite"
   spec.description   = "Compile Ruby to JavaScript using Opal and Vite for fast development"
-  spec.homepage      = "https://github.com/stofu1234/opal-vite"
+  spec.homepage      = "https://stofu1234.github.io/opal-vite/"
   spec.license       = "MIT"
   spec.required_ruby_version = ">= 2.7.0"
 

@@ -1,0 +1,11 @@
+[phases.setup]
+nixPkgs = ["ruby_3_2", "nodejs_20"]
+
+[phases.install]
+cmds = ["npm install", "bundle install"]
+
+[phases.build]
+cmds = ["npm run build"]
+
+[start]
+cmd = "bundle exec puma -C config/puma.rb"

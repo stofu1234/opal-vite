@@ -96,7 +96,15 @@ class ChatController < StimulusController
     # Define connectWebSocket function
     js_define_method(:connectWebSocket) do
       protocol = `window.location.protocol === 'https:' ? 'wss:' : 'ws:'`
-      ws_url = `#{protocol} + '//' + window.location.hostname + ':3007'`
+      # In production, use same port as HTTP; in dev, use :3007
+      port = `window.location.port`
+      ws_url = if `#{port} === '3006'`
+        # Development mode with Vite proxy
+        `#{protocol} + '//' + window.location.hostname + ':3007'`
+      else
+        # Production mode - same port for HTTP and WS
+        `#{protocol} + '//' + window.location.host`
+      end
 
       ws = js_new(js_global('WebSocket'), ws_url)
       js_set_prop(:ws, ws)

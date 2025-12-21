@@ -7,17 +7,21 @@
     "dev": "vite",
     "server": "node server.mjs",
     "client": "vite",
-    "build": "vite build",
+    "build:dev": "vite build",
+    "start": "node production-server.mjs",
     "test": "bundle exec rspec",
     "test:headed": "HEADLESS=false bundle exec rspec",
     "test:slowmo": "HEADLESS=false SLOWMO=0.5 bundle exec rspec"
   },
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "dependencies": {
-    "@hotwired/stimulus": "^3.2.2",
-    "vite": "^5.0.0",
     "ws": "^8.18.0"
   },
   "devDependencies": {
-    "vite-plugin-opal": "workspace:*"
+    "@hotwired/stimulus": "^3.2.2",
+    "vite": "^5.0.0",
+    "vite-plugin-opal": "^0.2.11"
   }
 }

@@ -1,0 +1,8 @@
+{
+  "app/opal/application_loader.js": {
+    "file": "assets/application-Dku1UUUb.js",
+    "name": "application",
+    "src": "app/opal/application_loader.js",
+    "isEntry": true
+  }
+}

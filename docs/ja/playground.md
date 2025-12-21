@@ -74,6 +74,20 @@ Reactとの統合サンプル。Rubyでロジックを記述。
 
 [**デモを開く**](https://stofu1234.github.io/opal-vite/playground/react-app/)
 
+---
+
+### Chat App (Railway)
+WebSocketを使用したリアルタイムチャットアプリ。複数ユーザー対応。
+
+[**デモを開く**](https://opal-vite-chat-demo-production.up.railway.app)
+
+---
+
+### Rails App (Railway)
+Rails + Opal + Viteの統合サンプル。サーバーサイドRailsとクライアントサイドOpalの連携。
+
+[**デモを開く**](https://opal-vite-rails-demo-production.up.railway.app)
+
 </div>
 
 ## ソースコード
@@ -90,6 +104,8 @@ Reactとの統合サンプル。Rubyでロジックを記述。
 - [turbo-app](https://github.com/stofu1234/opal-vite/tree/master/examples/turbo-app)
 - [vue-app](https://github.com/stofu1234/opal-vite/tree/master/examples/vue-app)
 - [react-app](https://github.com/stofu1234/opal-vite/tree/master/examples/react-app)
+- [chat-app](https://github.com/stofu1234/opal-vite/tree/master/examples/chat-app)
+- [rails-app](https://github.com/stofu1234/opal-vite/tree/master/examples/rails-app)
 
 ## ローカルで実行
 

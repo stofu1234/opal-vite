@@ -8,7 +8,7 @@ Gem::Specification.new do |spec|
 
   spec.summary       = "Rails integration for Opal with Vite"
   spec.description   = "Seamlessly integrate Opal (Ruby to JavaScript compiler) with Rails using Vite for fast development"
-  spec.homepage      = "https://github.com/stofu1234/opal-vite"
+  spec.homepage      = "https://stofu1234.github.io/opal-vite/"
   spec.license       = "MIT"
   spec.required_ruby_version = ">= 2.7.0"
 
@@ -20,7 +20,7 @@ Gem::Specification.new do |spec|
   end
   spec.require_paths = ["lib"]
 
-  spec.add_dependency "opal-vite", Opal::Vite::Rails::VERSION
+  spec.add_dependency "opal-vite", "~> #{Opal::Vite::Rails::VERSION}"
   spec.add_dependency "railties", ">= 6.0.0"
   spec.add_dependency "actionview", ">= 6.0.0"
   spec.add_dependency "vite_rails", "~> 3.0"

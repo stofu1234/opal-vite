@@ -1,0 +1,7 @@
+source "https://rubygems.org"
+
+# Rails (minimal - without ActiveRecord)
+gem "rails", "~> 7.1.0"
+
+# Server
+gem "puma", "~> 6.0"

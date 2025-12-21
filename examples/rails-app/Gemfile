@@ -1,10 +1,7 @@
 source "https://rubygems.org"
 
-# Rails
+# Rails (without ActiveRecord for this demo)
 gem "rails", "~> 7.1.0"
-
-# Database
-gem "sqlite3", "~> 1.4"
 
 # Server
 gem "puma", "~> 6.0"
@@ -15,6 +12,6 @@ gem "vite_rails", "~> 3.0"
 # Opal
 gem "opal", "~> 1.8"
 
-# Opal-Vite integration (local paths for development)
+# Opal-Vite integration (local paths for development/build)
 gem "opal-vite", path: "../../gems/opal-vite"
 gem "opal-vite-rails", path: "../../gems/opal-vite-rails"

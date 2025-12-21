@@ -57,14 +57,11 @@ Rails.application.configure do
   # Don't log any deprecations.
   config.active_support.report_deprecations = false
 
-  # Do not dump schema after migrations.
-  config.active_record.dump_schema_after_migration = false
+  # ActiveRecord is not used in this demo app
 
-  # Enable DNS rebinding protection and other `Host` header attacks.
-  # config.hosts = [
-  #   "example.com",     # Allow requests from example.com
-  #   /.*\.example\.com/ # Allow requests from subdomains like `www.example.com`
-  # ]
-  # Skip DNS rebinding protection for the default health check endpoint.
-  # config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
+  # Allow all hosts for Railway deployment
+  config.hosts.clear
+
+  # Enable static file serving for Railway (no nginx/apache in front)
+  config.public_file_server.enabled = true
 end

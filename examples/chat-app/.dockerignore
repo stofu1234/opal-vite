@@ -1,0 +1,11 @@
+node_modules
+.git
+*.md
+spec
+Gemfile
+Gemfile.lock
+.rspec
+app
+server.mjs
+vite.config.ts
+*.log

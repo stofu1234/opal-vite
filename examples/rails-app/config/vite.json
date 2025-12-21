@@ -1,0 +1,15 @@
+{
+  "all": {
+    "sourceCodeDir": "app/opal",
+    "watchAdditionalPaths": []
+  },
+  "development": {
+    "autoBuild": true,
+    "publicOutputDir": "vite-dev",
+    "port": 3036
+  },
+  "production": {
+    "autoBuild": false,
+    "publicOutputDir": "dist"
+  }
+}
