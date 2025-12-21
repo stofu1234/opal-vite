@@ -491,25 +491,38 @@ module OpalVite
 
       # ===== Element Methods =====
 
+      # Convert element to native JavaScript element
+      # Handles both raw JS elements and Native-wrapped elements
+      # @param element [Native, Object] DOM element (raw or Native-wrapped)
+      # @return [Object] Raw JavaScript element
+      def to_native_element(element)
+        # Check if element is an Opal object with to_n method
+        # Use backtick JavaScript to safely check without calling Ruby methods on JS objects
+        `typeof #{element}.$to_n === 'function'` ? element.to_n : element
+      end
+
       # Add class to element
       # @param element [Native] DOM element
       # @param class_name [String] CSS class to add
       def add_class(element, class_name)
-        `#{element}.classList.add(#{class_name})`
+        el = to_native_element(element)
+        `#{el}.classList.add(#{class_name})`
       end
 
       # Remove class from element
       # @param element [Native] DOM element
       # @param class_name [String] CSS class to remove
       def remove_class(element, class_name)
-        `#{element}.classList.remove(#{class_name})`
+        el = to_native_element(element)
+        `#{el}.classList.remove(#{class_name})`
       end
 
       # Toggle class on element
       # @param element [Native] DOM element
       # @param class_name [String] CSS class to toggle
       def toggle_class(element, class_name)
-        `#{element}.classList.toggle(#{class_name})`
+        el = to_native_element(element)
+        `#{el}.classList.toggle(#{class_name})`
       end
 
       # Check if element has class
@@ -517,7 +530,8 @@ module OpalVite
       # @param class_name [String] CSS class to check
       # @return [Boolean]
       def has_class?(element, class_name)
-        `#{element}.classList.contains(#{class_name})`
+        el = to_native_element(element)
+        `#{el}.classList.contains(#{class_name})`
       end
 
       # Set element attribute
@@ -525,7 +539,8 @@ module OpalVite
       # @param attr [String] Attribute name
       # @param value [String] Attribute value
       def set_attr(element, attr, value)
-        `#{element}.setAttribute(#{attr}, #{value})`
+        el = to_native_element(element)
+        `#{el}.setAttribute(#{attr}, #{value})`
       end
 
       # Get element attribute
@@ -533,14 +548,16 @@ module OpalVite
       # @param attr [String] Attribute name
       # @return [String, nil] Attribute value
       def get_attr(element, attr)
-        `#{element}.getAttribute(#{attr})`
+        el = to_native_element(element)
+        `#{el}.getAttribute(#{attr})`
       end
 
       # Remove element attribute
       # @param element [Native] DOM element
       # @param attr [String] Attribute name
       def remove_attr(element, attr)
-        `#{element}.removeAttribute(#{attr})`
+        el = to_native_element(element)
+        `#{el}.removeAttribute(#{attr})`
       end
 
       # Set element style
@@ -548,41 +565,47 @@ module OpalVite
       # @param property [String] CSS property
       # @param value [String] CSS value
       def set_style(element, property, value)
-        `#{element}.style[#{property}] = #{value}`
+        el = to_native_element(element)
+        `#{el}.style[#{property}] = #{value}`
       end
 
       # Set element innerHTML
       # @param element [Native] DOM element
       # @param html [String] HTML content
       def set_html(element, html)
-        `#{element}.innerHTML = #{html}`
+        el = to_native_element(element)
+        `#{el}.innerHTML = #{html}`
       end
 
       # Set element textContent
       # @param element [Native] DOM element
       # @param text [String] Text content
       def set_text(element, text)
-        `#{element}.textContent = #{text}`
+        el = to_native_element(element)
+        `#{el}.textContent = #{text}`
       end
 
       # Get element value (for inputs)
       # @param element [Native] DOM element
       # @return [String] Element value
       def get_value(element)
-        `#{element}.value`
+        el = to_native_element(element)
+        `#{el}.value`
       end
 
       # Set element value (for inputs)
       # @param element [Native] DOM element
       # @param value [String] Value to set
       def set_value(element, value)
-        `#{element}.value = #{value}`
+        el = to_native_element(element)
+        `#{el}.value = #{value}`
       end
 
       # Focus element
       # @param element [Native] DOM element
       def focus(element)
-        `#{element}.focus()`
+        el = to_native_element(element)
+        `#{el}.focus()`
       end
 
       # Check if element has attribute
@@ -590,14 +613,15 @@ module OpalVite
       # @param attr [String] Attribute name
       # @return [Boolean]
       def has_attr?(element, attr)
-        `#{element}.hasAttribute(#{attr})`
+        el = to_native_element(element)
+        `#{el}.hasAttribute(#{attr})`
       end
 
       # ===== DOM Creation Methods =====
 
       # Create a new DOM element
       # @param tag [String] HTML tag name
-      # @return [Native] Created element
+      # @return [Object] Created element (raw JavaScript)
       def create_element(tag)
         `document.createElement(#{tag})`
       end
@@ -606,34 +630,40 @@ module OpalVite
       # @param parent [Native] Parent element
       # @param child [Native] Child element to append
       def append_child(parent, child)
-        `#{parent}.appendChild(#{child})`
+        p = to_native_element(parent)
+        c = to_native_element(child)
+        `#{p}.appendChild(#{c})`
       end
 
       # Remove element from DOM
       # @param element [Native] Element to remove
       def remove_element(element)
-        `#{element}.remove()`
+        el = to_native_element(element)
+        `#{el}.remove()`
       end
 
       # Get next element sibling
       # @param element [Native] DOM element
       # @return [Native, nil] Next sibling element
       def next_sibling(element)
-        `#{element}.nextElementSibling`
+        el = to_native_element(element)
+        `#{el}.nextElementSibling`
       end
 
       # Get previous element sibling
       # @param element [Native] DOM element
       # @return [Native, nil] Previous sibling element
       def prev_sibling(element)
-        `#{element}.previousElementSibling`
+        el = to_native_element(element)
+        `#{el}.previousElementSibling`
       end
 
       # Get parent element
       # @param element [Native] DOM element
       # @return [Native, nil] Parent element
       def parent(element)
-        `#{element}.parentElement`
+        el = to_native_element(element)
+        `#{el}.parentElement`
       end
 
       # ===== DOM Query Methods =====
@@ -642,28 +672,32 @@ module OpalVite
       # @param selector [String] CSS selector
       # @return [Native, nil] Element or nil
       def query(selector)
-        `document.querySelector(#{selector})`
+        el = `document.querySelector(#{selector})`
+        `#{el} === null` ? nil : Native(el)
       end
 
       # Query selector all on document
       # @param selector [String] CSS selector
-      # @return [Array] Array of elements
+      # @return [Array] Ruby Array of Native-wrapped elements
       def query_all(selector)
-        `Array.from(document.querySelectorAll(#{selector}))`
+        elements = `Array.from(document.querySelectorAll(#{selector}))`
+        Native(elements).to_a.map { |el| Native(el) }
       end
 
       # Query selector on controller element
       # @param selector [String] CSS selector
       # @return [Native, nil] Element or nil
       def query_element(selector)
-        `this.element.querySelector(#{selector})`
+        el = `this.element.querySelector(#{selector})`
+        `#{el} === null` ? nil : Native(el)
       end
 
       # Query selector all on controller element
       # @param selector [String] CSS selector
-      # @return [Array] Array of elements
+      # @return [Array] Ruby Array of Native-wrapped elements
       def query_all_element(selector)
-        `Array.from(this.element.querySelectorAll(#{selector}))`
+        elements = `Array.from(this.element.querySelectorAll(#{selector}))`
+        Native(elements).to_a.map { |el| Native(el) }
       end
 
       # ===== Document Methods =====
