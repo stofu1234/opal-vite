@@ -427,6 +427,11 @@ jobs:
           bundler-cache: true
           working-directory: examples/snabberb-app
 
+      - name: Install Chrome for Cuprite
+        uses: browser-actions/setup-chrome@v1
+        with:
+          chrome-version: stable
+
       - name: Build and install opal-vite gem
         run: |
           cd gems/opal-vite
@@ -445,12 +450,11 @@ jobs:
         run: bundle install
         working-directory: examples/snabberb-app
 
-      - name: Install Playwright browsers
-        run: pnpm exec playwright install chromium
-        working-directory: examples/snabberb-app
-
-      - name: Run E2E tests (Playwright)
-        run: pnpm test
+      - name: Run E2E tests (Capybara + Cuprite)
+        run: |
+          pnpm dev &
+          sleep 10
+          bundle exec rspec
         working-directory: examples/snabberb-app
         env:
           CI: true
