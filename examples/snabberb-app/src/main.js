@@ -1,7 +1,5 @@
-// Import snabbdom and expose globally (required by snabberb gem)
-// This MUST be done before Opal runtime loads
-import * as snabbdom from 'snabbdom'
-window.snabbdom = snabbdom
+// Setup snabbdom globally FIRST (required by snabberb gem)
+import './snabbdom-setup.js'
 
 // Import Opal runtime (required for production builds)
 import '/@opal-runtime'
