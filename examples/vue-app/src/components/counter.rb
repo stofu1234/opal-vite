@@ -1,8 +1,21 @@
 # backtick_javascript: true
 require 'native'
 require 'opal_vite/concerns/v1/vue_helpers'
+require_relative '../services/counter_service'
 
 # Counter App - Vue.js component defined in Ruby
+#
+# This component demonstrates two solutions for reducing backtick JavaScript:
+#
+# 【解決策①】Service Pattern (ロジック分離)
+#   - Business logic is in CounterService (pure Ruby)
+#   - Vue component only syncs state
+#   - Service can be tested and reused independently
+#
+# 【解決策②】vue_method/vue_computed_fn helpers
+#   - Helpers wrap Vue's `this` in Native for Ruby-style access
+#   - Usage: vue_method { |vm| vm[:count] += 1 }
+#
 class CounterApp
   extend VueHelpers
 
@@ -31,37 +44,49 @@ class CounterApp
   HTML
 
   def self.create_app
-    # Define the Vue component options in Ruby
+    # 解決策① - Service instance holds business logic
+    service = CounterService.new
+
     options = {
-      data: -> {
-        `{ count: 0 }`
+      data: vue_fn { { count: service.count }.to_n },
+
+      computed: {
+        # 解決策② - vue_computed_fn for Ruby-style computed properties
+        doubled: vue_computed_fn { |vm| vm[:count] * 2 },
+        absolute: vue_computed_fn { |vm|
+          count = vm[:count]
+          count < 0 ? -count : count
+        }
       },
-      computed: `{
-        doubled() {
-          return this.count * 2;
+
+      methods: {
+        # 解決策①+② combined:
+        # - Business logic in service (pure Ruby)
+        # - vue_method to sync state to Vue
+        increment: vue_method { |vm|
+          service.increment                    # ① Service handles logic
+          vm[:count] = service.count           # ① Sync to Vue
+          console_log("Incremented to: #{service.count}")
         },
-        absolute() {
-          return Math.abs(this.count);
+
+        decrement: vue_method { |vm|
+          service.decrement
+          vm[:count] = service.count
+          console_log("Decremented to: #{service.count}")
+        },
+
+        reset: vue_method { |vm|
+          service.reset
+          vm[:count] = service.count
+          console_log("Reset to zero")
         }
-      }`,
-      methods: `{
-        increment() {
-          this.count++;
-          console.log('Incremented to:', this.count);
-        },
-        decrement() {
-          this.count--;
-          console.log('Decremented to:', this.count);
-        },
-        reset() {
-          this.count = 0;
-          console.log('Reset to zero');
-        }
-      }`,
+      },
+
       template: TEMPLATE,
-      mounted: `function() {
-        console.log('Counter component mounted (from Ruby!)');
-      }`
+
+      mounted: vue_hook { |vm|
+        console_log("Counter component mounted (from Ruby with Service pattern!)")
+      }
     }
 
     VueHelpers.create_app(options)

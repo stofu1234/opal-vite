@@ -3,73 +3,109 @@ require 'native'
 require 'opal_vite/concerns/v1/vue_helpers'
 
 # Todo App - Vue.js component defined in Ruby
+#
+# Demonstrates 解決策② - using vue_method helpers to reduce backtick JavaScript
+# while keeping localStorage persistence working with Vue's reactivity.
+#
 class TodoApp
   extend VueHelpers
 
+  STORAGE_KEY = 'opal-vue-todos'
+
   def self.get_template
-    # Get template from a hidden element in the DOM
     `document.getElementById('todo-template').innerHTML`
   end
 
   def self.create_app
     template = get_template
+
     options = {
-      data: `function() {
-        var STORAGE_KEY = 'opal-vue-todos';
-        var saved = localStorage.getItem(STORAGE_KEY);
-        var todos = saved ? JSON.parse(saved) : [];
-        return {
+      data: vue_fn {
+        # Load from localStorage
+        saved = `localStorage.getItem(#{STORAGE_KEY})`
+        todos = `#{saved} ? JSON.parse(#{saved}) : []`
+        next_id = 1
+        `if (#{todos}.length > 0) {
+          #{next_id} = Math.max.apply(null, #{todos}.map(function(t) { return t.id; })) + 1;
+        }`
+        {
           newTodo: '',
           todos: todos,
-          nextId: todos.length > 0 ? Math.max.apply(null, todos.map(function(t) { return t.id; })) + 1 : 1,
+          nextId: next_id,
           storageKey: STORAGE_KEY
-        };
-      }`,
-      computed: `{
-        remaining: function() {
-          return this.todos.filter(function(t) { return !t.completed; }).length;
-        },
-        completed: function() {
-          return this.todos.filter(function(t) { return t.completed; }).length;
-        }
-      }`,
-      methods: `{
-        addTodo: function() {
-          var text = this.newTodo.trim();
-          if (!text) return;
+        }.to_n
+      },
 
-          this.todos.push({
-            id: this.nextId++,
-            text: text,
-            completed: false
-          });
-          this.newTodo = '';
-          this.saveTodos();
-          console.log('Todo added:', text);
+      computed: {
+        # 解決策② - vue_computed_fn でバッククォート削減
+        remaining: vue_computed_fn { |vm|
+          todos = vm[:todos]
+          `#{todos}.filter(function(t) { return !t.completed; }).length`
         },
-        removeTodo: function(id) {
-          var index = this.todos.findIndex(function(t) { return t.id === id; });
-          if (index > -1) {
-            var removed = this.todos.splice(index, 1);
-            this.saveTodos();
-            console.log('Todo removed:', removed[0].text);
-          }
-        },
-        clearCompleted: function() {
-          this.todos = this.todos.filter(function(t) { return !t.completed; });
-          this.saveTodos();
-          console.log('Cleared completed todos');
-        },
-        saveTodos: function() {
-          localStorage.setItem(this.storageKey, JSON.stringify(this.todos));
-          console.log('Todos saved to localStorage');
+
+        completed: vue_computed_fn { |vm|
+          todos = vm[:todos]
+          `#{todos}.filter(function(t) { return t.completed; }).length`
         }
-      }`,
+      },
+
+      methods: {
+        # 解決策② - vue_method でバッククォート削減
+        # Note: vm.to_n を使って Vue の this に直接アクセスし、リアクティビティを維持
+        addTodo: vue_method { |vm|
+          this = vm.to_n
+          text = `#{this}.newTodo.trim()`
+
+          unless `#{text} === ''`
+            next_id = `#{this}.nextId`
+            todo = { id: next_id, text: text, completed: false }.to_n
+            `#{this}.todos.push(#{todo})`
+            `#{this}.nextId = #{next_id} + 1`
+            `#{this}.newTodo = ''`
+
+            # Save to localStorage
+            storage_key = `#{this}.storageKey`
+            `localStorage.setItem(#{storage_key}, JSON.stringify(#{this}.todos))`
+            console_log("Todo added: #{text}")
+          end
+        },
+
+        removeTodo: vue_method { |vm, id|
+          this = vm.to_n
+          `var index = #{this}.todos.findIndex(function(t) { return t.id === #{id}; });
+           if (index > -1) {
+             #{this}.todos.splice(index, 1);
+           }`
+          # Save to localStorage
+          storage_key = `#{this}.storageKey`
+          `localStorage.setItem(#{storage_key}, JSON.stringify(#{this}.todos))`
+          console_log("Todo removed")
+        },
+
+        clearCompleted: vue_method { |vm|
+          this = vm.to_n
+          `#{this}.todos = #{this}.todos.filter(function(t) { return !t.completed; })`
+          storage_key = `#{this}.storageKey`
+          `localStorage.setItem(#{storage_key}, JSON.stringify(#{this}.todos))`
+          console_log("Cleared completed todos")
+        },
+
+        saveTodos: vue_method { |vm|
+          this = vm.to_n
+          storage_key = `#{this}.storageKey`
+          `localStorage.setItem(#{storage_key}, JSON.stringify(#{this}.todos))`
+          console_log("Todos saved to localStorage")
+        }
+      },
+
       template: template,
-      mounted: `function() {
-        console.log('Todo component mounted (from Ruby!)');
-        console.log('Loaded', this.todos.length, 'todos from localStorage');
-      }`
+
+      mounted: vue_hook { |vm|
+        todos = vm[:todos]
+        count = `#{todos}.length`
+        console_log("Todo component mounted (from Ruby!)")
+        console_log("Loaded #{count} todos from localStorage")
+      }
     }
 
     VueHelpers.create_app(options)

@@ -229,6 +229,10 @@ importers:
       vue:
         specifier: ^3.4.0
         version: 3.5.26(typescript@5.9.3)
+    devDependencies:
+      '@playwright/test':
+        specifier: ^1.57.0
+        version: 1.57.0
 
   packages/create-opal-vite:
     dependencies:
