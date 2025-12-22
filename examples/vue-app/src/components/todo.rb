@@ -36,18 +36,15 @@ class TodoApp
         }.to_n
       },
 
-      computed: {
-        # 解決策② - vue_computed_fn でバッククォート削減
-        remaining: vue_computed_fn { |vm|
-          todos = vm[:todos]
-          `#{todos}.filter(function(t) { return !t.completed; }).length`
+      # computed は Vue のリアクティビティを維持するため、直接 JS 関数を使用
+      computed: `{
+        remaining: function() {
+          return this.todos.filter(function(t) { return !t.completed; }).length;
         },
-
-        completed: vue_computed_fn { |vm|
-          todos = vm[:todos]
-          `#{todos}.filter(function(t) { return t.completed; }).length`
+        completed: function() {
+          return this.todos.filter(function(t) { return t.completed; }).length;
         }
-      },
+      }`,
 
       methods: {
         # 解決策② - vue_method でバッククォート削減
