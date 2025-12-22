@@ -1,6 +1,6 @@
 {
   "name": "vite-plugin-opal",
-  "version": "0.2.13",
+  "version": "0.2.14",
   "description": "Vite plugin for Opal - Compile Ruby to JavaScript",
   "type": "module",
   "main": "./dist/index.js",

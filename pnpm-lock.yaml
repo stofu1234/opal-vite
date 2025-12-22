@@ -69,8 +69,8 @@ importers:
         specifier: ^5.0.0
         version: 5.4.21(@types/node@20.19.26)(terser@5.44.1)
       vite-plugin-opal:
-        specifier: ^0.2.11
-        version: 0.2.11(vite@5.4.21(@types/node@20.19.26)(terser@5.44.1))
+        specifier: ^0.2.12
+        version: 0.2.13(vite@5.4.21(@types/node@20.19.26)(terser@5.44.1))
 
   examples/form-validation-app:
     dependencies:
@@ -3008,6 +3008,11 @@ packages:
 
   vite-plugin-opal@0.2.11:
     resolution: {integrity: sha512-OqoX5nvX+dyXAtf2wyJMAxWrpJwoxLywN+vO2qWkwCQDc669FP6QgdvW/fTdPagDfxvOr7a+eaaooU0dGbKyuA==}
+    peerDependencies:
+      vite: ^5.0.0
+
+  vite-plugin-opal@0.2.13:
+    resolution: {integrity: sha512-9+myEbksFNfR6hC0bMdFlHT5RVCvIkfhyvfR0bTZRim12C4CX/zHamyk36aEIDF1ibfdiD/Ddp2eneaYTyBIbg==}
     peerDependencies:
       vite: ^5.0.0
 
@@ -6187,6 +6192,11 @@ snapshots:
       - terser
 
   vite-plugin-opal@0.2.11(vite@5.4.21(@types/node@20.19.26)(terser@5.44.1)):
+    dependencies:
+      chokidar: 3.6.0
+      vite: 5.4.21(@types/node@20.19.26)(terser@5.44.1)
+
+  vite-plugin-opal@0.2.13(vite@5.4.21(@types/node@20.19.26)(terser@5.44.1)):
     dependencies:
       chokidar: 3.6.0
       vite: 5.4.21(@types/node@20.19.26)(terser@5.44.1)
