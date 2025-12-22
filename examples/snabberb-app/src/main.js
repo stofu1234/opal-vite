@@ -1,4 +1,9 @@
-// Import Opal runtime first (required for production builds)
+// Import snabbdom and expose globally (required by snabberb gem)
+// This MUST be done before Opal runtime loads
+import * as snabbdom from 'snabbdom'
+window.snabbdom = snabbdom
+
+// Import Opal runtime (required for production builds)
 import '/@opal-runtime'
 
 // Snabberb + Opal + Vite Example

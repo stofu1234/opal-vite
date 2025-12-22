@@ -48,12 +48,13 @@ jobs:
         run: pnpm test
         working-directory: packages/vite-plugin-opal
 
-      - name: Publish to npm
-        if: startsWith(github.ref, 'refs/tags/')
-        run: pnpm publish --no-git-checks
-        working-directory: packages/vite-plugin-opal
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      # Commented out: Manual publish preferred
+      # - name: Publish to npm
+      #   if: startsWith(github.ref, 'refs/tags/')
+      #   run: pnpm publish --no-git-checks
+      #   working-directory: packages/vite-plugin-opal
+      #   env:
+      #     NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Extract version
         id: version
@@ -91,32 +92,33 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  publish-gem:
-    name: Publish Ruby Gem
-    runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/')
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: '3.2'
-          bundler-cache: true
-          working-directory: gems/opal-vite
-
-      - name: Build gem
-        run: gem build opal-vite.gemspec
-        working-directory: gems/opal-vite
-
-      - name: Publish to RubyGems
-        run: |
-          mkdir -p ~/.gem
-          echo ":rubygems_api_key: ${RUBYGEMS_API_KEY}" > ~/.gem/credentials
-          chmod 0600 ~/.gem/credentials
-          gem push *.gem
-        working-directory: gems/opal-vite
-        env:
-          RUBYGEMS_API_KEY: ${{ secrets.RUBYGEMS_API_KEY }}
+  # Commented out: Manual publish preferred
+  # publish-gem:
+  #   name: Publish Ruby Gem
+  #   runs-on: ubuntu-latest
+  #   if: startsWith(github.ref, 'refs/tags/')
+  #
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
+  #
+  #     - name: Setup Ruby
+  #       uses: ruby/setup-ruby@v1
+  #       with:
+  #         ruby-version: '3.2'
+  #         bundler-cache: true
+  #         working-directory: gems/opal-vite
+  #
+  #     - name: Build gem
+  #       run: gem build opal-vite.gemspec
+  #       working-directory: gems/opal-vite
+  #
+  #     - name: Publish to RubyGems
+  #       run: |
+  #         mkdir -p ~/.gem
+  #         echo ":rubygems_api_key: ${RUBYGEMS_API_KEY}" > ~/.gem/credentials
+  #         chmod 0600 ~/.gem/credentials
+  #         gem push *.gem
+  #       working-directory: gems/opal-vite
+  #       env:
+  #         RUBYGEMS_API_KEY: ${{ secrets.RUBYGEMS_API_KEY }}
