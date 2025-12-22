@@ -86,6 +86,86 @@ module OpalVite
         end
 
         # ===================
+        # Vue Function Helpers
+        # ===================
+
+        # Wrap any Ruby proc/lambda in a pure JS function (removes $$class property)
+        # Use this for Vue options that expect functions (data, lifecycle hooks, etc.)
+        # @param block [Proc] Any Ruby proc or lambda
+        # @return [Function] Pure JS function for Vue compatibility
+        #
+        # Usage:
+        #   data: vue_fn { { count: 0 }.to_n }
+        #   someCallback: vue_fn { |arg| process(arg) }
+        def vue_fn(&block)
+          `(function() { var fn = #{block}; return function() { return fn.apply(this, arguments); }; })()`
+        end
+
+        # ===================
+        # Vue Method/Computed Helpers (解決策②)
+        # ===================
+        # These helpers reduce backtick JavaScript by wrapping Vue's `this`
+        # in a Native object, allowing Ruby-style property access.
+        #
+        # Example:
+        #   methods: {
+        #     increment: vue_method { |vm| vm[:count] += 1 }
+        #   }
+        #
+        # Instead of:
+        #   methods: `{ increment() { this.count++ } }`
+
+        # Create a Vue method that receives `this` as Native-wrapped vm
+        # @param block [Proc] Block that receives vm (Native-wrapped this) and optional arguments
+        # @return [Function] Pure JS function (no $$class property) for Vue compatibility
+        #
+        # Usage:
+        #   increment: vue_method { |vm| vm[:count] += 1 }
+        #   greet: vue_method { |vm, name| console_log("Hello, #{name}!") }
+        #   remove: vue_method { |vm, id| service.remove(id) }
+        #
+        # Note: When Vue calls the method, `this` is captured and passed as the first argument.
+        # Additional arguments from Vue (e.g., @click="removeTodo(todo.id)") are also passed.
+        def vue_method(&block)
+          p = proc do |*args|
+            vm = Native(`this`)
+            block.call(vm, *args)
+          end
+          # Wrap in pure JS function to avoid Vue $$class warning
+          `(function() { var fn = #{p}; return function() { return fn.apply(this, arguments); }; })()`
+        end
+
+        # Create a Vue computed getter that receives `this` as Native-wrapped vm
+        # @param block [Proc] Block that receives vm and returns computed value
+        # @return [Function] Pure JS function (no $$class property) for Vue compatibility
+        #
+        # Usage:
+        #   doubled: vue_computed_fn { |vm| vm[:count] * 2 }
+        def vue_computed_fn(&block)
+          p = proc do
+            vm = Native(`this`)
+            block.call(vm)
+          end
+          # Wrap in pure JS function to avoid Vue $$class warning
+          `(function() { var fn = #{p}; return function() { return fn.apply(this, arguments); }; })()`
+        end
+
+        # Create a Vue lifecycle hook that receives `this` as Native-wrapped vm
+        # @param block [Proc] Block that receives vm
+        # @return [Function] Pure JS function (no $$class property) for Vue compatibility
+        #
+        # Usage:
+        #   mounted: vue_hook { |vm| console_log("Mounted with count: #{vm[:count]}") }
+        def vue_hook(&block)
+          p = proc do
+            vm = Native(`this`)
+            block.call(vm)
+          end
+          # Wrap in pure JS function to avoid Vue $$class warning
+          `(function() { var fn = #{p}; return function() { return fn.apply(this, arguments); }; })()`
+        end
+
+        # ===================
         # Lifecycle Hooks
         # ===================
 
