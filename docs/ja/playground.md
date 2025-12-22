@@ -76,6 +76,13 @@ Reactとの統合サンプル。Rubyでロジックを記述。
 
 ---
 
+### Snabberb App
+Snabberb SPAフレームワークのサンプル。仮想DOMを使用したカウンターとTodoアプリ。
+
+[**デモを開く**](https://stofu1234.github.io/opal-vite/playground/snabberb-app/)
+
+---
+
 ### Chat App (Railway)
 WebSocketを使用したリアルタイムチャットアプリ。複数ユーザー対応。
 
@@ -104,6 +111,7 @@ Rails + Opal + Viteの統合サンプル。サーバーサイドRailsとクラ�
 - [turbo-app](https://github.com/stofu1234/opal-vite/tree/master/examples/turbo-app)
 - [vue-app](https://github.com/stofu1234/opal-vite/tree/master/examples/vue-app)
 - [react-app](https://github.com/stofu1234/opal-vite/tree/master/examples/react-app)
+- [snabberb-app](https://github.com/stofu1234/opal-vite/tree/master/examples/snabberb-app)
 - [chat-app](https://github.com/stofu1234/opal-vite/tree/master/examples/chat-app)
 - [rails-app](https://github.com/stofu1234/opal-vite/tree/master/examples/rails-app)
 
