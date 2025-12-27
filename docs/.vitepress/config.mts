@@ -41,6 +41,7 @@ export default defineConfig({
             {
               text: 'Advanced',
               items: [
+                { text: 'Production Build', link: '/guide/production-build' },
                 { text: 'Migration', link: '/guide/migration' },
                 { text: 'Source Maps', link: '/guide/source-maps' },
                 { text: 'Testing', link: '/guide/testing' },
@@ -90,6 +91,7 @@ export default defineConfig({
             {
               text: '詳細',
               items: [
+                { text: '本番ビルド', link: '/ja/guide/production-build' },
                 { text: 'マイグレーション', link: '/ja/guide/migration' },
                 { text: 'ソースマップ', link: '/ja/guide/source-maps' },
                 { text: 'テスト', link: '/ja/guide/testing' },
