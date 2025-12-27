@@ -1307,6 +1307,348 @@ module OpalVite
         `#{promise}.finally(#{block})`
       end
 
+      # ===== Stimulus Values API =====
+      # Access Stimulus values defined with `static values = { name: Type }`
+
+      # Get a Stimulus value
+      # @param name [Symbol, String] Value name (e.g., :count, :url)
+      # @return [Object] The value (auto-converted by Stimulus based on type)
+      # @example
+      #   # With static values = { count: Number, url: String }
+      #   get_value(:count)  # => 0
+      #   get_value(:url)    # => "/api/items"
+      def get_value(name)
+        prop_name = "#{camelize(name, false)}Value"
+        `this[#{prop_name}]`
+      end
+
+      # Set a Stimulus value
+      # @param name [Symbol, String] Value name
+      # @param value [Object] The value to set
+      # @example
+      #   set_value(:count, 5)
+      #   set_value(:items, [1, 2, 3])
+      def set_value(name, value)
+        prop_name = "#{camelize(name, false)}Value"
+        native_value = value.respond_to?(:to_n) ? value.to_n : value
+        `this[#{prop_name}] = #{native_value}`
+      end
+
+      # Check if a Stimulus value exists (has data attribute)
+      # @param name [Symbol, String] Value name
+      # @return [Boolean] true if value's data attribute exists
+      # @example
+      #   if has_value?(:api_url)
+      #     fetch_json(get_value(:api_url)) { |data| ... }
+      #   end
+      def has_value?(name)
+        prop_name = "has#{camelize(name)}Value"
+        `this[#{prop_name}]`
+      end
+
+      # Increment a numeric Stimulus value
+      # @param name [Symbol, String] Value name
+      # @param amount [Number] Amount to increment (default: 1)
+      def increment_value(name, amount = 1)
+        set_value(name, get_value(name) + amount)
+      end
+
+      # Decrement a numeric Stimulus value
+      # @param name [Symbol, String] Value name
+      # @param amount [Number] Amount to decrement (default: 1)
+      def decrement_value(name, amount = 1)
+        set_value(name, get_value(name) - amount)
+      end
+
+      # Toggle a boolean Stimulus value
+      # @param name [Symbol, String] Value name
+      def toggle_value(name)
+        set_value(name, !get_value(name))
+      end
+
+      # ===== Stimulus CSS Classes API =====
+      # Access CSS classes defined with `static classes = [ "loading", "active" ]`
+
+      # Get a Stimulus CSS class (singular)
+      # @param name [Symbol, String] Class logical name
+      # @return [String] The CSS class name
+      # @example
+      #   # With static classes = [ "loading" ] and data-controller-loading-class="spinner"
+      #   get_class(:loading)  # => "spinner"
+      def get_class(name)
+        prop_name = "#{camelize(name, false)}Class"
+        `this[#{prop_name}]`
+      end
+
+      # Get all Stimulus CSS classes (plural, for space-separated values)
+      # @param name [Symbol, String] Class logical name
+      # @return [Array] Array of CSS class names
+      # @example
+      #   # With data-controller-loading-class="spinner bg-gray-500"
+      #   get_classes(:loading)  # => ["spinner", "bg-gray-500"]
+      def get_classes(name)
+        prop_name = "#{camelize(name, false)}Classes"
+        `Array.from(this[#{prop_name}] || [])`
+      end
+
+      # Check if a Stimulus CSS class is defined
+      # @param name [Symbol, String] Class logical name
+      # @return [Boolean] true if class data attribute exists
+      def has_class_definition?(name)
+        prop_name = "has#{camelize(name)}Class"
+        `this[#{prop_name}]`
+      end
+
+      # Apply a Stimulus CSS class to an element
+      # @param element [Native] DOM element
+      # @param name [Symbol, String] Class logical name
+      def apply_class(element, name)
+        el = to_native_element(element)
+        class_name = get_class(name)
+        `#{el}.classList.add(#{class_name})` if class_name
+      end
+
+      # Apply all Stimulus CSS classes to an element
+      # @param element [Native] DOM element
+      # @param name [Symbol, String] Class logical name
+      def apply_classes(element, name)
+        el = to_native_element(element)
+        classes = get_classes(name)
+        `#{el}.classList.add(...#{classes})` if classes
+      end
+
+      # Remove a Stimulus CSS class from an element
+      # @param element [Native] DOM element
+      # @param name [Symbol, String] Class logical name
+      def remove_applied_class(element, name)
+        el = to_native_element(element)
+        class_name = get_class(name)
+        `#{el}.classList.remove(#{class_name})` if class_name
+      end
+
+      # Remove all Stimulus CSS classes from an element
+      # @param element [Native] DOM element
+      # @param name [Symbol, String] Class logical name
+      def remove_applied_classes(element, name)
+        el = to_native_element(element)
+        classes = get_classes(name)
+        `#{el}.classList.remove(...#{classes})` if classes
+      end
+
+      # ===== Stimulus Outlets API =====
+      # Access outlets defined with `static outlets = [ "result" ]`
+
+      # Check if an outlet exists
+      # @param name [Symbol, String] Outlet identifier
+      # @return [Boolean] true if outlet is connected
+      # @example
+      #   if has_outlet?(:modal)
+      #     get_outlet(:modal).open
+      #   end
+      def has_outlet?(name)
+        prop_name = "has#{camelize(name)}Outlet"
+        `this[#{prop_name}]`
+      end
+
+      # Get a single outlet controller instance
+      # @param name [Symbol, String] Outlet identifier
+      # @return [Native] The outlet controller instance
+      # @note Throws error if outlet doesn't exist - use has_outlet? first
+      def get_outlet(name)
+        prop_name = "#{camelize(name, false)}Outlet"
+        `this[#{prop_name}]`
+      end
+
+      # Get all outlet controller instances
+      # @param name [Symbol, String] Outlet identifier
+      # @return [Array] Array of outlet controller instances
+      def get_outlets(name)
+        prop_name = "#{camelize(name, false)}Outlets"
+        `Array.from(this[#{prop_name}] || [])`
+      end
+
+      # Get a single outlet's element
+      # @param name [Symbol, String] Outlet identifier
+      # @return [Native] The outlet's controller element
+      # @note Throws error if outlet doesn't exist - use has_outlet? first
+      def get_outlet_element(name)
+        prop_name = "#{camelize(name, false)}OutletElement"
+        `this[#{prop_name}]`
+      end
+
+      # Get all outlet elements
+      # @param name [Symbol, String] Outlet identifier
+      # @return [Array] Array of outlet controller elements
+      def get_outlet_elements(name)
+        prop_name = "#{camelize(name, false)}OutletElements"
+        `Array.from(this[#{prop_name}] || [])`
+      end
+
+      # Call a method on an outlet controller
+      # @param name [Symbol, String] Outlet identifier
+      # @param method [Symbol, String] Method name to call
+      # @param args [Array] Arguments to pass
+      # @return [Object] Method return value
+      def call_outlet(name, method, *args)
+        return nil unless has_outlet?(name)
+        outlet = get_outlet(name)
+        js_call_on(outlet, method, *args)
+      end
+
+      # Call a method on all outlet controllers
+      # @param name [Symbol, String] Outlet identifier
+      # @param method [Symbol, String] Method name to call
+      # @param args [Array] Arguments to pass
+      def call_all_outlets(name, method, *args)
+        get_outlets(name).each do |outlet|
+          js_call_on(outlet, method, *args)
+        end
+      end
+
+      # ===== Stimulus dispatch() API =====
+      # Emit custom events with controller identifier prefix
+
+      # Dispatch a Stimulus-style custom event
+      # @param name [String] Event name (will be prefixed with controller identifier)
+      # @param detail [Hash] Event detail data
+      # @param target [Native, nil] Target element (default: controller element)
+      # @param prefix [String, nil] Custom prefix (default: controller identifier)
+      # @param bubbles [Boolean] Whether event bubbles (default: true)
+      # @param cancelable [Boolean] Whether event is cancelable (default: true)
+      # @return [Native] The dispatched event
+      # @example
+      #   # In a "clipboard" controller:
+      #   stimulus_dispatch("copied", detail: { content: text })
+      #   # Dispatches "clipboard:copied" event
+      def stimulus_dispatch(name, detail: {}, target: nil, prefix: nil, bubbles: true, cancelable: true)
+        native_detail = detail.respond_to?(:to_n) ? detail.to_n : detail
+        `this.dispatch(#{name}, {
+          detail: #{native_detail},
+          target: #{target} || undefined,
+          prefix: #{prefix} || undefined,
+          bubbles: #{bubbles},
+          cancelable: #{cancelable}
+        })`
+      end
+
+      # Dispatch event and check if it was cancelled
+      # @param name [String] Event name
+      # @param detail [Hash] Event detail data
+      # @return [Boolean] true if event was NOT cancelled
+      def stimulus_dispatch_confirm(name, detail: {})
+        event = stimulus_dispatch(name, detail: detail, cancelable: true)
+        `!#{event}.defaultPrevented`
+      end
+
+      # ===== Stimulus Action Parameters API =====
+      # Access action parameters from data-[identifier]-[name]-param attributes
+
+      # Get all action parameters from the current event
+      # @return [Native] JavaScript object with all parameters
+      # @example
+      #   # <button data-action="item#delete" data-item-id-param="123">
+      #   def delete(event)
+      #     params = action_params  # => { id: 123 }
+      #   end
+      def action_params
+        `event.params || {}`
+      end
+
+      # Get a specific action parameter
+      # @param name [Symbol, String] Parameter name
+      # @return [Object] Parameter value (auto-typecast by Stimulus)
+      # @example
+      #   action_param(:id)   # => 123 (Number)
+      #   action_param(:url)  # => "/api/item" (String)
+      def action_param(name)
+        `(event.params || {})[#{name.to_s}]`
+      end
+
+      # Get action parameter as integer with default
+      # @param name [Symbol, String] Parameter name
+      # @param default [Integer] Default value if missing or NaN
+      # @return [Integer] Parameter value
+      def action_param_int(name, default = 0)
+        value = action_param(name)
+        result = parse_int(value)
+        is_nan?(result) ? default : result
+      end
+
+      # Get action parameter as boolean
+      # @param name [Symbol, String] Parameter name
+      # @return [Boolean] Parameter value
+      def action_param_bool(name)
+        value = action_param(name)
+        `!!#{value} && #{value} !== "false" && #{value} !== "0"`
+      end
+
+      # Check if an action parameter exists
+      # @param name [Symbol, String] Parameter name
+      # @return [Boolean] true if parameter exists
+      def has_action_param?(name)
+        `(event.params || {}).hasOwnProperty(#{name.to_s})`
+      end
+
+      # ===== Stimulus Controller Access =====
+      # Access controller properties and other controllers
+
+      # Get the controller's application instance
+      # @return [Native] Stimulus Application
+      def this_application
+        `this.application`
+      end
+
+      # Get the controller's identifier
+      # @return [String] Controller identifier (e.g., "modal", "tabs")
+      def this_identifier
+        `this.identifier`
+      end
+
+      # Get the controller's element
+      # @return [Native] Controller's root element
+      def this_element
+        `this.element`
+      end
+
+      # Get another controller instance by element and identifier
+      # @param element [Native] DOM element with the controller
+      # @param identifier [String] Controller identifier
+      # @return [Native, nil] Controller instance or nil
+      # @example
+      #   modal = get_controller(modal_element, "modal")
+      #   modal.open if modal
+      def get_controller(element, identifier)
+        el = to_native_element(element)
+        `this.application.getControllerForElementAndIdentifier(#{el}, #{identifier})`
+      end
+
+      # Get all controllers of a type within an element's scope
+      # @param element [Native] Container element
+      # @param identifier [String] Controller identifier
+      # @return [Array] Array of controller instances
+      def get_controllers(element, identifier)
+        el = to_native_element(element)
+        `Array.from(#{el}.querySelectorAll('[data-controller~="' + #{identifier} + '"]'))
+          .map(el => this.application.getControllerForElementAndIdentifier(el, #{identifier}))
+          .filter(c => c !== null)`
+      end
+
+      # ===== Stimulus Scope Helpers =====
+
+      # Get the controller's scope (element and descendants, excluding nested controllers)
+      # @return [Native] Controller's scope element
+      def this_scope
+        `this.scope.element`
+      end
+
+      # Check if an element is within this controller's scope
+      # @param element [Native] Element to check
+      # @return [Boolean] true if element is in scope
+      def in_scope?(element)
+        el = to_native_element(element)
+        `this.element.contains(#{el})`
+      end
+
       private
 
       # Convert snake_case to camelCase, preserving existing camelCase

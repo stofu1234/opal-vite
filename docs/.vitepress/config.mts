@@ -53,6 +53,7 @@ export default defineConfig({
               text: 'API Reference',
               items: [
                 { text: 'Overview', link: '/api/v1/' },
+                { text: 'Stimulus API (v0.3.0)', link: '/api/v1/en/stimulus_api' },
                 { text: 'StimulusHelpers', link: '/api/v1/en/stimulus_helpers' },
                 { text: 'DomHelpers', link: '/api/v1/en/dom_helpers' },
                 { text: 'Storable', link: '/api/v1/en/storable' },

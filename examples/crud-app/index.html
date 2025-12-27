@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CRUD App - Stimulus Action Parameters Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+      <header class="mb-8">
+        <h1 class="text-4xl font-bold text-gray-800 mb-2">CRUD App</h1>
+        <p class="text-lg text-gray-600">
+          Demonstrating Stimulus Action Parameters with Ruby (Opal) + Vite
+        </p>
+        <div class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <h2 class="font-semibold text-blue-900 mb-2">Features Demonstrated:</h2>
+          <ul class="list-disc list-inside text-blue-800 space-y-1">
+            <li><code class="bg-blue-100 px-1 rounded">action_param(:name)</code> - Get action parameter</li>
+            <li><code class="bg-blue-100 px-1 rounded">action_param_int(:id)</code> - Get integer parameter</li>
+            <li><code class="bg-blue-100 px-1 rounded">has_action_param?(:name)</code> - Check if parameter exists</li>
+            <li><code class="bg-blue-100 px-1 rounded">data-[controller]-[name]-param</code> - HTML attribute syntax</li>
+          </ul>
+        </div>
+      </header>
+
+      <main>
+        <!-- Item List Controller -->
+        <div class="bg-white rounded-lg shadow-md p-6" data-controller="list">
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-gray-800">Items</h2>
+            <button
+              data-action="click->list#add"
+              class="bg-green-500 hover:bg-green-600 text-white font-semibold px-4 py-2 rounded transition"
+            >
+              + Add Item
+            </button>
+          </div>
+
+          <!-- Add Item Form -->
+          <div class="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <div class="flex gap-2">
+              <input
+                type="text"
+                data-list-target="nameInput"
+                placeholder="Enter item name..."
+                class="flex-1 px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                data-action="keydown.enter->list#add"
+              />
+              <input
+                type="number"
+                data-list-target="quantityInput"
+                placeholder="Quantity"
+                value="1"
+                min="1"
+                class="w-24 px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <button
+                data-action="click->list#add"
+                class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-6 py-2 rounded transition"
+              >
+                Add
+              </button>
+            </div>
+          </div>
+
+          <!-- Items List -->
+          <div data-list-target="container">
+            <div class="text-center py-8 text-gray-500">
+              No items yet. Add one above!
+            </div>
+          </div>
+
+          <!-- Item Template -->
+          <template data-list-target="template">
+            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200 hover:border-gray-300 transition">
+              <div class="flex-1">
+                <h3 class="text-lg font-semibold text-gray-800" data-name></h3>
+                <p class="text-sm text-gray-600">Quantity: <span data-quantity></span></p>
+                <p class="text-xs text-gray-400">ID: <span data-id></span></p>
+              </div>
+              <div class="flex gap-2">
+                <button
+                  data-action="click->list#edit"
+                  class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded transition"
+                  title="Edit item"
+                >
+                  Edit
+                </button>
+                <button
+                  data-action="click->list#delete"
+                  class="bg-red-500 hover:bg-red-600 text-white font-semibold px-4 py-2 rounded transition"
+                  title="Delete item"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </template>
+
+          <!-- Statistics -->
+          <div class="mt-6 pt-6 border-t border-gray-200">
+            <div class="grid grid-cols-2 gap-4 text-center">
+              <div class="p-4 bg-blue-50 rounded-lg">
+                <div class="text-3xl font-bold text-blue-600" data-list-target="itemCount">0</div>
+                <div class="text-sm text-blue-800">Total Items</div>
+              </div>
+              <div class="p-4 bg-green-50 rounded-lg">
+                <div class="text-3xl font-bold text-green-600" data-list-target="totalQuantity">0</div>
+                <div class="text-sm text-green-800">Total Quantity</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Parameters Info -->
+        <div class="mt-8 p-6 bg-white rounded-lg shadow-md">
+          <h3 class="text-xl font-bold text-gray-800 mb-4">How Action Parameters Work</h3>
+          <div class="space-y-4">
+            <div>
+              <h4 class="font-semibold text-gray-700 mb-2">HTML Syntax:</h4>
+              <pre class="bg-gray-100 p-3 rounded text-sm overflow-x-auto"><code>&lt;button data-action="list#edit"
+        data-list-id-param="123"
+        data-list-name-param="Item Name"&gt;
+  Edit
+&lt;/button&gt;</code></pre>
+            </div>
+            <div>
+              <h4 class="font-semibold text-gray-700 mb-2">Ruby Controller Code:</h4>
+              <pre class="bg-gray-100 p-3 rounded text-sm overflow-x-auto"><code>def edit
+  # Get parameters using StimulusHelpers
+  id = action_param_int(:id)
+  name = action_param(:name)
+
+  # Check if parameter exists
+  if has_action_param?(:quantity)
+    quantity = action_param_int(:quantity)
+  end
+
+  # Use the parameters
+  puts "Editing item #{id}: #{name}"
+end</code></pre>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <footer class="mt-8 text-center text-gray-600 text-sm">
+        <p>
+          Built with
+          <a href="https://opalrb.com/" target="_blank" class="text-blue-500 hover:underline">Opal</a>,
+          <a href="https://stimulus.hotwired.dev/" target="_blank" class="text-blue-500 hover:underline">Stimulus</a>, and
+          <a href="https://vitejs.dev/" target="_blank" class="text-blue-500 hover:underline">Vite</a>
+        </p>
+      </footer>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="hidden" data-controller="modal" data-modal-target="overlay">
+      <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" data-action="click->modal#close_on_overlay">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4" data-modal-target="content" data-action="click->modal#stop_propagation">
+          <div class="flex justify-between items-center p-6 border-b border-gray-200">
+            <h3 class="text-xl font-bold text-gray-800" data-modal-target="title">Edit Item</h3>
+            <button
+              data-action="click->modal#close"
+              class="text-gray-500 hover:text-gray-700 text-2xl font-bold"
+            >
+              &times;
+            </button>
+          </div>
+          <div class="p-6" data-modal-target="body">
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Item Name</label>
+                <input
+                  type="text"
+                  data-modal-target="nameInput"
+                  class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter item name"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Quantity</label>
+                <input
+                  type="number"
+                  data-modal-target="quantityInput"
+                  min="1"
+                  class="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter quantity"
+                />
+              </div>
+            </div>
+          </div>
+          <div class="flex justify-end gap-2 p-6 border-t border-gray-200">
+            <button
+              data-action="click->modal#close"
+              class="px-4 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition"
+            >
+              Cancel
+            </button>
+            <button
+              data-action="click->modal#save"
+              class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded transition"
+            >
+              Save Changes
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
