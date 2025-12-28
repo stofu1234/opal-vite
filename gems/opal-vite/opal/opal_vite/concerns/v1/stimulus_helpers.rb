@@ -1831,8 +1831,7 @@ module OpalVite
       # @param email [String] Email to validate
       # @return [Boolean] True if valid
       def valid_email?(email)
-        pattern = `^[^\s@]+@[^\s@]+\.[^\s@]+$`
-        `new RegExp(#{pattern}).test(#{email})`
+        `/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(#{email})`
       end
 
       # Validate a URL
