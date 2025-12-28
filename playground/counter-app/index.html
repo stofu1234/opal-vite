@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Counter App - Stimulus Values API Demo</title>
+    <script type="module" crossorigin src="/opal-vite/playground/counter-app/assets/index-DnRR6-DY.js"></script>
+    <link rel="stylesheet" crossorigin href="/opal-vite/playground/counter-app/assets/index-B485BuzF.css">
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>Counter App</h1>
+        <p class="subtitle">Demonstrating Stimulus Values API with Opal</p>
+      </header>
+
+      <main>
+        <!-- Counter Controller demonstrating Values API -->
+        <section class="card" data-controller="counter" data-counter-count-value="0">
+          <h2>Counter Controller</h2>
+          <p>Demonstrates Stimulus Values API with get_value, set_value, increment_value, and decrement_value helpers</p>
+
+          <div class="demo">
+            <div class="counter-display">
+              <div class="counter-label">Current Count:</div>
+              <div class="counter-value" data-counter-target="display">0</div>
+            </div>
+
+            <div class="button-group">
+              <button
+                class="btn-decrement"
+                data-action="click->counter#decrement"
+                title="Decrease by 1">
+                - Decrement
+              </button>
+
+              <button
+                class="btn-reset"
+                data-action="click->counter#reset"
+                title="Reset to 0">
+                Reset
+              </button>
+
+              <button
+                class="btn-increment"
+                data-action="click->counter#increment"
+                title="Increase by 1">
+                + Increment
+              </button>
+            </div>
+
+            <div class="info-panel">
+              <h3>About this demo:</h3>
+              <ul>
+                <li><strong>Values API:</strong> Uses <code>static values = { count: Number }</code></li>
+                <li><strong>Helpers:</strong> Leverages <code>get_value</code>, <code>set_value</code>, <code>increment_value</code>, and <code>decrement_value</code></li>
+                <li><strong>Targets:</strong> Updates display using <code>data-counter-target="display"</code></li>
+                <li><strong>Change Callback:</strong> Implements <code>count_value_changed</code> to react to value changes</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer>
+        <p>
+          Built with
+          <a href="https://stimulus.hotwired.dev/" target="_blank">Stimulus</a>,
+          <a href="https://opalrb.com/" target="_blank">Opal</a>, and
+          <a href="https://vitejs.dev/" target="_blank">Vite</a>
+        </p>
+        <p class="tech-note">
+          This example demonstrates the Stimulus Values API using the new helper methods
+        </p>
+      </footer>
+    </div>
+
+  </body>
+</html>
