@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tabs App - Stimulus Outlets & Dispatch Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      /* Custom animations for tab transitions */
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .panel-visible {
+        animation: fadeIn 0.3s ease-out;
+      }
+
+      .panel-hidden {
+        display: none;
+      }
+
+      /* Tab button styles */
+      .tab-button {
+        transition: all 0.2s ease;
+      }
+
+      .tab-button:hover:not(.tab-active) {
+        background-color: #f3f4f6;
+      }
+
+      .tab-active {
+        background-color: #3b82f6;
+        color: white;
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+      <header class="mb-8">
+        <h1 class="text-4xl font-bold text-gray-900 mb-2">Tab Navigation Demo</h1>
+        <p class="text-lg text-gray-600">
+          Demonstrating Stimulus Outlets API and dispatch() with Opal + Ruby
+        </p>
+      </header>
+
+      <main>
+        <!-- Tabs Container -->
+        <div
+          class="bg-white rounded-lg shadow-lg overflow-hidden"
+          data-controller="tabs"
+          data-tabs-panel-outlet=".panel"
+        >
+          <!-- Tab Buttons -->
+          <div class="flex border-b border-gray-200">
+            <button
+              class="tab-button flex-1 px-6 py-4 text-left font-medium text-gray-700 border-b-2 border-transparent hover:border-gray-300 tab-active"
+              data-action="click->tabs#select"
+              data-tabs-index-param="0"
+            >
+              Overview
+            </button>
+            <button
+              class="tab-button flex-1 px-6 py-4 text-left font-medium text-gray-700 border-b-2 border-transparent hover:border-gray-300"
+              data-action="click->tabs#select"
+              data-tabs-index-param="1"
+            >
+              Features
+            </button>
+            <button
+              class="tab-button flex-1 px-6 py-4 text-left font-medium text-gray-700 border-b-2 border-transparent hover:border-gray-300"
+              data-action="click->tabs#select"
+              data-tabs-index-param="2"
+            >
+              Documentation
+            </button>
+            <button
+              class="tab-button flex-1 px-6 py-4 text-left font-medium text-gray-700 border-b-2 border-transparent hover:border-gray-300"
+              data-action="click->tabs#select"
+              data-tabs-index-param="3"
+            >
+              Settings
+            </button>
+          </div>
+
+          <!-- Tab Panels -->
+          <div class="relative">
+            <!-- Panel 1: Overview -->
+            <div
+              class="panel panel-visible p-8"
+              data-controller="panel"
+              data-panel-index-value="0"
+            >
+              <h2 class="text-2xl font-bold text-gray-900 mb-4">Welcome to Tabs Demo</h2>
+              <p class="text-gray-700 mb-4">
+                This example demonstrates two powerful Stimulus features implemented in Ruby using Opal:
+              </p>
+              <ul class="list-disc list-inside space-y-2 text-gray-700">
+                <li><strong>Outlets API:</strong> The tabs controller connects to panel controllers</li>
+                <li><strong>stimulus_dispatch():</strong> Custom events for inter-controller communication</li>
+                <li><strong>Animated Transitions:</strong> Smooth panel switching with CSS animations</li>
+              </ul>
+              <div class="mt-6 p-4 bg-blue-50 border-l-4 border-blue-500 text-blue-700">
+                <p class="font-semibold">Current Panel Index: 0</p>
+              </div>
+            </div>
+
+            <!-- Panel 2: Features -->
+            <div
+              class="panel panel-hidden p-8"
+              data-controller="panel"
+              data-panel-index-value="1"
+            >
+              <h2 class="text-2xl font-bold text-gray-900 mb-4">Key Features</h2>
+              <div class="space-y-4">
+                <div class="border-l-4 border-green-500 pl-4">
+                  <h3 class="font-bold text-gray-900">Outlets API</h3>
+                  <p class="text-gray-700">
+                    The tabs controller declares <code class="bg-gray-100 px-2 py-1 rounded">static outlets = ["panel"]</code>
+                    to connect with all panel controllers in the DOM.
+                  </p>
+                </div>
+                <div class="border-l-4 border-purple-500 pl-4">
+                  <h3 class="font-bold text-gray-900">Helper Methods</h3>
+                  <p class="text-gray-700">
+                    Uses <code class="bg-gray-100 px-2 py-1 rounded">has_outlet?</code>,
+                    <code class="bg-gray-100 px-2 py-1 rounded">get_outlets</code>, and
+                    <code class="bg-gray-100 px-2 py-1 rounded">call_all_outlets</code> from StimulusHelpers.
+                  </p>
+                </div>
+                <div class="border-l-4 border-orange-500 pl-4">
+                  <h3 class="font-bold text-gray-900">Event Dispatch</h3>
+                  <p class="text-gray-700">
+                    Emits <code class="bg-gray-100 px-2 py-1 rounded">tabs:change</code> events using
+                    <code class="bg-gray-100 px-2 py-1 rounded">stimulus_dispatch()</code> for loose coupling.
+                  </p>
+                </div>
+              </div>
+              <div class="mt-6 p-4 bg-green-50 border-l-4 border-green-500 text-green-700">
+                <p class="font-semibold">Current Panel Index: 1</p>
+              </div>
+            </div>
+
+            <!-- Panel 3: Documentation -->
+            <div
+              class="panel panel-hidden p-8"
+              data-controller="panel"
+              data-panel-index-value="2"
+            >
+              <h2 class="text-2xl font-bold text-gray-900 mb-4">How It Works</h2>
+              <div class="prose max-w-none">
+                <h3 class="text-xl font-semibold text-gray-900 mt-4 mb-2">TabsController (Ruby)</h3>
+                <pre class="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto text-sm"><code>class TabsController &lt; StimulusController
+  include OpalVite::Concerns::V1::StimulusHelpers
+
+  # Define outlets connection
+  self.outlets = ["panel"]
+
+  def select
+    index = action_param_int(:index)
+
+    # Call hide on all panels using outlets
+    call_all_outlets(:panel, :hide)
+
+    # Dispatch event on window for panel controllers
+    dispatch_window_event("tabs:change", { index: index })
+  end
+end</code></pre>
+
+                <h3 class="text-xl font-semibold text-gray-900 mt-6 mb-2">PanelController (Ruby)</h3>
+                <pre class="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto text-sm"><code>class PanelController &lt; StimulusController
+  include OpalVite::Concerns::V1::StimulusHelpers
+
+  self.values = { index: :number }
+
+  def connect
+    # Listen for tabs:change events
+    on_window_event('tabs:change') do |e|
+      handle_change(e)
+    end
+  end
+
+  def show
+    element_remove_class('panel-hidden')
+    element_add_class('panel-visible')
+  end
+
+  def hide
+    element_remove_class('panel-visible')
+    element_add_class('panel-hidden')
+  end
+end</code></pre>
+              </div>
+              <div class="mt-6 p-4 bg-purple-50 border-l-4 border-purple-500 text-purple-700">
+                <p class="font-semibold">Current Panel Index: 2</p>
+              </div>
+            </div>
+
+            <!-- Panel 4: Settings -->
+            <div
+              class="panel panel-hidden p-8"
+              data-controller="panel"
+              data-panel-index-value="3"
+            >
+              <h2 class="text-2xl font-bold text-gray-900 mb-4">Settings & Configuration</h2>
+              <div class="space-y-4">
+                <div class="bg-gray-50 p-4 rounded-lg">
+                  <label class="flex items-center space-x-3">
+                    <input type="checkbox" class="form-checkbox h-5 w-5 text-blue-600" checked disabled />
+                    <span class="text-gray-700">Enable animations</span>
+                  </label>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-lg">
+                  <label class="flex items-center space-x-3">
+                    <input type="checkbox" class="form-checkbox h-5 w-5 text-blue-600" checked disabled />
+                    <span class="text-gray-700">Use Outlets API</span>
+                  </label>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-lg">
+                  <label class="flex items-center space-x-3">
+                    <input type="checkbox" class="form-checkbox h-5 w-5 text-blue-600" checked disabled />
+                    <span class="text-gray-700">Dispatch custom events</span>
+                  </label>
+                </div>
+              </div>
+              <div class="mt-6 p-4 bg-orange-50 border-l-4 border-orange-500 text-orange-700">
+                <p class="font-semibold">Current Panel Index: 3</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Info Section -->
+        <div class="mt-8 bg-blue-50 border-l-4 border-blue-500 p-6 rounded-r-lg">
+          <h3 class="text-lg font-semibold text-blue-900 mb-2">About This Demo</h3>
+          <p class="text-blue-800 mb-2">
+            This tab navigation is built entirely with Ruby using Opal to compile to JavaScript.
+            The controllers communicate using Stimulus Outlets and custom events.
+          </p>
+          <p class="text-blue-800">
+            Open your browser's console to see the Ruby controllers in action!
+          </p>
+        </div>
+      </main>
+
+      <footer class="mt-12 text-center text-gray-600">
+        <p>
+          Built with
+          <a href="https://stimulus.hotwired.dev/" target="_blank" class="text-blue-600 hover:underline">Stimulus</a>,
+          <a href="https://opalrb.com/" target="_blank" class="text-blue-600 hover:underline">Opal</a>, and
+          <a href="https://vitejs.dev/" target="_blank" class="text-blue-600 hover:underline">Vite</a>
+        </p>
+      </footer>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

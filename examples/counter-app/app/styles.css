@@ -1,0 +1,235 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  padding: 2rem;
+  color: #333;
+}
+
+.container {
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+header {
+  text-align: center;
+  color: white;
+  margin-bottom: 3rem;
+}
+
+header h1 {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+header .subtitle {
+  font-size: 1.2rem;
+  opacity: 0.9;
+}
+
+main {
+  display: grid;
+  gap: 2rem;
+}
+
+.card {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.card h2 {
+  color: #667eea;
+  margin-bottom: 0.5rem;
+  font-size: 1.5rem;
+}
+
+.card > p {
+  color: #666;
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+
+.demo {
+  background: #f8f9fa;
+  padding: 2rem;
+  border-radius: 8px;
+}
+
+/* Counter Display Styles */
+.counter-display {
+  text-align: center;
+  margin-bottom: 2rem;
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.counter-label {
+  font-size: 1rem;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.counter-value {
+  font-size: 5rem;
+  font-weight: bold;
+  color: #667eea;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  transition: all 0.3s ease;
+}
+
+/* Button Styles */
+button {
+  padding: 1rem 2rem;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex: 1;
+  min-width: 140px;
+}
+
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+.button-group {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.btn-decrement {
+  background: #ef4444;
+}
+
+.btn-decrement:hover {
+  background: #dc2626;
+}
+
+.btn-reset {
+  background: #6b7280;
+}
+
+.btn-reset:hover {
+  background: #4b5563;
+}
+
+.btn-increment {
+  background: #10b981;
+}
+
+.btn-increment:hover {
+  background: #059669;
+}
+
+/* Info Panel Styles */
+.info-panel {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border-left: 4px solid #667eea;
+}
+
+.info-panel h3 {
+  color: #667eea;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+
+.info-panel ul {
+  list-style: none;
+  padding: 0;
+}
+
+.info-panel li {
+  padding: 0.5rem 0;
+  color: #555;
+  line-height: 1.6;
+}
+
+.info-panel li:not(:last-child) {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.info-panel strong {
+  color: #667eea;
+  font-weight: 600;
+}
+
+.info-panel code {
+  background: #f3f4f6;
+  padding: 0.2rem 0.4rem;
+  border-radius: 3px;
+  font-size: 0.9em;
+  color: #dc2626;
+  font-family: 'Monaco', 'Courier New', monospace;
+}
+
+/* Footer Styles */
+footer {
+  text-align: center;
+  color: white;
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+footer p {
+  margin-bottom: 0.5rem;
+}
+
+footer a {
+  color: white;
+  text-decoration: underline;
+}
+
+footer a:hover {
+  opacity: 0.8;
+}
+
+.tech-note {
+  font-size: 0.9rem;
+  opacity: 0.8;
+  font-style: italic;
+}
+
+/* Animation for counter value changes */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.counter-value.changed {
+  animation: pulse 0.3s ease;
+}

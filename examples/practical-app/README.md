@@ -39,6 +39,12 @@ A full-featured Todo application demonstrating real-world usage patterns of **Op
 - ✅ Smooth transitions throughout
 - ✅ Empty state messaging
 
+### 🎨 Stimulus CSS Classes API
+- ✅ Dynamic CSS class management via data attributes
+- ✅ Loading state with animated spinner
+- ✅ Success state with checkmark animation
+- ✅ Demonstrates has_class_definition?, apply_class, remove_applied_class helpers
+
 ## Getting Started
 
 ### Prerequisites
@@ -98,14 +104,15 @@ All controllers inherit from `StimulusController` provided by the `opal_stimulus
 
 #### 1. TodoController (`todo_controller.rb`)
 
-**Purpose:** Manages the complete todo lifecycle with LocalStorage persistence.
+**Purpose:** Manages the complete todo lifecycle with LocalStorage persistence. Also demonstrates the Stimulus CSS Classes API.
 
 **Key Patterns:**
 
-- **Inline JavaScript with backticks:** Uses Opal's `` ` `` syntax to write JavaScript directly in Ruby methods
-- **Helper methods in connect:** Defines JavaScript functions (`getTodos`, `saveTodos`, `addTodoToDOM`) in the `connect` lifecycle hook
+- **CSS Classes API:** Demonstrates dynamic CSS class management with loading/success states
+- **StimulusHelpers module:** Uses helper methods from OpalVite::Concerns::V1::StimulusHelpers
 - **Template cloning:** Uses HTML `<template>` element for dynamic content generation
 - **CustomEvent communication:** Listens for `update-todo` events from the modal
+- **Service objects:** Delegates storage operations to TodoStorageService and presentation to TodoPresenter
 
 **Methods:**
 - `connect` - Initialize helper methods and load todos from LocalStorage
@@ -355,6 +362,77 @@ def load_data
   `
 end
 ```
+
+### 7. Stimulus CSS Classes API
+
+The CSS Classes API allows you to define configurable CSS classes that can be applied dynamically. This is demonstrated in the TodoController with loading and success states.
+
+**Define classes in the controller:**
+
+```ruby
+class TodoController < StimulusController
+  include StimulusHelpers
+
+  self.classes = ["loading", "success"]
+end
+```
+
+**Configure classes via HTML data attributes:**
+
+```html
+<div
+  data-controller="todo"
+  data-todo-loading-class="todo-form-loading"
+  data-todo-success-class="todo-form-success"
+>
+  <div data-todo-target="form">
+    <!-- Form content -->
+  </div>
+</div>
+```
+
+**Apply classes dynamically in Ruby:**
+
+```ruby
+def add_todo
+  form_el = get_target(:form)
+
+  # Check if loading class is configured
+  if has_class_definition?(:loading)
+    # Apply the loading class
+    apply_class(form_el, :loading)
+
+    # Simulate async operation
+    set_timeout(800) do
+      # Remove loading class
+      remove_applied_class(form_el, :loading)
+
+      # Apply success class briefly
+      if has_class_definition?(:success)
+        apply_class(form_el, :success)
+
+        set_timeout(1000) do
+          remove_applied_class(form_el, :success)
+        end
+      end
+    end
+  end
+end
+```
+
+**Key Helper Methods:**
+
+- `has_class_definition?(name)` - Check if a class is configured in HTML
+- `get_class(name)` - Get the actual CSS class name from data attribute
+- `apply_class(element, name)` - Add the configured class to an element
+- `remove_applied_class(element, name)` - Remove the configured class from an element
+
+**Benefits:**
+
+1. **Separation of concerns** - CSS class names defined in HTML, not hardcoded in Ruby
+2. **Reusability** - Same controller can use different CSS frameworks/styles
+3. **Type safety** - Stimulus validates class definitions at runtime
+4. **Flexibility** - Easy to customize without changing controller code
 
 ## Common Patterns
 
