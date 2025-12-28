@@ -4,8 +4,18 @@ import { accessSync } from 'fs'
 import * as path from 'path'
 import type { OpalPluginOptions, CompileResult, CacheEntry } from './types'
 
+// Default Opal version for CDN
+const DEFAULT_OPAL_VERSION = '1.8.2'
+
+// CDN URL templates
+const CDN_URLS: Record<string, string> = {
+  unpkg: 'https://unpkg.com/opal-runtime@{version}/dist/opal.min.js',
+  jsdelivr: 'https://cdn.jsdelivr.net/npm/opal-runtime@{version}/dist/opal.min.js',
+  cdnjs: 'https://cdnjs.cloudflare.com/ajax/libs/opal/{version}/opal.min.js'
+}
+
 export class OpalCompiler {
-  private options: Required<OpalPluginOptions>
+  private options: Required<OpalPluginOptions> & { cdn: string | false; opalVersion: string }
   private cache: Map<string, CacheEntry> = new Map()
   private runtimeCache: string | null = null
   private useBundler: boolean
@@ -19,7 +29,9 @@ export class OpalCompiler {
       freezing: options.freezing !== false,
       debug: options.debug || false,
       useBundler: options.useBundler !== undefined ? options.useBundler : this.detectGemfile(),
-      includeConcerns: options.includeConcerns !== false
+      includeConcerns: options.includeConcerns !== false,
+      cdn: options.cdn || false,
+      opalVersion: options.opalVersion || DEFAULT_OPAL_VERSION
     }
     this.useBundler = this.options.useBundler
 
@@ -27,7 +39,34 @@ export class OpalCompiler {
       console.log(`[vite-plugin-opal] Using bundler: ${this.useBundler}`)
       console.log(`[vite-plugin-opal] Working directory: ${process.cwd()}`)
       console.log(`[vite-plugin-opal] Include concerns: ${this.options.includeConcerns}`)
+      if (this.options.cdn) {
+        console.log(`[vite-plugin-opal] CDN mode: ${this.options.cdn}`)
+        console.log(`[vite-plugin-opal] CDN URL: ${this.getCdnUrl()}`)
+      }
     }
+  }
+
+  /**
+   * Check if CDN mode is enabled
+   */
+  isCdnEnabled(): boolean {
+    return !!this.options.cdn
+  }
+
+  /**
+   * Get the CDN URL for Opal runtime
+   */
+  getCdnUrl(): string | null {
+    const cdn = this.options.cdn
+    if (!cdn) return null
+
+    // Check if it's a known CDN provider
+    if (cdn in CDN_URLS) {
+      return CDN_URLS[cdn].replace('{version}', this.options.opalVersion)
+    }
+
+    // Assume it's a custom URL
+    return cdn
   }
 
   private detectGemfile(): boolean {

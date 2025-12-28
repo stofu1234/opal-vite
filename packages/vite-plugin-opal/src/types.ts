@@ -140,6 +140,48 @@ export interface OpalPluginOptions {
    * ```
    */
   includeConcerns?: boolean
+
+  /**
+   * Load Opal runtime from CDN instead of bundling it.
+   * This reduces bundle size and improves caching across sites.
+   *
+   * Supported values:
+   * - `false` or `undefined`: Bundle runtime locally (default)
+   * - `'unpkg'`: Use unpkg CDN (https://unpkg.com)
+   * - `'jsdelivr'`: Use jsDelivr CDN (https://cdn.jsdelivr.net)
+   * - `'cdnjs'`: Use cdnjs CDN (https://cdnjs.cloudflare.com)
+   * - Custom URL string: Use a custom CDN URL (must end with opal.min.js or opal.js)
+   *
+   * @default false
+   * @example
+   * ```ts
+   * // Use jsDelivr CDN
+   * {
+   *   cdn: 'jsdelivr'
+   * }
+   *
+   * // Use custom CDN URL
+   * {
+   *   cdn: 'https://my-cdn.example.com/opal/1.8.2/opal.min.js'
+   * }
+   * ```
+   */
+  cdn?: 'unpkg' | 'jsdelivr' | 'cdnjs' | string | false
+
+  /**
+   * Opal version to use when loading from CDN.
+   * Only used when `cdn` is set to a CDN provider name.
+   *
+   * @default '1.8.2'
+   * @example
+   * ```ts
+   * {
+   *   cdn: 'jsdelivr',
+   *   opalVersion: '1.8.2'
+   * }
+   * ```
+   */
+  opalVersion?: string
 }
 
 /**
