@@ -309,7 +309,7 @@ Contributions are welcome! Please follow these guidelines:
 
 ## Roadmap
 
-- [ ] Support for more Opal standard library features
+- [x] Support for more Opal standard library features (v0.3.1: URIHelpers, Base64Helpers)
 - [ ] Better error messages and debugging
 - [ ] Performance optimizations
 - [ ] Additional Rails integrations (ActionCable, etc.)
