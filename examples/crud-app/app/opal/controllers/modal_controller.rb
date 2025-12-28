@@ -19,12 +19,17 @@ class ModalController < StimulusController
       name = `#{detail}.name`
       quantity = `#{detail}.quantity`
 
-      # Store item ID for save
-      `this.currentItemId = #{id}`
+      # Store item ID for save as Ruby instance variable
+      @current_item_id = id
 
-      # Set form values directly using JavaScript
-      `this.nameInputTarget.value = #{name}`
-      `this.quantityInputTarget.value = #{quantity}`
+      # Set form values using query selector (works in event callbacks)
+      # Note: Cannot use 'this' in event callbacks - it's not bound to controller
+      el = element
+      name_input = `#{el}.querySelector('[data-modal-target="nameInput"]')`
+      quantity_input = `#{el}.querySelector('[data-modal-target="quantityInput"]')`
+
+      `#{name_input}.value = #{name}` if `#{name_input}`
+      `#{quantity_input}.value = #{quantity}` if `#{quantity_input}`
 
       # Open modal
       open_modal
@@ -49,6 +54,7 @@ class ModalController < StimulusController
   # Action: Save changes
   def save
     # Get input values directly using JavaScript for reliability
+    # Note: 'this' works in action methods (called from Stimulus actions)
     name = `this.nameInputTarget.value`
     name = `#{name}.trim()` if name
 
@@ -61,8 +67,8 @@ class ModalController < StimulusController
     quantity = parse_int(quantity_str)
     quantity = 1 if is_nan?(quantity) || quantity < 1
 
-    # Get stored item ID
-    item_id = `this.currentItemId`
+    # Get stored item ID from Ruby instance variable
+    item_id = @current_item_id
 
     puts "Saving item #{item_id}: #{name} (quantity: #{quantity})"
 
@@ -93,6 +99,6 @@ class ModalController < StimulusController
     element_add_class('hidden')
 
     # Clear current item ID
-    `this.currentItemId = null`
+    @current_item_id = nil
   end
 end
