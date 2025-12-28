@@ -14,31 +14,31 @@ class CounterController < StimulusController
   self.values = { count: :number, label: :string }
 
   def increment
-    increment_value(:count)      # 1増加
-    increment_value(:count, 5)   # 5増加
+    increment_stimulus_value(:count)      # 1増加
+    increment_stimulus_value(:count, 5)   # 5増加
   end
 
   def decrement
-    decrement_value(:count)
+    decrement_stimulus_value(:count)
   end
 
   def reset
-    set_value(:count, 0)
+    set_stimulus_value(:count, 0)
   end
 
   def display
-    count = get_value(:count)
-    label = get_value(:label)
+    count = stimulus_value(:count)
+    label = stimulus_value(:label)
     target_set_text(:output, "#{label}: #{count}")
   end
 
   def toggle_feature
-    toggle_value(:enabled)  # ブール値を反転
+    toggle_stimulus_value(:enabled)  # ブール値を反転
   end
 
   def conditional_load
-    if has_value?(:api_url)
-      fetch_json(get_value(:api_url)) { |data| process(data) }
+    if has_stimulus_value?(:api_url)
+      fetch_json(stimulus_value(:api_url)) { |data| process(data) }
     end
   end
 end
@@ -48,12 +48,12 @@ end
 
 | メソッド | 説明 |
 |----------|------|
-| `get_value(name)` | 値を取得 |
-| `set_value(name, value)` | 値を設定 |
-| `has_value?(name)` | 値のdata属性が存在するか確認 |
-| `increment_value(name, amount=1)` | 数値を増加 |
-| `decrement_value(name, amount=1)` | 数値を減少 |
-| `toggle_value(name)` | ブール値を反転 |
+| `stimulus_value(name)` | 値を取得 |
+| `set_stimulus_value(name, value)` | 値を設定 |
+| `has_stimulus_value?(name)` | 値のdata属性が存在するか確認 |
+| `increment_stimulus_value(name, amount=1)` | 数値を増加 |
+| `decrement_stimulus_value(name, amount=1)` | 数値を減少 |
+| `toggle_stimulus_value(name)` | ブール値を反転 |
 
 ---
 

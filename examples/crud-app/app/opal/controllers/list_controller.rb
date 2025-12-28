@@ -106,9 +106,9 @@ class ListController < StimulusController
     puts "Delete action called with ID: #{id} (via action_param_int)"
 
     # Filter out the item with this ID
-    items = get_value(:items)
+    items = stimulus_value(:items)
     `#{items} = #{items}.filter(item => item.id !== #{id})`
-    set_value(:items, items)
+    set_stimulus_value(:items, items)
 
     render_items
 
@@ -124,7 +124,7 @@ class ListController < StimulusController
   private
 
   def add_item(name, quantity)
-    items = get_value(:items)
+    items = stimulus_value(:items)
 
     new_item = `{
       id: #{@next_id},
@@ -133,13 +133,13 @@ class ListController < StimulusController
     }`
 
     `#{items}.push(#{new_item})`
-    set_value(:items, items)
+    set_stimulus_value(:items, items)
 
     @next_id += 1
   end
 
   def update_item(id, name, quantity)
-    items = get_value(:items)
+    items = stimulus_value(:items)
 
     # Find and update the item
     `
@@ -150,7 +150,7 @@ class ListController < StimulusController
       }
     `
 
-    set_value(:items, items)
+    set_stimulus_value(:items, items)
     render_items
 
     puts "Updated item #{id}: #{name} (quantity: #{quantity})"
@@ -160,7 +160,7 @@ class ListController < StimulusController
     return unless has_target?(:container)
     return unless has_target?(:template)
 
-    items = get_value(:items)
+    items = stimulus_value(:items)
     container = get_target(:container)
 
     # Clear container
@@ -224,7 +224,7 @@ class ListController < StimulusController
   end
 
   def update_stats
-    items = get_value(:items)
+    items = stimulus_value(:items)
 
     # Count items
     item_count = `#{items}.length`

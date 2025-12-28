@@ -450,12 +450,7 @@ module OpalVite
       # @param name [String] Event name
       # @yield Block to execute when event fires
       def on_controller_event(name, &block)
-        `
-          const handler = #{block};
-          this.element.addEventListener(#{name}, function(e) {
-            handler(e);
-          });
-        `
+        `this.element.addEventListener(#{name}, #{block})`
       end
 
       # Get the current event's target element
@@ -1309,15 +1304,17 @@ module OpalVite
 
       # ===== Stimulus Values API =====
       # Access Stimulus values defined with `static values = { name: Type }`
+      # Note: These methods use "stimulus_value" prefix to avoid conflict with
+      # get_value(element) which gets an element's value attribute.
 
       # Get a Stimulus value
       # @param name [Symbol, String] Value name (e.g., :count, :url)
       # @return [Object] The value (auto-converted by Stimulus based on type)
       # @example
-      #   # With static values = { count: Number, url: String }
-      #   get_value(:count)  # => 0
-      #   get_value(:url)    # => "/api/items"
-      def get_value(name)
+      #   # With self.values = { count: :number, url: :string }
+      #   stimulus_value(:count)  # => 0
+      #   stimulus_value(:url)    # => "/api/items"
+      def stimulus_value(name)
         prop_name = "#{camelize(name, false)}Value"
         `this[#{prop_name}]`
       end
@@ -1326,9 +1323,9 @@ module OpalVite
       # @param name [Symbol, String] Value name
       # @param value [Object] The value to set
       # @example
-      #   set_value(:count, 5)
-      #   set_value(:items, [1, 2, 3])
-      def set_value(name, value)
+      #   set_stimulus_value(:count, 5)
+      #   set_stimulus_value(:items, [1, 2, 3])
+      def set_stimulus_value(name, value)
         prop_name = "#{camelize(name, false)}Value"
         native_value = value.respond_to?(:to_n) ? value.to_n : value
         `this[#{prop_name}] = #{native_value}`
@@ -1338,10 +1335,10 @@ module OpalVite
       # @param name [Symbol, String] Value name
       # @return [Boolean] true if value's data attribute exists
       # @example
-      #   if has_value?(:api_url)
-      #     fetch_json(get_value(:api_url)) { |data| ... }
+      #   if has_stimulus_value?(:api_url)
+      #     fetch_json(stimulus_value(:api_url)) { |data| ... }
       #   end
-      def has_value?(name)
+      def has_stimulus_value?(name)
         prop_name = "has#{camelize(name)}Value"
         `this[#{prop_name}]`
       end
@@ -1349,21 +1346,21 @@ module OpalVite
       # Increment a numeric Stimulus value
       # @param name [Symbol, String] Value name
       # @param amount [Number] Amount to increment (default: 1)
-      def increment_value(name, amount = 1)
-        set_value(name, get_value(name) + amount)
+      def increment_stimulus_value(name, amount = 1)
+        set_stimulus_value(name, stimulus_value(name) + amount)
       end
 
       # Decrement a numeric Stimulus value
       # @param name [Symbol, String] Value name
       # @param amount [Number] Amount to decrement (default: 1)
-      def decrement_value(name, amount = 1)
-        set_value(name, get_value(name) - amount)
+      def decrement_stimulus_value(name, amount = 1)
+        set_stimulus_value(name, stimulus_value(name) - amount)
       end
 
       # Toggle a boolean Stimulus value
       # @param name [Symbol, String] Value name
-      def toggle_value(name)
-        set_value(name, !get_value(name))
+      def toggle_stimulus_value(name)
+        set_stimulus_value(name, !stimulus_value(name))
       end
 
       # ===== Stimulus CSS Classes API =====

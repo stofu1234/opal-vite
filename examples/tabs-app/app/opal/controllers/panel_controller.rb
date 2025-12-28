@@ -16,7 +16,7 @@ class PanelController < StimulusController
   self.values = { index: :number }
 
   def connect
-    panel_index = get_value(:index)
+    panel_index = stimulus_value(:index)
     puts "PanelController connected - Panel #{panel_index}"
 
     # Listen for tabs:change events dispatched by TabsController
@@ -29,7 +29,7 @@ class PanelController < StimulusController
   # Show this panel with animation
   # This method can be called via outlets or internally
   def show
-    panel_index = get_value(:index)
+    panel_index = stimulus_value(:index)
     puts "Showing panel #{panel_index}"
 
     # Remove hidden class and add visible class for animation
@@ -40,7 +40,7 @@ class PanelController < StimulusController
   # Hide this panel
   # This method can be called via outlets or internally
   def hide
-    panel_index = get_value(:index)
+    panel_index = stimulus_value(:index)
     puts "Hiding panel #{panel_index}"
 
     # Remove visible class and add hidden class
@@ -58,7 +58,7 @@ class PanelController < StimulusController
     selected_index = `#{detail}.index`
 
     # Get this panel's index
-    panel_index = get_value(:index)
+    panel_index = stimulus_value(:index)
 
     puts "Panel #{panel_index} received tabs:change event with index #{selected_index}"
 

@@ -14,31 +14,31 @@ class CounterController < StimulusController
   self.values = { count: :number, label: :string }
 
   def increment
-    increment_value(:count)      # Increment by 1
-    increment_value(:count, 5)   # Increment by 5
+    increment_stimulus_value(:count)      # Increment by 1
+    increment_stimulus_value(:count, 5)   # Increment by 5
   end
 
   def decrement
-    decrement_value(:count)
+    decrement_stimulus_value(:count)
   end
 
   def reset
-    set_value(:count, 0)
+    set_stimulus_value(:count, 0)
   end
 
   def display
-    count = get_value(:count)
-    label = get_value(:label)
+    count = stimulus_value(:count)
+    label = stimulus_value(:label)
     target_set_text(:output, "#{label}: #{count}")
   end
 
   def toggle_feature
-    toggle_value(:enabled)  # Flip boolean value
+    toggle_stimulus_value(:enabled)  # Flip boolean value
   end
 
   def conditional_load
-    if has_value?(:api_url)
-      fetch_json(get_value(:api_url)) { |data| process(data) }
+    if has_stimulus_value?(:api_url)
+      fetch_json(stimulus_value(:api_url)) { |data| process(data) }
     end
   end
 end
@@ -48,12 +48,12 @@ end
 
 | Method | Description |
 |--------|-------------|
-| `get_value(name)` | Get the value |
-| `set_value(name, value)` | Set the value |
-| `has_value?(name)` | Check if value's data attribute exists |
-| `increment_value(name, amount=1)` | Increment numeric value |
-| `decrement_value(name, amount=1)` | Decrement numeric value |
-| `toggle_value(name)` | Toggle boolean value |
+| `stimulus_value(name)` | Get the value |
+| `set_stimulus_value(name, value)` | Set the value |
+| `has_stimulus_value?(name)` | Check if value's data attribute exists |
+| `increment_stimulus_value(name, amount=1)` | Increment numeric value |
+| `decrement_stimulus_value(name, amount=1)` | Decrement numeric value |
+| `toggle_stimulus_value(name)` | Toggle boolean value |
 
 ---
 
