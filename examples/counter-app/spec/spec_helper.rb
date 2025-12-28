@@ -85,8 +85,12 @@ RSpec.configure do |config|
   config.before(:each, type: :feature) do
     visit '/'
     wait_for_stimulus_ready
-    # Extra wait for DOM to stabilize
-    sleep 0.5
+    # Extra wait for DOM to stabilize (CI requires more time)
+    sleep ENV['CI'] ? 1.0 : 0.5
+    # Wait for all buttons to be clickable
+    ['+ Increment', 'Reset', '- Decrement'].each do |text|
+      find('button', text: text, wait: 5, visible: true)
+    end
   end
 
   # Wait for Stimulus controllers to be fully connected

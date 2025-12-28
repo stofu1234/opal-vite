@@ -5,19 +5,25 @@ require_relative '../spec_helper'
 RSpec.describe 'Counter App', type: :feature do
   # Helper to click increment and wait for the value to update
   def click_increment_and_wait(expected_value)
-    click_button '+ Increment'
+    # Wait for button to be present and click
+    find('button', text: '+ Increment', wait: 5).click
+    sleep 0.1 # Small delay to ensure click is processed
     expect(page).to have_css('[data-counter-target="display"]', text: expected_value.to_s, wait: 10)
   end
 
   # Helper to click decrement and wait for the value to update
   def click_decrement_and_wait(expected_value)
-    click_button '- Decrement'
+    # Wait for button to be present and click
+    find('button', text: '- Decrement', wait: 5).click
+    sleep 0.1 # Small delay to ensure click is processed
     expect(page).to have_css('[data-counter-target="display"]', text: expected_value.to_s, wait: 10)
   end
 
   # Helper to click reset and wait for value to be 0
   def click_reset_and_wait
-    click_button 'Reset'
+    # Wait for button to be present and click
+    find('button', text: 'Reset', wait: 5).click
+    sleep 0.1 # Small delay to ensure click is processed
     expect(page).to have_css('[data-counter-target="display"]', text: '0', wait: 10)
   end
 
