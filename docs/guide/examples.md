@@ -4,7 +4,7 @@ opal-vite includes several example applications that demonstrate different Stimu
 
 ## Counter App
 
-[Live Demo](/playground/counter-app/) | [Source Code](https://github.com/stofu1234/opal-vite/tree/master/examples/counter-app)
+[Live Demo](https://stofu1234.github.io/opal-vite/playground/counter-app/) | [Source Code](https://github.com/stofu1234/opal-vite/tree/master/examples/counter-app)
 
 A simple counter application demonstrating the **Stimulus Values API**.
 
@@ -64,7 +64,7 @@ pnpm dev
 
 ## CRUD App
 
-[Live Demo](/playground/crud-app/) | [Source Code](https://github.com/stofu1234/opal-vite/tree/master/examples/crud-app)
+[Live Demo](https://stofu1234.github.io/opal-vite/playground/crud-app/) | [Source Code](https://github.com/stofu1234/opal-vite/tree/master/examples/crud-app)
 
 A CRUD (Create, Read, Update, Delete) application demonstrating **Stimulus Action Parameters**.
 
@@ -122,7 +122,7 @@ pnpm dev
 
 ## Tabs App
 
-[Live Demo](/playground/tabs-app/) | [Source Code](https://github.com/stofu1234/opal-vite/tree/master/examples/tabs-app)
+[Live Demo](https://stofu1234.github.io/opal-vite/playground/tabs-app/) | [Source Code](https://github.com/stofu1234/opal-vite/tree/master/examples/tabs-app)
 
 A tabbed interface demonstrating **Stimulus Outlets and Dispatch**.
 
