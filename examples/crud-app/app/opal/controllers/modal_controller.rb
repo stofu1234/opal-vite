@@ -12,6 +12,10 @@ class ModalController < StimulusController
   def connect
     puts "ModalController connected"
 
+    # Store element reference for use in callbacks
+    # (element/this is not accessible inside on_window_event callbacks)
+    controller_element = element
+
     # Listen for open-modal event
     on_window_event('open-modal') do |e|
       detail = `#{e}.detail`
@@ -22,11 +26,9 @@ class ModalController < StimulusController
       # Store item ID for save as Ruby instance variable
       @current_item_id = id
 
-      # Set form values using query selector (works in event callbacks)
-      # Note: Cannot use 'this' in event callbacks - it's not bound to controller
-      el = element
-      name_input = `#{el}.querySelector('[data-modal-target="nameInput"]')`
-      quantity_input = `#{el}.querySelector('[data-modal-target="quantityInput"]')`
+      # Set form values using the captured element reference
+      name_input = `#{controller_element}.querySelector('[data-modal-target="nameInput"]')`
+      quantity_input = `#{controller_element}.querySelector('[data-modal-target="quantityInput"]')`
 
       `#{name_input}.value = #{name}` if `#{name_input}`
       `#{quantity_input}.value = #{quantity}` if `#{quantity_input}`
