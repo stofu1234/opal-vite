@@ -178,15 +178,14 @@ RSpec.describe 'Tabs Navigation', type: :feature do
       # Verify the outlet connection is working by checking that panels respond
       # when tabs controller calls call_all_outlets
       click_button 'Features'
+      sleep 0.3
       wait_for_dom_stable
 
-      # The Features panel should be visible
-      features_panel = find('.panel', text: 'Key Features')
-      expect(features_panel[:class]).to include('panel-visible')
+      # The Features panel should be visible (wait for it to appear)
+      expect(page).to have_css('.panel.panel-visible', text: 'Key Features', wait: 5)
 
       # The Overview panel should be hidden (use visible: :all to find hidden elements)
-      overview_panel = find('.panel', text: 'Welcome to Tabs Demo', visible: :all)
-      expect(overview_panel[:class]).to include('panel-hidden')
+      expect(page).to have_css('.panel.panel-hidden', text: 'Welcome to Tabs Demo', visible: :all, wait: 5)
     end
   end
 

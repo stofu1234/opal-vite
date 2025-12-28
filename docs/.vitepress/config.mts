@@ -35,7 +35,8 @@ export default defineConfig({
               text: 'Introduction',
               items: [
                 { text: 'Getting Started', link: '/guide/getting-started' },
-                { text: 'Installation', link: '/guide/installation' }
+                { text: 'Installation', link: '/guide/installation' },
+                { text: 'Examples', link: '/guide/examples' }
               ]
             },
             {
@@ -85,7 +86,8 @@ export default defineConfig({
               text: 'はじめに',
               items: [
                 { text: 'クイックスタート', link: '/ja/guide/getting-started' },
-                { text: 'インストール', link: '/ja/guide/installation' }
+                { text: 'インストール', link: '/ja/guide/installation' },
+                { text: 'サンプル', link: '/ja/guide/examples' }
               ]
             },
             {

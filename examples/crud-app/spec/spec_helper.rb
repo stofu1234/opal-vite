@@ -52,7 +52,7 @@ Capybara.default_driver = :cuprite
 Capybara.javascript_driver = :cuprite
 
 # Configure app host (Vite dev server)
-Capybara.app_host = ENV.fetch('APP_HOST', 'http://localhost:3007')
+Capybara.app_host = ENV.fetch('APP_HOST', 'http://localhost:3005')
 Capybara.run_server = false  # Don't start a server, use external Vite dev server
 
 # Default max wait time for async operations
@@ -98,17 +98,13 @@ RSpec.configure do |config|
           // Check if Stimulus application exists
           if (typeof Stimulus === 'undefined') return false;
 
-          // Check if tabs controller is connected
-          var tabsEl = document.querySelector('[data-controller~="tabs"]');
-          if (!tabsEl) return false;
+          // Check if list controller is connected
+          var listEl = document.querySelector('[data-controller~="list"]');
+          if (!listEl) return false;
 
-          // Check if panel controllers are connected
-          var panels = document.querySelectorAll('[data-controller~="panel"]');
-          if (panels.length !== 4) return false;
-
-          // Check if first panel is visible
-          var firstPanel = panels[0];
-          if (!firstPanel.classList.contains('panel-visible')) return false;
+          // Check if items are rendered (initial sample data)
+          var itemCount = document.querySelector('[data-list-target="itemCount"]');
+          if (!itemCount || itemCount.textContent === '0') return false;
 
           return true;
         })()
@@ -120,14 +116,6 @@ RSpec.configure do |config|
 
       sleep 0.1
     end
-  end
-
-  # Check for JavaScript errors in console
-  def check_js_errors
-    errors = page.driver.browser.evaluate(<<~JS)
-      window.__jsErrors || []
-    JS
-    raise "JavaScript errors detected: #{errors.join(', ')}" if errors.any?
   end
 
   # Retry helper for flaky operations
