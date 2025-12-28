@@ -6,6 +6,7 @@
 # - Handling user actions (add, toggle, delete, edit, filter)
 # - Coordinating between storage service and presenter
 # - Managing toast notifications
+# - Demonstrating CSS Classes API (loading, success states)
 #
 # Storage operations are in TodoStorageService
 # DOM rendering is in TodoPresenter
@@ -13,8 +14,9 @@
 class TodoController < StimulusController
   include StimulusHelpers
 
-  self.targets = ["list", "input", "template", "count", "emptyState"]
+  self.targets = ["list", "input", "template", "count", "emptyState", "form"]
   self.values = { storage_key: :string, filter: :string }
+  self.classes = ["loading", "success"]
 
   def initialize
     super
@@ -38,6 +40,17 @@ class TodoController < StimulusController
   end
 
   # Action: Add new todo
+  #
+  # Demonstrates Stimulus CSS Classes API:
+  # - self.classes = ["loading", "success"] - Define class identifiers
+  # - has_class_definition?(:loading) - Check if class is configured in HTML
+  # - apply_class(element, :loading) - Apply the loading class to element
+  # - remove_applied_class(element, :loading) - Remove the loading class
+  # - get_class(:loading) - Get the actual CSS class name from data attribute
+  #
+  # HTML attributes:
+  # - data-todo-loading-class="todo-form-loading"
+  # - data-todo-success-class="todo-form-success"
   def add_todo
     text = target_value(:input)
     text = `#{text}.trim()`
@@ -47,10 +60,46 @@ class TodoController < StimulusController
       return
     end
 
-    @storage.add(text)
-    target_set_value(:input, '')
-    render_todos
-    show_toast('Todo added!', 'success')
+    # Get the form element
+    form_el = get_target(:form)
+
+    # Apply loading class using CSS Classes API
+    if has_class_definition?(:loading)
+      apply_class(form_el, :loading)
+      # Disable the button during loading
+      button = `#{form_el}.querySelector('button')`
+      set_attr(button, 'disabled', 'true') if button
+    end
+
+    # Simulate async operation with setTimeout
+    set_timeout(800) do
+      # Add the todo
+      @storage.add(text)
+      target_set_value(:input, '')
+
+      # Remove loading class
+      if has_class_definition?(:loading)
+        remove_applied_class(form_el, :loading)
+        # Re-enable the button
+        button = `#{form_el}.querySelector('button')`
+        remove_attr(button, 'disabled') if button
+      end
+
+      # Render todos
+      render_todos
+
+      # Apply success class briefly
+      if has_class_definition?(:success)
+        apply_class(form_el, :success)
+
+        # Remove success class after 1 second
+        set_timeout(1000) do
+          remove_applied_class(form_el, :success)
+        end
+      end
+
+      show_toast('Todo added!', 'success')
+    end
   end
 
   # Action: Toggle todo completion

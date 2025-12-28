@@ -24,18 +24,6 @@ class ModalController < StimulusController
 
       open_modal
     end
-
-    # Listen for modal-save event on this element
-    on_controller_event('modal-save') do |e|
-      detail = `#{e}.detail`
-      # Use raw JS for window event dispatch to avoid Opal wrapping issues
-      `
-        const updateEvent = new CustomEvent('update-todo', { detail: #{detail} });
-        window.dispatchEvent(updateEvent);
-      `
-      close_modal
-      reset_form if has_target?(:input)
-    end
   end
 
   # Open modal
@@ -82,6 +70,8 @@ class ModalController < StimulusController
   # Save (for edit todo)
   def save
     input = get_target(:input)
+    return unless input
+
     text = get_value(input)
     text = `#{text}.trim()`
 
@@ -95,11 +85,15 @@ class ModalController < StimulusController
 
     todo_id = get_attr(input, 'data-todo-id')
 
-    # Dispatch save event
-    dispatch_event('modal-save', {
+    # Dispatch update event to todo controller
+    dispatch_window_event('update-todo', {
       todoId: parse_int(todo_id),
       text: text
     })
+
+    # Close modal and reset form
+    close_modal
+    reset_form if has_target?(:input)
   end
 
   private
