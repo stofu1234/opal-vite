@@ -51,7 +51,7 @@ jobs:
 
       - name: Build examples for playground
         run: |
-          EXAMPLES="practical-app chart-app stimulus-app api-example form-validation-app i18n-app pwa-app turbo-app vue-app react-app snabberb-app counter-app crud-app tabs-app"
+          EXAMPLES="practical-app chart-app stimulus-app api-example form-validation-app i18n-app pwa-app turbo-app vue-app react-app snabberb-app counter-app crud-app tabs-app utilities-app"
           for app in $EXAMPLES; do
             echo "Building $app..."
             cd examples/$app
@@ -64,7 +64,7 @@ jobs:
       - name: Copy examples to playground directory
         run: |
           mkdir -p docs/.vitepress/dist/playground
-          EXAMPLES="practical-app chart-app stimulus-app api-example form-validation-app i18n-app pwa-app turbo-app vue-app react-app snabberb-app counter-app crud-app tabs-app"
+          EXAMPLES="practical-app chart-app stimulus-app api-example form-validation-app i18n-app pwa-app turbo-app vue-app react-app snabberb-app counter-app crud-app tabs-app utilities-app"
           for app in $EXAMPLES; do
             cp -r examples/$app/dist docs/.vitepress/dist/playground/$app
           done
