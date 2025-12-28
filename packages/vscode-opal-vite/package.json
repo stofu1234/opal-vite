@@ -1,0 +1,107 @@
+{
+  "name": "vscode-opal-vite",
+  "displayName": "Opal Vite",
+  "description": "VS Code extension for Opal (Ruby to JavaScript) development with Vite",
+  "version": "0.3.2",
+  "publisher": "opal-vite",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/stofu1234/opal-vite.git",
+    "directory": "packages/vscode-opal-vite"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Snippets",
+    "Linters"
+  ],
+  "keywords": [
+    "opal",
+    "ruby",
+    "vite",
+    "stimulus",
+    "javascript"
+  ],
+  "icon": "images/opal-vite-icon.png",
+  "activationEvents": [
+    "onLanguage:opal",
+    "workspaceContains:**/*.rb"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "opal",
+        "aliases": ["Opal", "opal"],
+        "extensions": [".rb", ".opal"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "opal",
+        "scopeName": "source.opal",
+        "path": "./syntaxes/opal.tmLanguage.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "opal",
+        "path": "./snippets/opal.snippets.json"
+      }
+    ],
+    "configuration": {
+      "title": "Opal Vite",
+      "properties": {
+        "opalVite.enableDiagnostics": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable Opal incompatible syntax diagnostics"
+        },
+        "opalVite.diagnosticSeverity": {
+          "type": "string",
+          "default": "warning",
+          "enum": ["error", "warning", "information", "hint"],
+          "description": "Severity level for Opal incompatible syntax warnings"
+        },
+        "opalVite.autoDetectOpalFiles": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically detect Opal files in app/opal directory"
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "opalVite.toggleDiagnostics",
+        "title": "Toggle Opal Diagnostics",
+        "category": "Opal Vite"
+      },
+      {
+        "command": "opalVite.compileFile",
+        "title": "Compile Current Opal File",
+        "category": "Opal Vite"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts",
+    "package": "vsce package",
+    "publish": "vsce publish"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.0.0",
+    "typescript": "^5.3.0",
+    "@vscode/vsce": "^2.22.0"
+  }
+}

@@ -1,0 +1,355 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Opal",
+  "scopeName": "source.opal",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#opal-native" },
+    { "include": "#opal-vite-concerns" },
+    { "include": "#keywords" },
+    { "include": "#strings" },
+    { "include": "#symbols" },
+    { "include": "#numbers" },
+    { "include": "#constants" },
+    { "include": "#variables" },
+    { "include": "#operators" },
+    { "include": "#method-definitions" },
+    { "include": "#class-definitions" },
+    { "include": "#module-definitions" },
+    { "include": "#method-calls" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.number-sign.opal",
+          "match": "#.*$"
+        },
+        {
+          "name": "comment.block.documentation.opal",
+          "begin": "^=begin",
+          "end": "^=end"
+        }
+      ]
+    },
+    "opal-native": {
+      "patterns": [
+        {
+          "name": "meta.opal.native-block",
+          "begin": "%x`|`",
+          "end": "`",
+          "beginCaptures": {
+            "0": { "name": "punctuation.definition.native.begin.opal" }
+          },
+          "endCaptures": {
+            "0": { "name": "punctuation.definition.native.end.opal" }
+          },
+          "patterns": [
+            {
+              "name": "source.js.embedded.opal",
+              "match": "[^`]+"
+            }
+          ]
+        },
+        {
+          "name": "support.class.opal.native",
+          "match": "\\bNative\\b"
+        },
+        {
+          "name": "support.function.opal.native",
+          "match": "\\b(Native\\.call|Native\\.alias_native|alias_native|expose|expose_to_opal)\\b"
+        },
+        {
+          "name": "support.class.opal.js",
+          "match": "\\b(JS|JS::Object|JS::Function|JS::Array|PromiseV2)\\b"
+        }
+      ]
+    },
+    "opal-vite-concerns": {
+      "patterns": [
+        {
+          "name": "support.module.opal-vite",
+          "match": "\\bOpalVite::Concerns::(V1::|)(DomHelpers|JsProxyEx|StimulusHelpers|Storable|Toastable|URIHelpers|Base64Helpers|ValidationHelpers|FormHelpers)\\b"
+        },
+        {
+          "name": "support.function.opal-vite.dom",
+          "match": "\\b(query_selector|query_selector_all|create_element|append_child|remove_child|add_class|remove_class|toggle_class|set_attribute|get_attribute|set_style|get_computed_style|add_event_listener|remove_event_listener|dispatch_event|element_by_id)\\b"
+        },
+        {
+          "name": "support.function.opal-vite.storage",
+          "match": "\\b(local_storage_get|local_storage_set|local_storage_remove|local_storage_clear|session_storage_get|session_storage_set|session_storage_remove)\\b"
+        },
+        {
+          "name": "support.function.opal-vite.stimulus",
+          "match": "\\b(controller_connected\\?|get_controller|stimulus_dispatch|targets|values|classes)\\b"
+        },
+        {
+          "name": "support.function.opal-vite.uri",
+          "match": "\\b(uri_encode|uri_decode|uri_encode_component|uri_decode_component|parse_query_string|build_query_string)\\b"
+        },
+        {
+          "name": "support.function.opal-vite.base64",
+          "match": "\\b(base64_encode|base64_decode|base64_encode_unicode|base64_decode_unicode)\\b"
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.opal",
+          "match": "\\b(if|elsif|else|unless|case|when|while|until|for|in|do|begin|end|rescue|ensure|raise|retry|return|break|next|redo|throw|catch|then|yield)\\b"
+        },
+        {
+          "name": "keyword.control.class.opal",
+          "match": "\\b(class|module|def|undef|alias|defined\\?)\\b"
+        },
+        {
+          "name": "keyword.other.special-method.opal",
+          "match": "\\b(require|require_relative|require_tree|include|extend|prepend|autoload|attr_reader|attr_writer|attr_accessor|private|protected|public)\\b"
+        },
+        {
+          "name": "keyword.operator.logical.opal",
+          "match": "\\b(and|or|not)\\b"
+        },
+        {
+          "name": "constant.language.opal",
+          "match": "\\b(true|false|nil|self|super|__FILE__|__LINE__|__dir__|__method__|__callee__)\\b"
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.opal",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [
+            { "include": "#interpolation" },
+            { "include": "#escape-sequences" }
+          ]
+        },
+        {
+          "name": "string.quoted.single.opal",
+          "begin": "'",
+          "end": "'",
+          "patterns": [
+            {
+              "name": "constant.character.escape.opal",
+              "match": "\\\\[\\\\']"
+            }
+          ]
+        },
+        {
+          "name": "string.regexp.opal",
+          "begin": "/(?![/*])",
+          "end": "/[imxo]*",
+          "patterns": [
+            { "include": "#interpolation" }
+          ]
+        },
+        {
+          "name": "string.other.heredoc.opal",
+          "begin": "<<[-~]?(\\w+)",
+          "end": "^\\s*\\1$",
+          "beginCaptures": {
+            "0": { "name": "punctuation.definition.string.begin.opal" }
+          },
+          "endCaptures": {
+            "0": { "name": "punctuation.definition.string.end.opal" }
+          },
+          "patterns": [
+            { "include": "#interpolation" }
+          ]
+        }
+      ]
+    },
+    "interpolation": {
+      "patterns": [
+        {
+          "name": "meta.embedded.line.opal",
+          "begin": "#\\{",
+          "end": "\\}",
+          "beginCaptures": {
+            "0": { "name": "punctuation.section.embedded.begin.opal" }
+          },
+          "endCaptures": {
+            "0": { "name": "punctuation.section.embedded.end.opal" }
+          },
+          "patterns": [
+            { "include": "$self" }
+          ]
+        }
+      ]
+    },
+    "escape-sequences": {
+      "patterns": [
+        {
+          "name": "constant.character.escape.opal",
+          "match": "\\\\[abefnrstv\\\\\"'0-7xuU]"
+        }
+      ]
+    },
+    "symbols": {
+      "patterns": [
+        {
+          "name": "constant.other.symbol.opal",
+          "match": ":[a-zA-Z_][a-zA-Z0-9_]*[?!]?"
+        },
+        {
+          "name": "constant.other.symbol.opal",
+          "begin": ":\"",
+          "end": "\"",
+          "patterns": [
+            { "include": "#interpolation" }
+          ]
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.float.opal",
+          "match": "\\b\\d[\\d_]*\\.\\d[\\d_]*([eE][+-]?\\d[\\d_]*)?\\b"
+        },
+        {
+          "name": "constant.numeric.integer.hexadecimal.opal",
+          "match": "\\b0[xX][0-9a-fA-F_]+\\b"
+        },
+        {
+          "name": "constant.numeric.integer.octal.opal",
+          "match": "\\b0[oO]?[0-7_]+\\b"
+        },
+        {
+          "name": "constant.numeric.integer.binary.opal",
+          "match": "\\b0[bB][01_]+\\b"
+        },
+        {
+          "name": "constant.numeric.integer.decimal.opal",
+          "match": "\\b\\d[\\d_]*\\b"
+        }
+      ]
+    },
+    "constants": {
+      "patterns": [
+        {
+          "name": "entity.name.type.class.opal",
+          "match": "\\b[A-Z][a-zA-Z0-9_]*\\b"
+        }
+      ]
+    },
+    "variables": {
+      "patterns": [
+        {
+          "name": "variable.other.readwrite.global.opal",
+          "match": "\\$[a-zA-Z_][a-zA-Z0-9_]*"
+        },
+        {
+          "name": "variable.other.readwrite.instance.opal",
+          "match": "@[a-zA-Z_][a-zA-Z0-9_]*"
+        },
+        {
+          "name": "variable.other.readwrite.class.opal",
+          "match": "@@[a-zA-Z_][a-zA-Z0-9_]*"
+        }
+      ]
+    },
+    "operators": {
+      "patterns": [
+        {
+          "name": "keyword.operator.assignment.opal",
+          "match": "\\+=|-=|\\*=|/=|%=|\\*\\*=|&=|\\|=|\\^=|<<=|>>=|&&=|\\|\\|=|="
+        },
+        {
+          "name": "keyword.operator.comparison.opal",
+          "match": "<=>|===|==|!=|<=|>=|<|>"
+        },
+        {
+          "name": "keyword.operator.arithmetic.opal",
+          "match": "\\+|-|\\*\\*|\\*|/|%"
+        },
+        {
+          "name": "keyword.operator.bitwise.opal",
+          "match": "&|\\||\\^|~|<<|>>"
+        },
+        {
+          "name": "keyword.operator.logical.opal",
+          "match": "&&|\\|\\||!"
+        },
+        {
+          "name": "keyword.operator.range.opal",
+          "match": "\\.\\.\\.|\\.\\."
+        },
+        {
+          "name": "keyword.operator.ternary.opal",
+          "match": "\\?|:"
+        },
+        {
+          "name": "keyword.operator.splat.opal",
+          "match": "\\*\\*|\\*|&"
+        },
+        {
+          "name": "keyword.operator.safe-navigation.opal",
+          "match": "&\\."
+        }
+      ]
+    },
+    "method-definitions": {
+      "patterns": [
+        {
+          "name": "meta.function.method.opal",
+          "match": "\\b(def)\\s+([a-zA-Z_][a-zA-Z0-9_]*[?!=]?)",
+          "captures": {
+            "1": { "name": "keyword.control.def.opal" },
+            "2": { "name": "entity.name.function.opal" }
+          }
+        },
+        {
+          "name": "meta.function.method.singleton.opal",
+          "match": "\\b(def)\\s+(self)\\.([a-zA-Z_][a-zA-Z0-9_]*[?!=]?)",
+          "captures": {
+            "1": { "name": "keyword.control.def.opal" },
+            "2": { "name": "variable.language.self.opal" },
+            "3": { "name": "entity.name.function.opal" }
+          }
+        }
+      ]
+    },
+    "class-definitions": {
+      "patterns": [
+        {
+          "name": "meta.class.opal",
+          "match": "\\b(class)\\s+([A-Z][a-zA-Z0-9_]*)(?:\\s*(<)\\s*([A-Z][a-zA-Z0-9_:]*))?",
+          "captures": {
+            "1": { "name": "keyword.control.class.opal" },
+            "2": { "name": "entity.name.type.class.opal" },
+            "3": { "name": "punctuation.separator.inheritance.opal" },
+            "4": { "name": "entity.other.inherited-class.opal" }
+          }
+        }
+      ]
+    },
+    "module-definitions": {
+      "patterns": [
+        {
+          "name": "meta.module.opal",
+          "match": "\\b(module)\\s+([A-Z][a-zA-Z0-9_]*)",
+          "captures": {
+            "1": { "name": "keyword.control.module.opal" },
+            "2": { "name": "entity.name.type.module.opal" }
+          }
+        }
+      ]
+    },
+    "method-calls": {
+      "patterns": [
+        {
+          "name": "meta.function-call.opal",
+          "match": "\\b([a-zA-Z_][a-zA-Z0-9_]*[?!]?)\\s*(?=\\()",
+          "captures": {
+            "1": { "name": "entity.name.function.opal" }
+          }
+        }
+      ]
+    }
+  }
+}
