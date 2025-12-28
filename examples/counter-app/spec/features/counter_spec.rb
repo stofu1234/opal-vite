@@ -3,27 +3,65 @@
 require_relative '../spec_helper'
 
 RSpec.describe 'Counter App', type: :feature do
+  # Helper to wait for Stimulus controller to be fully ready
+  def wait_for_controller_ready(timeout: 10)
+    start = Time.now
+    loop do
+      ready = page.evaluate_script(<<~JS)
+        (function() {
+          var el = document.querySelector('[data-controller="counter"]');
+          if (!el) return false;
+          if (!window.Stimulus) return false;
+          var ctrl = window.Stimulus.getControllerForElementAndIdentifier(el, 'counter');
+          return ctrl && typeof ctrl.increment === 'function';
+        })()
+      JS
+      return if ready
+
+      break if Time.now - start > timeout
+      sleep 0.1
+    end
+  end
+
   # Helper to click increment and wait for the value to update
   def click_increment_and_wait(expected_value)
-    # Wait for button to be present and click
-    find('button', text: '+ Increment', wait: 5).click
-    sleep 0.1 # Small delay to ensure click is processed
+    # Ensure controller is ready
+    wait_for_controller_ready
+
+    # Wait for button and click using native click
+    btn = find('button', text: '+ Increment', wait: 5)
+    btn.click
+    sleep 0.3
+
+    # Wait for expected value
     expect(page).to have_css('[data-counter-target="display"]', text: expected_value.to_s, wait: 10)
   end
 
   # Helper to click decrement and wait for the value to update
   def click_decrement_and_wait(expected_value)
-    # Wait for button to be present and click
-    find('button', text: '- Decrement', wait: 5).click
-    sleep 0.1 # Small delay to ensure click is processed
+    # Ensure controller is ready
+    wait_for_controller_ready
+
+    # Wait for button and click using native click
+    btn = find('button', text: '- Decrement', wait: 5)
+    btn.click
+    sleep 0.3
+
+    # Wait for expected value
     expect(page).to have_css('[data-counter-target="display"]', text: expected_value.to_s, wait: 10)
   end
 
   # Helper to click reset and wait for value to be 0
   def click_reset_and_wait
-    # Wait for button to be present and click
-    find('button', text: 'Reset', wait: 5).click
-    sleep 0.1 # Small delay to ensure click is processed
+    # Ensure controller is ready
+    wait_for_controller_ready
+
+    # Wait for button and click using native click
+    btn = find('button', text: 'Reset', wait: 5)
+    btn.click
+    sleep 0.3
+
+    # Wait for expected value
     expect(page).to have_css('[data-counter-target="display"]', text: '0', wait: 10)
   end
 
