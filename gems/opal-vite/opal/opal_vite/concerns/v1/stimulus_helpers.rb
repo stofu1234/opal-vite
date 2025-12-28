@@ -1645,6 +1645,300 @@ module OpalVite
         `this.element.contains(#{el})`
       end
 
+      # ===== Debounce/Throttle Utilities =====
+
+      # Create a debounced version of a block
+      # @param wait [Integer] Milliseconds to wait
+      # @yield Block to debounce
+      # @return [Native] Debounced function
+      def debounce(wait, &block)
+        `
+          var timeout;
+          return function(...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => #{block.call}, wait);
+          };
+        `
+      end
+
+      # Create a throttled version of a block
+      # @param wait [Integer] Milliseconds between calls
+      # @yield Block to throttle
+      # @return [Native] Throttled function
+      def throttle(wait, &block)
+        `
+          var lastTime = 0;
+          return function(...args) {
+            var now = Date.now();
+            if (now - lastTime >= #{wait}) {
+              lastTime = now;
+              #{block.call};
+            }
+          };
+        `
+      end
+
+      # Debounce a method call
+      # @param wait [Integer] Milliseconds to wait
+      # @param key [String] Unique key for this debounce
+      # @yield Block to execute after debounce
+      def debounced(wait, key = 'default', &block)
+        @_debounce_timers ||= {}
+        timer_key = "_debounce_#{key}"
+
+        `clearTimeout(#{@_debounce_timers[timer_key]})`
+        @_debounce_timers[timer_key] = `setTimeout(function() { #{block.call} }, #{wait})`
+      end
+
+      # Throttle a method call
+      # @param wait [Integer] Milliseconds between calls
+      # @param key [String] Unique key for this throttle
+      # @yield Block to execute if not throttled
+      def throttled(wait, key = 'default', &block)
+        @_throttle_times ||= {}
+        time_key = "_throttle_#{key}"
+
+        now = `Date.now()`
+        last_time = @_throttle_times[time_key] || 0
+
+        if `#{now} - #{last_time} >= #{wait}`
+          @_throttle_times[time_key] = now
+          block.call
+        end
+      end
+
+      # ===== Clipboard Utilities =====
+
+      # Copy text to clipboard
+      # @param text [String] Text to copy
+      # @yield Optional callback on success
+      def copy_to_clipboard(text, &on_success)
+        `navigator.clipboard.writeText(#{text}).then(function() {
+          #{on_success.call if on_success}
+        })`
+      end
+
+      # Read text from clipboard
+      # @yield Block receiving clipboard text
+      def read_from_clipboard(&block)
+        `navigator.clipboard.readText().then(function(text) {
+          #{block.call(`text`)}
+        })`
+      end
+
+      # ===== Object Utilities =====
+
+      # Deep clone an object
+      # @param obj [Object] Object to clone
+      # @return [Object] Cloned object
+      def deep_clone(obj)
+        `JSON.parse(JSON.stringify(#{obj.to_n}))`
+      end
+
+      # Deep merge two objects
+      # @param target [Hash] Target object
+      # @param source [Hash] Source object
+      # @return [Hash] Merged object
+      def deep_merge(target, source)
+        `
+          function deepMerge(target, source) {
+            var result = Object.assign({}, target);
+            for (var key in source) {
+              if (source.hasOwnProperty(key)) {
+                if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
+                  result[key] = deepMerge(result[key] || {}, source[key]);
+                } else {
+                  result[key] = source[key];
+                }
+              }
+            }
+            return result;
+          }
+          return deepMerge(#{target.to_n}, #{source.to_n});
+        `
+      end
+
+      # Pick specific keys from an object
+      # @param obj [Hash] Source object
+      # @param keys [Array<String, Symbol>] Keys to pick
+      # @return [Hash] Object with only specified keys
+      def pick(obj, *keys)
+        result = {}
+        keys.flatten.each do |key|
+          key_s = key.to_s
+          native_obj = obj.to_n
+          if `#{native_obj}.hasOwnProperty(#{key_s})`
+            result[key_s] = `#{native_obj}[#{key_s}]`
+          end
+        end
+        result
+      end
+
+      # Omit specific keys from an object
+      # @param obj [Hash] Source object
+      # @param keys [Array<String, Symbol>] Keys to omit
+      # @return [Hash] Object without specified keys
+      def omit(obj, *keys)
+        keys_to_omit = keys.flatten.map(&:to_s)
+        result = {}
+        native_obj = obj.to_n
+        `Object.keys(#{native_obj}).forEach(function(key) {
+          if (!#{keys_to_omit}.includes(key)) {
+            #{result[`key`] = `#{native_obj}[key]`}
+          }
+        })`
+        result
+      end
+
+      # ===== Set Utilities =====
+
+      # Create a unique array (like Set)
+      # @param arr [Array] Array with possible duplicates
+      # @return [Array] Array with unique values
+      def unique(arr)
+        `[...new Set(#{arr.to_n})]`
+      end
+
+      # Get intersection of two arrays
+      # @param arr1 [Array] First array
+      # @param arr2 [Array] Second array
+      # @return [Array] Intersection
+      def intersection(arr1, arr2)
+        set2 = `new Set(#{arr2.to_n})`
+        `#{arr1.to_n}.filter(x => #{set2}.has(x))`
+      end
+
+      # Get difference of two arrays (arr1 - arr2)
+      # @param arr1 [Array] First array
+      # @param arr2 [Array] Second array
+      # @return [Array] Difference
+      def difference(arr1, arr2)
+        set2 = `new Set(#{arr2.to_n})`
+        `#{arr1.to_n}.filter(x => !#{set2}.has(x))`
+      end
+
+      # Get union of two arrays
+      # @param arr1 [Array] First array
+      # @param arr2 [Array] Second array
+      # @return [Array] Union (unique values)
+      def union(arr1, arr2)
+        `[...new Set([...#{arr1.to_n}, ...#{arr2.to_n}])]`
+      end
+
+      # ===== Validation Utilities =====
+
+      # Validate an email address
+      # @param email [String] Email to validate
+      # @return [Boolean] True if valid
+      def valid_email?(email)
+        `/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(#{email})`
+      end
+
+      # Validate a URL
+      # @param url [String] URL to validate
+      # @return [Boolean] True if valid
+      def valid_url?(url)
+        `
+          try {
+            new URL(#{url});
+            return true;
+          } catch (e) {
+            return false;
+          }
+        `
+      end
+
+      # Validate a phone number (basic)
+      # @param phone [String] Phone number to validate
+      # @return [Boolean] True if valid
+      def valid_phone?(phone)
+        # Remove common separators and check for digits
+        cleaned = `#{phone}.replace(/[\s\-\(\)\.]/g, '')`
+        `
+          var pattern = /^[\+]?[0-9]{10,15}$/;
+          return pattern.test(#{cleaned});
+        `
+      end
+
+      # Check if a value is blank (nil, empty string, or whitespace only)
+      # @param value [Object] Value to check
+      # @return [Boolean] True if blank
+      def blank?(value)
+        return true if value.nil?
+        return `#{value}.trim() === ''` if `typeof #{value} === 'string'`
+        return `#{value}.length === 0` if `Array.isArray(#{value})`
+        false
+      end
+
+      # Check if a value is present (not blank)
+      # @param value [Object] Value to check
+      # @return [Boolean] True if present
+      def present?(value)
+        !blank?(value)
+      end
+
+      # Validate minimum length
+      # @param value [String] Value to check
+      # @param min [Integer] Minimum length
+      # @return [Boolean] True if valid
+      def min_length?(value, min)
+        return false if value.nil?
+        `#{value}.length >= #{min}`
+      end
+
+      # Validate maximum length
+      # @param value [String] Value to check
+      # @param max [Integer] Maximum length
+      # @return [Boolean] True if valid
+      def max_length?(value, max)
+        return false if value.nil?
+        `#{value}.length <= #{max}`
+      end
+
+      # Validate a value matches a pattern
+      # @param value [String] Value to check
+      # @param pattern [String] Regular expression pattern
+      # @return [Boolean] True if matches
+      def matches_pattern?(value, pattern)
+        return false if value.nil?
+        `new RegExp(#{pattern}).test(#{value})`
+      end
+
+      # ===== Console Helpers =====
+
+      # Log a styled message to console
+      # @param message [String] Message to log
+      # @param style [String] CSS style string
+      def console_styled(message, style = 'color: blue; font-weight: bold;')
+        `console.log('%c' + #{message}, #{style})`
+      end
+
+      # Log a grouped set of messages
+      # @param label [String] Group label
+      # @yield Block that logs messages
+      def console_group(label, collapsed: false, &block)
+        if collapsed
+          `console.groupCollapsed(#{label})`
+        else
+          `console.group(#{label})`
+        end
+        block.call
+        `console.groupEnd()`
+      end
+
+      # Log a table
+      # @param data [Array, Hash] Data to display as table
+      def console_table(data)
+        `console.table(#{data.to_n})`
+      end
+
+      # Log with timestamp
+      # @param message [String] Message to log
+      def console_time(message)
+        timestamp = `new Date().toISOString()`
+        `console.log('[' + #{timestamp} + '] ' + #{message})`
+      end
+
       private
 
       # Convert snake_case to camelCase, preserving existing camelCase

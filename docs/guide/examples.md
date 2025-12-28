@@ -193,6 +193,65 @@ pnpm dev
 
 ---
 
+## Utilities App
+
+[Live Demo](https://stofu1234.github.io/opal-vite/playground/utilities-app/) | [Source Code](https://github.com/stofu1234/opal-vite/tree/master/examples/utilities-app)
+
+A comprehensive demo of **stdlib helper modules** and **utility functions**.
+
+**Features demonstrated:**
+- `URIHelpers` - URL parsing, query parameters, encoding
+- `Base64Helpers` - Encoding, JWT, Basic Auth
+- `debounce`, `throttle` - Rate limiting
+- `copy_to_clipboard`, `read_from_clipboard` - Clipboard API
+- `unique`, `intersection`, `difference`, `union` - Set operations
+- `deep_clone`, `deep_merge`, `pick`, `omit` - Object utilities
+- `valid_email?`, `valid_url?`, `valid_phone?` - Validation
+
+**Location:** `examples/utilities-app/`
+
+```ruby
+class UrlDemoController < StimulusController
+  include OpalVite::Concerns::V1::StimulusHelpers
+  include OpalVite::Concerns::V1::URIHelpers
+
+  def parse
+    url = parse_url(target_value(:urlInput))
+    return unless url
+
+    puts url_hostname(url)    # => "example.com"
+    puts url_pathname(url)    # => "/api/v1"
+    puts url_all_params(url)  # => { "page" => "1" }
+  end
+end
+
+class Base64DemoController < StimulusController
+  include OpalVite::Concerns::V1::Base64Helpers
+
+  def encode
+    text = target_value(:input)
+    encoded = base64_encode(text)
+    # => "SGVsbG8gV29ybGQ="
+  end
+
+  def decode_jwt
+    jwt = target_value(:jwtInput)
+    payload = decode_jwt_payload(jwt)
+    expired = jwt_expired?(jwt)
+  end
+end
+```
+
+**Run locally:**
+```bash
+cd examples/utilities-app
+bundle install
+pnpm install
+pnpm dev
+```
+
+---
+
 ## Running Tests
 
 Each example app includes E2E tests using Capybara + Cuprite:

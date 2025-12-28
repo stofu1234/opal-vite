@@ -58,6 +58,8 @@ export default defineConfig({
                 { text: 'Stimulus API (v0.3.0)', link: '/api/v1/en/stimulus_api' },
                 { text: 'StimulusHelpers', link: '/api/v1/en/stimulus_helpers' },
                 { text: 'DomHelpers', link: '/api/v1/en/dom_helpers' },
+                { text: 'URIHelpers', link: '/api/v1/en/uri_helpers' },
+                { text: 'Base64Helpers', link: '/api/v1/en/base64_helpers' },
                 { text: 'Storable', link: '/api/v1/en/storable' },
                 { text: 'Toastable', link: '/api/v1/en/toastable' },
                 { text: 'JsProxyEx', link: '/api/v1/en/js_proxy_ex' },
