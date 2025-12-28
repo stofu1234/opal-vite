@@ -4,8 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Practical App - Todo with Opal + Vite</title>
-    <script type="module" crossorigin src="/opal-vite/playground/practical-app/assets/index-DS03woX1.js"></script>
-    <link rel="stylesheet" crossorigin href="/opal-vite/playground/practical-app/assets/index-CYtDPx00.css">
+    <script type="module" crossorigin src="/opal-vite/playground/practical-app/assets/index-X8UdImza.js"></script>
+    <link rel="stylesheet" crossorigin href="/opal-vite/playground/practical-app/assets/index-DsytwXei.css">
   </head>
   <body>
     <div class="container">
@@ -20,9 +20,19 @@
       </header>
 
       <main>
-        <!-- Todo Application -->
-        <div class="todo-card" data-controller="todo" data-todo-storage-key-value="opal_todos">
-          <div class="todo-input-group">
+        <!-- Todo Application
+             Demonstrates Stimulus CSS Classes API:
+             - data-todo-loading-class: Applied during async add operation
+             - data-todo-success-class: Applied briefly after successful add
+        -->
+        <div
+          class="todo-card"
+          data-controller="todo"
+          data-todo-storage-key-value="opal_todos"
+          data-todo-loading-class="todo-form-loading"
+          data-todo-success-class="todo-form-success"
+        >
+          <div class="todo-input-group" data-todo-target="form">
             <input
               type="text"
               class="todo-input"
@@ -146,7 +156,7 @@
 
       <footer>
         <p>
-          Features: ✅ CRUD Operations ✅ LocalStorage ✅ Form Validation ✅ Modals ✅ Toast Notifications ✅ Animations
+          Features: ✅ CRUD Operations ✅ LocalStorage ✅ Form Validation ✅ Modals ✅ Toast Notifications ✅ Animations ✅ CSS Classes API
         </p>
         <p style="margin-top: 1rem;">
           Built with
