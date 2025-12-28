@@ -13,8 +13,8 @@ class ModalController < StimulusController
     puts "ModalController connected"
 
     # Store element reference for use in callbacks
-    # (element/this is not accessible inside on_window_event callbacks)
-    controller_element = element
+    # Note: Must use JavaScript this.element, not a Ruby method
+    controller_element = `this.element`
 
     # Listen for open-modal event
     on_window_event('open-modal') do |e|
