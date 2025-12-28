@@ -7,7 +7,7 @@ RSpec.describe 'Base64 Demo', type: :feature do
     it 'encodes text to Base64' do
       stable_set('[data-base64-demo-target="input"]', 'Hello')
       stable_click('[data-action="click->base64-demo#encode"]')
-      sleep 0.3
+      sleep 0.5
       wait_for_dom_stable
 
       output = find('[data-base64-demo-target="output"]')

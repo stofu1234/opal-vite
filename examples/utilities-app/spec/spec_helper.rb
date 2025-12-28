@@ -88,29 +88,54 @@ RSpec.configure do |config|
   end
 
   # Wait for Stimulus controllers to be fully connected
-  def wait_for_stimulus_ready(timeout: 15)
+  def wait_for_stimulus_ready(timeout: 30)
     start_time = Time.now
     loop do
       result = page.evaluate_script(<<~JS)
         (function() {
           // Check if Stimulus application exists
-          if (typeof Stimulus === 'undefined') return false;
+          if (typeof Stimulus === 'undefined') return { ready: false, reason: 'Stimulus not defined' };
 
-          // Check if all controllers are connected
-          var urlDemo = document.querySelector('[data-controller~="url-demo"]');
-          var base64Demo = document.querySelector('[data-controller~="base64-demo"]');
-          var validationDemo = document.querySelector('[data-controller~="validation-demo"]');
-          var clipboardDemo = document.querySelector('[data-controller~="clipboard-demo"]');
+          // Check if all controller elements exist
+          var urlDemoEl = document.querySelector('[data-controller~="url-demo"]');
+          var base64DemoEl = document.querySelector('[data-controller~="base64-demo"]');
+          var validationDemoEl = document.querySelector('[data-controller~="validation-demo"]');
+          var clipboardDemoEl = document.querySelector('[data-controller~="clipboard-demo"]');
 
-          return urlDemo && base64Demo && validationDemo && clipboardDemo;
+          if (!urlDemoEl || !base64DemoEl || !validationDemoEl || !clipboardDemoEl) {
+            return { ready: false, reason: 'Elements not found' };
+          }
+
+          // Check if controllers are actually registered and connected
+          var urlController = Stimulus.getControllerForElementAndIdentifier(urlDemoEl, 'url-demo');
+          var base64Controller = Stimulus.getControllerForElementAndIdentifier(base64DemoEl, 'base64-demo');
+          var validationController = Stimulus.getControllerForElementAndIdentifier(validationDemoEl, 'validation-demo');
+          var clipboardController = Stimulus.getControllerForElementAndIdentifier(clipboardDemoEl, 'clipboard-demo');
+
+          if (!urlController || !base64Controller || !validationController || !clipboardController) {
+            return {
+              ready: false,
+              reason: 'Controllers not connected',
+              url: !!urlController,
+              base64: !!base64Controller,
+              validation: !!validationController,
+              clipboard: !!clipboardController
+            };
+          }
+
+          return { ready: true };
         })()
       JS
-      return if result
+
+      return if result && result['ready']
 
       elapsed = Time.now - start_time
-      raise Capybara::ElementNotFound, "Stimulus controllers not ready within #{timeout}s" if elapsed > timeout
+      if elapsed > timeout
+        reason = result ? result.inspect : 'unknown'
+        raise Capybara::ElementNotFound, "Stimulus controllers not ready within #{timeout}s: #{reason}"
+      end
 
-      sleep 0.1
+      sleep 0.2
     end
   end
 end

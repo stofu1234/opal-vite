@@ -14,6 +14,12 @@ class Base64DemoController < StimulusController
   include OpalVite::Concerns::V1::StimulusHelpers
   include OpalVite::Concerns::V1::Base64Helpers
 
+  # Override stimulus_name to handle numbers in class name
+  # (opal_stimulus regex doesn't insert hyphen between digit and uppercase)
+  def self.stimulus_name
+    'base64-demo'
+  end
+
   self.targets = ["input", "output", "jwtInput", "authUser", "authPass"]
 
   def connect
@@ -23,7 +29,11 @@ class Base64DemoController < StimulusController
   # Action: Encode to Base64
   def encode
     text = target_value(:input)
-    return if blank?(text)
+
+    if blank?(text)
+      show_output("Please enter text to encode", "error")
+      return
+    end
 
     encoded = base64_encode(text)
     if encoded
