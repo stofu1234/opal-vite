@@ -185,7 +185,7 @@ RSpec.describe 'CRUD App', type: :feature do
       expect(page).to have_css('[data-controller="modal"].hidden', visible: :all)
     end
 
-    it 'updates item on save', skip: 'Edit save functionality has timing issue' do
+    it 'updates item on save' do
       within(find('.bg-gray-50', text: 'Keyboard')) do
         click_button 'Edit'
       end
@@ -193,11 +193,11 @@ RSpec.describe 'CRUD App', type: :feature do
 
       # Update the name and quantity in the modal
       modal_name_input = find('[data-modal-target="nameInput"]')
-      modal_name_input.fill_in with: ''  # Clear first
+      modal_name_input.set('')  # Clear first using set
       modal_name_input.fill_in with: 'Mechanical Keyboard'
 
       modal_quantity_input = find('[data-modal-target="quantityInput"]')
-      modal_quantity_input.fill_in with: ''  # Clear first
+      modal_quantity_input.set('')  # Clear first using set
       modal_quantity_input.fill_in with: '1'
 
       click_button 'Save Changes'
