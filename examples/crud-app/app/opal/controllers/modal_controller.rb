@@ -22,9 +22,9 @@ class ModalController < StimulusController
       # Store item ID for save
       `this.currentItemId = #{id}`
 
-      # Set form values
-      target_set_value(:nameInput, name) if has_target?(:nameInput)
-      target_set_value(:quantityInput, quantity) if has_target?(:quantityInput)
+      # Set form values directly using JavaScript
+      `this.nameInputTarget.value = #{name}`
+      `this.quantityInputTarget.value = #{quantity}`
 
       # Open modal
       open_modal
@@ -48,21 +48,18 @@ class ModalController < StimulusController
 
   # Action: Save changes
   def save
-    return unless has_target?(:nameInput) && has_target?(:quantityInput)
+    # Get input values directly using JavaScript for reliability
+    name = `this.nameInputTarget.value`
+    name = `#{name}.trim()` if name
 
-    name = target_value(:nameInput)
-    name = `#{name}.trim()`
-
-    if `#{name} === ''`
+    if `#{name} === '' || #{name} == null || typeof #{name} === 'undefined'`
       puts "Error: Item name cannot be empty"
       return
     end
 
-    quantity = parse_int(target_value(:quantityInput))
-    if is_nan?(quantity) || quantity < 1
-      puts "Error: Quantity must be at least 1"
-      return
-    end
+    quantity_str = `this.quantityInputTarget.value`
+    quantity = parse_int(quantity_str)
+    quantity = 1 if is_nan?(quantity) || quantity < 1
 
     # Get stored item ID
     item_id = `this.currentItemId`
