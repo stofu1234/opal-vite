@@ -77,9 +77,10 @@ class TabsController < StimulusController
     end
 
     # Method 2: Dispatch custom event for the selected panel
-    # This demonstrates stimulus_dispatch for loose coupling
+    # Using dispatch_window_event since panels listen on window
+    # This demonstrates loose coupling via window events
     puts "Dispatching tabs:change event for index #{index}"
-    stimulus_dispatch('change', detail: { index: index })
+    dispatch_window_event('tabs:change', { index: index })
   end
 
   # Alternative method: Show panel using outlet reference directly

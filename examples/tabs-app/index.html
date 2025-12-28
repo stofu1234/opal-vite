@@ -161,7 +161,7 @@
   include OpalVite::Concerns::V1::StimulusHelpers
 
   # Define outlets connection
-  `static outlets = ["panel"]`
+  self.outlets = ["panel"]
 
   def select
     index = action_param_int(:index)
@@ -169,8 +169,8 @@
     # Call hide on all panels using outlets
     call_all_outlets(:panel, :hide)
 
-    # Dispatch event for selected panel
-    stimulus_dispatch("change", detail: { index: index })
+    # Dispatch event on window for panel controllers
+    dispatch_window_event("tabs:change", { index: index })
   end
 end</code></pre>
 

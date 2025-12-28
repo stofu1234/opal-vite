@@ -1519,13 +1519,12 @@ module OpalVite
       #   # Dispatches "clipboard:copied" event
       def stimulus_dispatch(name, detail: {}, target: nil, prefix: nil, bubbles: true, cancelable: true)
         native_detail = detail.respond_to?(:to_n) ? detail.to_n : detail
-        `this.dispatch(#{name}, {
-          detail: #{native_detail},
-          target: #{target} || undefined,
-          prefix: #{prefix} || undefined,
-          bubbles: #{bubbles},
-          cancelable: #{cancelable}
-        })`
+        # Build options object, only including target/prefix if explicitly provided
+        # Note: Ruby nil becomes Opal.nil in JS (truthy), so we must check explicitly
+        options = `{ detail: #{native_detail}, bubbles: #{bubbles}, cancelable: #{cancelable} }`
+        `#{options}.target = #{target}` unless target.nil?
+        `#{options}.prefix = #{prefix}` unless prefix.nil?
+        `this.dispatch(#{name}, #{options})`
       end
 
       # Dispatch event and check if it was cancelled
