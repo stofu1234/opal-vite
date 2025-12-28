@@ -4,6 +4,8 @@ opal-viteには、Stimulus APIの様々な機能をデモンストレーショ�
 
 ## Counter App
 
+[ライブデモ](/playground/counter-app/) | [ソースコード](https://github.com/stofu1234/opal-vite/tree/master/examples/counter-app)
+
 **Stimulus Values API**を使用したシンプルなカウンターアプリケーション。
 
 **デモンストレーションする機能:**
@@ -62,6 +64,8 @@ pnpm dev
 
 ## CRUD App
 
+[ライブデモ](/playground/crud-app/) | [ソースコード](https://github.com/stofu1234/opal-vite/tree/master/examples/crud-app)
+
 **Stimulus Action Parameters**を使用したCRUD（作成・読取・更新・削除）アプリケーション。
 
 **デモンストレーションする機能:**
@@ -117,6 +121,8 @@ pnpm dev
 ---
 
 ## Tabs App
+
+[ライブデモ](/playground/tabs-app/) | [ソースコード](https://github.com/stofu1234/opal-vite/tree/master/examples/tabs-app)
 
 **Stimulus OutletsとDispatch**を使用したタブインターフェース。
 
