@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Utilities Demo - Opal Vite stdlib Helpers</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module" crossorigin src="/opal-vite/playground/utilities-app/assets/index-DrdPprtq.js"></script>
+  </head>
+  <body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+      <header class="mb-8">
+        <h1 class="text-4xl font-bold text-gray-800 mb-2">Utilities Demo</h1>
+        <p class="text-lg text-gray-600">
+          Demonstrating opal-vite stdlib helpers: URIHelpers, Base64Helpers, and StimulusHelpers utilities
+        </p>
+      </header>
+
+      <main class="space-y-8">
+        <!-- URL Demo Section -->
+        <section class="bg-white rounded-lg shadow-md p-6" data-controller="url-demo">
+          <h2 class="text-2xl font-bold text-gray-800 mb-4">URIHelpers</h2>
+          <p class="text-gray-600 mb-4">Parse, manipulate, and build URLs with ease.</p>
+
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-semibold mb-1">URL to parse:</label>
+              <div class="flex gap-2">
+                <input
+                  type="text"
+                  data-url-demo-target="urlInput"
+                  class="flex-1 px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500"
+                  placeholder="https://example.com/path?query=value"
+                />
+                <button
+                  data-action="click->url-demo#parse"
+                  class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+                >
+                  Parse
+                </button>
+              </div>
+            </div>
+
+            <div class="flex flex-wrap gap-2">
+              <button data-action="click->url-demo#parse_current" class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm">
+                Current URL
+              </button>
+              <button data-action="click->url-demo#build_example" class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm">
+                Build Example
+              </button>
+              <button data-action="click->url-demo#encode_demo" class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm">
+                Encoding Demo
+              </button>
+              <button data-action="click->url-demo#query_string_demo" class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm">
+                Query String
+              </button>
+            </div>
+
+            <div class="flex gap-2">
+              <input
+                type="text"
+                data-url-demo-target="paramKey"
+                class="px-3 py-2 border rounded"
+                placeholder="Key"
+              />
+              <input
+                type="text"
+                data-url-demo-target="paramValue"
+                class="px-3 py-2 border rounded"
+                placeholder="Value"
+              />
+              <button
+                data-action="click->url-demo#add_param"
+                class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded"
+              >
+                Add Param
+              </button>
+            </div>
+
+            <div data-url-demo-target="output" class="p-4 bg-gray-50 rounded min-h-[100px]">
+              <!-- Output will appear here -->
+            </div>
+          </div>
+        </section>
+
+        <!-- Base64 Demo Section -->
+        <section class="bg-white rounded-lg shadow-md p-6" data-controller="base64-demo">
+          <h2 class="text-2xl font-bold text-gray-800 mb-4">Base64Helpers</h2>
+          <p class="text-gray-600 mb-4">Encode, decode, and work with Base64 data.</p>
+
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-semibold mb-1">Text / Base64:</label>
+              <input
+                type="text"
+                data-base64-demo-target="input"
+                class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter text or Base64 string"
+              />
+            </div>
+
+            <div class="flex flex-wrap gap-2">
+              <button data-action="click->base64-demo#encode" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">
+                Encode
+              </button>
+              <button data-action="click->base64-demo#decode" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">
+                Decode
+              </button>
+              <button data-action="click->base64-demo#validate_base64" class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm">
+                Validate
+              </button>
+            </div>
+
+            <div class="flex flex-wrap gap-2">
+              <button data-action="click->base64-demo#urlsafe_demo" class="bg-purple-500 hover:bg-purple-600 text-white px-3 py-1 rounded text-sm">
+                URL-safe Demo
+              </button>
+              <button data-action="click->base64-demo#unicode_demo" class="bg-purple-500 hover:bg-purple-600 text-white px-3 py-1 rounded text-sm">
+                Unicode Demo
+              </button>
+              <button data-action="click->base64-demo#data_url_demo" class="bg-purple-500 hover:bg-purple-600 text-white px-3 py-1 rounded text-sm">
+                Data URL Demo
+              </button>
+            </div>
+
+            <div class="border-t pt-4 mt-4">
+              <h3 class="font-semibold mb-2">JWT Decoding</h3>
+              <div class="flex gap-2">
+                <input
+                  type="text"
+                  data-base64-demo-target="jwtInput"
+                  class="flex-1 px-3 py-2 border rounded text-sm"
+                  placeholder="Paste JWT token (or leave empty for example)"
+                />
+                <button data-action="click->base64-demo#decode_jwt" class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded">
+                  Decode JWT
+                </button>
+              </div>
+            </div>
+
+            <div class="border-t pt-4 mt-4">
+              <h3 class="font-semibold mb-2">Basic Auth</h3>
+              <div class="flex gap-2">
+                <input
+                  type="text"
+                  data-base64-demo-target="authUser"
+                  class="px-3 py-2 border rounded"
+                  placeholder="Username"
+                />
+                <input
+                  type="password"
+                  data-base64-demo-target="authPass"
+                  class="px-3 py-2 border rounded"
+                  placeholder="Password"
+                />
+                <button data-action="click->base64-demo#basic_auth_demo" class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded">
+                  Generate
+                </button>
+              </div>
+            </div>
+
+            <div data-base64-demo-target="output" class="p-4 bg-gray-50 rounded min-h-[100px]">
+              <!-- Output will appear here -->
+            </div>
+          </div>
+        </section>
+
+        <!-- Validation Demo Section -->
+        <section class="bg-white rounded-lg shadow-md p-6" data-controller="validation-demo">
+          <h2 class="text-2xl font-bold text-gray-800 mb-4">Validation Utilities</h2>
+          <p class="text-gray-600 mb-4">Validate emails, URLs, phones, and more.</p>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-semibold mb-1">Email:</label>
+              <div class="flex gap-2">
+                <input
+                  type="text"
+                  data-validation-demo-target="emailInput"
+                  data-action="input->validation-demo#validate_email"
+                  class="flex-1 px-3 py-2 border rounded"
+                  placeholder="user@example.com"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold mb-1">URL:</label>
+              <div class="flex gap-2">
+                <input
+                  type="text"
+                  data-validation-demo-target="urlInput"
+                  data-action="input->validation-demo#validate_url"
+                  class="flex-1 px-3 py-2 border rounded"
+                  placeholder="https://example.com"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold mb-1">Phone:</label>
+              <div class="flex gap-2">
+                <input
+                  type="text"
+                  data-validation-demo-target="phoneInput"
+                  data-action="input->validation-demo#validate_phone"
+                  class="flex-1 px-3 py-2 border rounded"
+                  placeholder="+81-90-1234-5678"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-semibold mb-1">Text (for blank/length check):</label>
+              <input
+                type="text"
+                data-validation-demo-target="textInput"
+                class="w-full px-3 py-2 border rounded"
+                placeholder="Enter any text"
+              />
+            </div>
+          </div>
+
+          <div class="flex flex-wrap gap-2 mt-4">
+            <button data-action="click->validation-demo#check_blank" class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm">
+              Check blank?
+            </button>
+            <button data-action="click->validation-demo#check_length" class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm">
+              Check Length
+            </button>
+            <button data-action="click->validation-demo#validate_all" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">
+              Validate All
+            </button>
+          </div>
+
+          <div class="flex gap-2 mt-4">
+            <input
+              type="text"
+              data-validation-demo-target="patternInput"
+              class="px-3 py-2 border rounded"
+              placeholder="Regex pattern (e.g., ^[A-Z])"
+            />
+            <button data-action="click->validation-demo#check_pattern" class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded">
+              Check Pattern
+            </button>
+          </div>
+
+          <div data-validation-demo-target="output" class="p-4 bg-gray-50 rounded min-h-[80px] mt-4">
+            <!-- Output will appear here -->
+          </div>
+        </section>
+
+        <!-- Clipboard & Utilities Demo Section -->
+        <section class="bg-white rounded-lg shadow-md p-6" data-controller="clipboard-demo">
+          <h2 class="text-2xl font-bold text-gray-800 mb-4">Clipboard & Other Utilities</h2>
+          <p class="text-gray-600 mb-4">Clipboard, debounce, throttle, set operations, and object utilities.</p>
+
+          <div class="space-y-6">
+            <!-- Clipboard -->
+            <div class="border-b pb-4">
+              <h3 class="font-semibold mb-2">Clipboard</h3>
+              <div class="flex gap-2 mb-2">
+                <input
+                  type="text"
+                  data-clipboard-demo-target="copyInput"
+                  class="flex-1 px-3 py-2 border rounded"
+                  placeholder="Text to copy"
+                  value="Hello, Clipboard!"
+                />
+                <button data-action="click->clipboard-demo#copy" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">
+                  Copy
+                </button>
+              </div>
+              <div class="flex gap-2">
+                <input
+                  type="text"
+                  data-clipboard-demo-target="pasteOutput"
+                  class="flex-1 px-3 py-2 border rounded bg-gray-50"
+                  placeholder="Pasted text will appear here"
+                  readonly
+                />
+                <button data-action="click->clipboard-demo#paste" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">
+                  Paste
+                </button>
+              </div>
+            </div>
+
+            <!-- Debounce/Throttle -->
+            <div class="border-b pb-4">
+              <h3 class="font-semibold mb-2">Debounce & Throttle</h3>
+              <div class="flex gap-4">
+                <div class="flex-1">
+                  <label class="block text-sm mb-1">Debounced Search (300ms):</label>
+                  <input
+                    type="text"
+                    data-clipboard-demo-target="searchInput"
+                    data-action="input->clipboard-demo#search_debounced"
+                    class="w-full px-3 py-2 border rounded"
+                    placeholder="Type to search..."
+                  />
+                  <div data-clipboard-demo-target="searchOutput" class="text-sm text-gray-600 mt-1"></div>
+                </div>
+                <div>
+                  <label class="block text-sm mb-1">Throttled (1000ms):</label>
+                  <button
+                    data-action="click->clipboard-demo#throttled_action"
+                    class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded"
+                  >
+                    Click Fast!
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Set Operations -->
+            <div class="border-b pb-4">
+              <h3 class="font-semibold mb-2">Set Operations</h3>
+              <div class="flex gap-2 mb-2">
+                <input
+                  type="text"
+                  data-clipboard-demo-target="arr1"
+                  class="flex-1 px-3 py-2 border rounded"
+                  value="1, 2, 3, 4, 5"
+                  placeholder="Array 1"
+                />
+                <input
+                  type="text"
+                  data-clipboard-demo-target="arr2"
+                  class="flex-1 px-3 py-2 border rounded"
+                  value="3, 4, 5, 6, 7"
+                  placeholder="Array 2"
+                />
+              </div>
+              <div class="flex gap-2">
+                <button data-action="click->clipboard-demo#unique_demo" class="bg-purple-500 hover:bg-purple-600 text-white px-3 py-1 rounded text-sm">
+                  Unique Demo
+                </button>
+                <button data-action="click->clipboard-demo#set_operations" class="bg-purple-500 hover:bg-purple-600 text-white px-3 py-1 rounded text-sm">
+                  Set Operations
+                </button>
+              </div>
+              <div data-clipboard-demo-target="setOutput" class="p-3 bg-gray-50 rounded mt-2"></div>
+            </div>
+
+            <!-- Object Utilities -->
+            <div class="border-b pb-4">
+              <h3 class="font-semibold mb-2">Object Utilities</h3>
+              <div class="flex flex-wrap gap-2">
+                <button data-action="click->clipboard-demo#deep_clone_demo" class="bg-teal-500 hover:bg-teal-600 text-white px-3 py-1 rounded text-sm">
+                  deep_clone()
+                </button>
+                <button data-action="click->clipboard-demo#deep_merge_demo" class="bg-teal-500 hover:bg-teal-600 text-white px-3 py-1 rounded text-sm">
+                  deep_merge()
+                </button>
+                <button data-action="click->clipboard-demo#pick_omit_demo" class="bg-teal-500 hover:bg-teal-600 text-white px-3 py-1 rounded text-sm">
+                  pick() / omit()
+                </button>
+              </div>
+              <div data-clipboard-demo-target="objOutput" class="p-3 bg-gray-50 rounded mt-2"></div>
+            </div>
+
+            <!-- Console Helpers -->
+            <div>
+              <h3 class="font-semibold mb-2">Console Helpers</h3>
+              <button data-action="click->clipboard-demo#console_demo" class="bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded">
+                Run Console Demo (open DevTools)
+              </button>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer class="mt-8 text-center text-gray-600 text-sm">
+        <p>
+          Built with
+          <a href="https://opalrb.com/" target="_blank" class="text-blue-500 hover:underline">Opal</a>,
+          <a href="https://stimulus.hotwired.dev/" target="_blank" class="text-blue-500 hover:underline">Stimulus</a>, and
+          <a href="https://vitejs.dev/" target="_blank" class="text-blue-500 hover:underline">Vite</a>
+        </p>
+      </footer>
+    </div>
+
+  </body>
+</html>
