@@ -3,7 +3,107 @@ import * as fs from 'fs/promises'
 import { accessSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs'
 import * as path from 'path'
 import * as crypto from 'crypto'
-import type { OpalPluginOptions, CompileResult, CacheEntry } from './types'
+import type { OpalPluginOptions, CompileResult, CacheEntry, OpalCompilationError } from './types'
+
+/**
+ * Parse Opal/Ruby compilation error output into structured error information
+ */
+function parseRubyError(stderr: string, filePath: string): OpalCompilationError {
+  const lines = stderr.trim().split('\n')
+  const error: OpalCompilationError = {
+    message: stderr.trim(),
+    file: filePath,
+    rawOutput: stderr
+  }
+
+  // Try to extract line number from Ruby error format: "file.rb:123: error message"
+  // or "file.rb:123:in `method': error message"
+  for (const line of lines) {
+    const lineMatch = line.match(/^(.+?):(\d+)(?::(\d+))?(?::in `[^']+')?\s*[:\-]?\s*(.*)/)
+    if (lineMatch) {
+      const [, matchedFile, lineNum, colNum, msg] = lineMatch
+      if (matchedFile.endsWith('.rb') || matchedFile.includes(filePath)) {
+        error.file = matchedFile
+        error.line = parseInt(lineNum, 10)
+        if (colNum) {
+          error.column = parseInt(colNum, 10)
+        }
+        error.message = msg || line
+        break
+      }
+    }
+  }
+
+  // Extract error type from Ruby exceptions
+  const typeMatch = stderr.match(/(\w+Error|\w+Exception):\s*(.+)/m)
+  if (typeMatch) {
+    error.errorType = typeMatch[1]
+    if (!error.message || error.message === stderr.trim()) {
+      error.message = typeMatch[2].trim()
+    }
+  }
+
+  // Check for common Opal-specific errors
+  if (stderr.includes('SyntaxError')) {
+    error.errorType = 'SyntaxError'
+    const syntaxMatch = stderr.match(/SyntaxError:\s*(.+?)(?:\n|$)/)
+    if (syntaxMatch) {
+      error.message = syntaxMatch[1]
+    }
+  } else if (stderr.includes('NameError')) {
+    error.errorType = 'NameError'
+    const nameMatch = stderr.match(/NameError:\s*(.+?)(?:\n|$)/)
+    if (nameMatch) {
+      error.message = nameMatch[1]
+    }
+  } else if (stderr.includes('LoadError')) {
+    error.errorType = 'LoadError'
+    const loadMatch = stderr.match(/LoadError:\s*(.+?)(?:\n|$)/)
+    if (loadMatch) {
+      error.message = loadMatch[1]
+    }
+    // Extract the file that couldn't be loaded
+    const requireMatch = stderr.match(/cannot load such file\s*--\s*(.+)/)
+    if (requireMatch) {
+      error.hint = `Check that '${requireMatch[1]}' exists and is in your load paths`
+    }
+  }
+
+  return error
+}
+
+/**
+ * Format compilation error for display in terminal/browser
+ */
+function formatCompilationError(error: OpalCompilationError): string {
+  const parts: string[] = []
+
+  // Header with error type
+  const errorType = error.errorType || 'CompilationError'
+  parts.push(`\x1b[31m✖ Opal ${errorType}\x1b[0m`)
+
+  // Location info
+  if (error.file) {
+    let location = `  \x1b[36m→ ${error.file}\x1b[0m`
+    if (error.line) {
+      location += `\x1b[33m:${error.line}\x1b[0m`
+      if (error.column) {
+        location += `\x1b[33m:${error.column}\x1b[0m`
+      }
+    }
+    parts.push(location)
+  }
+
+  // Error message
+  parts.push(`  \x1b[37m${error.message}\x1b[0m`)
+
+  // Hint if available
+  if (error.hint) {
+    parts.push(`  \x1b[33m💡 ${error.hint}\x1b[0m`)
+  }
+
+  return parts.join('\n')
+}
 
 /**
  * Metrics for a single compilation
@@ -485,7 +585,20 @@ export class OpalCompiler {
 
       ruby.on('close', (code) => {
         if (code !== 0) {
-          reject(new Error(`Opal compilation failed:\n${stderr}`))
+          const parsedError = parseRubyError(stderr, filePath)
+          const formattedMessage = formatCompilationError(parsedError)
+          console.error(formattedMessage)
+
+          // Create an error with structured information for Vite
+          const error = new Error(parsedError.message) as Error & OpalCompilationError
+          error.file = parsedError.file
+          error.line = parsedError.line
+          error.column = parsedError.column
+          error.errorType = parsedError.errorType
+          error.hint = parsedError.hint
+          error.rawOutput = parsedError.rawOutput
+
+          reject(error)
           return
         }
 
@@ -493,11 +606,21 @@ export class OpalCompiler {
           const result = JSON.parse(stdout)
           resolve(result)
         } catch (e) {
-          reject(new Error(`Failed to parse compiler output:\n${stdout}\n\nError: ${e}`))
+          const parseError = new Error(`Failed to parse compiler output: ${e}`)
+          console.error('\x1b[31m✖ Opal Compiler Output Parse Error\x1b[0m')
+          console.error(`  \x1b[36m→ ${filePath}\x1b[0m`)
+          console.error(`  \x1b[37mUnexpected output from Ruby compiler\x1b[0m`)
+          if (this.options.debug) {
+            console.error(`  \x1b[90mRaw output: ${stdout.substring(0, 500)}...\x1b[0m`)
+          }
+          reject(parseError)
         }
       })
 
       ruby.on('error', (err) => {
+        console.error('\x1b[31m✖ Ruby Process Error\x1b[0m')
+        console.error(`  \x1b[37m${err.message}\x1b[0m`)
+        console.error(`  \x1b[33m💡 Make sure Ruby and Opal are installed correctly\x1b[0m`)
         reject(new Error(`Failed to spawn Ruby process: ${err.message}`))
       })
     })
