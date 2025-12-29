@@ -67,8 +67,8 @@ class ChatController < StimulusController
   def connect_to_chat
     update_status("connecting", "Connecting...")
 
-    # Connect to WebSocket server
-    cable_connect("ws://localhost:3117/cable")
+    # Connect to WebSocket server (dynamic URL based on environment)
+    cable_connect(websocket_url)
 
     # Subscribe to ChatChannel
     cable_subscribe("ChatChannel",
@@ -189,5 +189,19 @@ class ChatController < StimulusController
         .gsub("<", "&lt;")
         .gsub(">", "&gt;")
         .gsub('"', "&quot;")
+  end
+
+  def websocket_url
+    hostname = `window.location.hostname`
+    protocol = `window.location.protocol`
+
+    if hostname == "localhost" || hostname == "127.0.0.1"
+      # Development: separate WebSocket server on port 3117
+      "ws://localhost:3117/cable"
+    else
+      # Production: WebSocket on same host (Railway)
+      ws_protocol = protocol == "https:" ? "wss:" : "ws:"
+      "#{ws_protocol}//#{hostname}/cable"
+    end
   end
 end

@@ -97,10 +97,10 @@ DebugHelpersモジュールのデモ。コンソールログ、パフォーマ�
 
 ---
 
-### ActionCable App
+### ActionCable App (Railway)
 ActionCableHelpersを使用したリアルタイムチャットのデモ。WebSocket通信、タイピングインジケーター、オンラインプレゼンス。
 
-[**Open Demo**](https://stofu1234.github.io/opal-vite/playground/actioncable-app/)
+[**Open Demo**](https://opal-vite-actioncable-demo-production.up.railway.app)
 
 ---
 

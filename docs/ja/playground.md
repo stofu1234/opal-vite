@@ -83,6 +83,13 @@ Snabberb SPAフレームワークのサンプル。仮想DOMを使用したカ�
 
 ---
 
+### ActionCable App (Railway)
+ActionCableHelpersを使用したリアルタイムチャットのデモ。WebSocket通信、タイピングインジケーター、オンラインプレゼンス。
+
+[**デモを開く**](https://opal-vite-actioncable-demo-production.up.railway.app)
+
+---
+
 ### Chat App (Railway)
 WebSocketを使用したリアルタイムチャットアプリ。複数ユーザー対応。
 
@@ -112,6 +119,7 @@ Rails + Opal + Viteの統合サンプル。サーバーサイドRailsとクラ�
 - [vue-app](https://github.com/stofu1234/opal-vite/tree/master/examples/vue-app)
 - [react-app](https://github.com/stofu1234/opal-vite/tree/master/examples/react-app)
 - [snabberb-app](https://github.com/stofu1234/opal-vite/tree/master/examples/snabberb-app)
+- [actioncable-app](https://github.com/stofu1234/opal-vite/tree/master/examples/actioncable-app)
 - [chat-app](https://github.com/stofu1234/opal-vite/tree/master/examples/chat-app)
 - [rails-app](https://github.com/stofu1234/opal-vite/tree/master/examples/rails-app)
 
