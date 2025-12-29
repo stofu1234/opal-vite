@@ -2,7 +2,7 @@
   "name": "vscode-opal-vite",
   "displayName": "Opal Vite",
   "description": "VS Code extension for Opal (Ruby to JavaScript) development with Vite",
-  "version": "0.3.2",
+  "version": "0.3.6",
   "publisher": "opal-vite",
   "license": "MIT",
   "repository": {
@@ -23,11 +23,13 @@
     "ruby",
     "vite",
     "stimulus",
-    "javascript"
+    "javascript",
+    "lsp"
   ],
   "icon": "images/opal-vite-icon.png",
   "activationEvents": [
     "onLanguage:opal",
+    "onLanguage:ruby",
     "workspaceContains:**/*.rb"
   ],
   "main": "./dist/extension.js",
@@ -36,7 +38,7 @@
       {
         "id": "opal",
         "aliases": ["Opal", "opal"],
-        "extensions": [".rb", ".opal"],
+        "extensions": [".opal"],
         "configuration": "./language-configuration.json"
       }
     ],
@@ -45,11 +47,20 @@
         "language": "opal",
         "scopeName": "source.opal",
         "path": "./syntaxes/opal.tmLanguage.json"
+      },
+      {
+        "scopeName": "source.opal",
+        "path": "./syntaxes/opal.tmLanguage.json",
+        "injectTo": ["source.ruby"]
       }
     ],
     "snippets": [
       {
         "language": "opal",
+        "path": "./snippets/opal.snippets.json"
+      },
+      {
+        "language": "ruby",
         "path": "./snippets/opal.snippets.json"
       }
     ],
@@ -71,6 +82,12 @@
           "type": "boolean",
           "default": true,
           "description": "Automatically detect Opal files in app/opal directory"
+        },
+        "opalVite.trace.server": {
+          "type": "string",
+          "enum": ["off", "messages", "verbose"],
+          "default": "off",
+          "description": "Traces the communication between VS Code and the language server"
         }
       }
     },
@@ -84,6 +101,11 @@
         "command": "opalVite.compileFile",
         "title": "Compile Current Opal File",
         "category": "Opal Vite"
+      },
+      {
+        "command": "opalVite.restartServer",
+        "title": "Restart Language Server",
+        "category": "Opal Vite"
       }
     ]
   },
@@ -94,6 +116,9 @@
     "lint": "eslint src --ext ts",
     "package": "vsce package",
     "publish": "vsce publish"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",

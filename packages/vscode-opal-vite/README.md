@@ -2,6 +2,26 @@
 
 VS Code extension for Opal (Ruby to JavaScript) development with Vite.
 
+## Architecture
+
+This extension uses the **Language Server Protocol (LSP)** for IDE-agnostic language features:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    opal-language-server                      │
+│  (Shared: patterns, snippets, diagnostics logic)            │
+└─────────────────────────────────────────────────────────────┘
+        ▲                    ▲                    ▲
+        │ LSP               │ LSP               │ API
+        │                    │                    │
+┌───────┴───────┐   ┌───────┴───────┐   ┌───────┴───────┐
+│  VS Code      │   │  IntelliJ     │   │  Vim/Neovim   │
+│  Extension    │   │  (LSP4IJ)     │   │  (future)     │
+└───────────────┘   └───────────────┘   └───────────────┘
+```
+
+The core language features are provided by `opal-language-server`, enabling consistent behavior across all supported IDEs.
+
 ## Features
 
 ### Syntax Highlighting
@@ -12,15 +32,17 @@ VS Code extension for Opal (Ruby to JavaScript) development with Vite.
   - `Native`, `JS::Object`, `PromiseV2`
   - OpalVite::Concerns modules
 
-### Opal Incompatible Syntax Warnings
+### Opal Incompatible Syntax Warnings (via LSP)
 
 Automatically detects and warns about Ruby code that won't work in Opal:
 
-- **Threading**: `Thread`, `Mutex`, `Queue` (JavaScript is single-threaded)
-- **File System**: `File`, `Dir`, `IO` operations (not available in browser)
-- **Process**: `system`, `exec`, `fork`, `spawn`
-- **Sockets**: `TCPSocket`, `UDPSocket`, etc.
-- **Native Extensions**: gems like `nokogiri`, `mysql2`, `pg`
+| Category | Examples |
+|----------|----------|
+| **Threading** | `Thread`, `Mutex`, `Queue` (JavaScript is single-threaded) |
+| **File System** | `File`, `Dir`, `IO` operations (not available in browser) |
+| **Process** | `system`, `exec`, `fork`, `spawn` |
+| **Sockets** | `TCPSocket`, `UDPSocket`, etc. |
+| **Native Extensions** | gems like `nokogiri`, `mysql2`, `pg` |
 
 ### Code Snippets
 
@@ -56,15 +78,6 @@ Quickly scaffold common Opal patterns:
 | `create-element` | Create new element |
 | `add-event-listener` | Add event listener |
 
-#### Storage Snippets
-
-| Prefix | Description |
-|--------|-------------|
-| `ls-get` | localStorage get |
-| `ls-set` | localStorage set |
-| `ss-get` | sessionStorage get |
-| `ss-set` | sessionStorage set |
-
 ## Configuration
 
 | Setting | Default | Description |
@@ -72,11 +85,13 @@ Quickly scaffold common Opal patterns:
 | `opalVite.enableDiagnostics` | `true` | Enable Opal incompatible syntax diagnostics |
 | `opalVite.diagnosticSeverity` | `warning` | Severity level for warnings |
 | `opalVite.autoDetectOpalFiles` | `true` | Auto-detect Opal files in `app/opal` directory |
+| `opalVite.trace.server` | `off` | Trace communication with language server |
 
 ## Commands
 
 - **Opal Vite: Toggle Diagnostics** - Enable/disable incompatible syntax warnings
 - **Opal Vite: Compile Current File** - Compile current Opal file using `opal` CLI
+- **Opal Vite: Restart Language Server** - Restart the LSP server
 
 ## File Detection
 
@@ -121,6 +136,27 @@ npm run watch
 # Package extension
 npm run package
 ```
+
+## Other IDEs
+
+The language features are also available for other IDEs via `opal-language-server`:
+
+### IntelliJ / RubyMine
+
+Use the LSP4IJ plugin:
+
+```
+Server: npx opal-language-server --stdio
+File patterns: *.rb, *.opal
+```
+
+### Vim / Neovim
+
+See `opal-language-server` README for configuration.
+
+### Emacs
+
+See `opal-language-server` README for configuration.
 
 ## License
 

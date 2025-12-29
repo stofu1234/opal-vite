@@ -1,153 +1,19 @@
+import * as path from 'path';
 import * as vscode from 'vscode';
 
-// Opal incompatible patterns with explanations
-const INCOMPATIBLE_PATTERNS: Array<{
-  pattern: RegExp;
-  message: string;
-  severity: 'warning' | 'error' | 'information';
-}> = [
-  // Threading and concurrency
-  {
-    pattern: /\bThread\.(new|start|fork|current|list|main|exclusive|kill)\b/g,
-    message: 'Thread is not supported in Opal. JavaScript is single-threaded. Consider using PromiseV2 for async operations.',
-    severity: 'error'
-  },
-  {
-    pattern: /\bMutex\.(new|lock|unlock|synchronize)\b/g,
-    message: 'Mutex is not available in Opal. JavaScript is single-threaded.',
-    severity: 'error'
-  },
-  {
-    pattern: /\bQueue\.(new|push|pop|shift)\b/g,
-    message: 'Queue (thread-safe) is not available in Opal.',
-    severity: 'error'
-  },
-  // File system operations
-  {
-    pattern: /\bFile\.(read|write|open|delete|exist\?|exists\?|expand_path|dirname|basename|join|size|mtime|stat)\b/g,
-    message: 'File operations are not available in browser Opal. Use fetch API for remote files.',
-    severity: 'error'
-  },
-  {
-    pattern: /\bDir\.(pwd|chdir|glob|entries|mkdir|rmdir|exist\?|exists\?)\b/g,
-    message: 'Dir operations are not available in browser Opal.',
-    severity: 'error'
-  },
-  {
-    pattern: /\bIO\.(read|write|popen|pipe|select)\b/g,
-    message: 'IO operations are not available in browser Opal.',
-    severity: 'error'
-  },
-  // Process and system
-  {
-    pattern: /\bProcess\.(pid|ppid|kill|fork|wait|spawn|exec)\b/g,
-    message: 'Process operations are not available in Opal.',
-    severity: 'error'
-  },
-  {
-    pattern: /\b(system|exec|fork|spawn)\s*[\(\s]/g,
-    message: 'System commands are not available in browser Opal.',
-    severity: 'error'
-  },
-  {
-    pattern: /\b`[^`]+`/g,
-    message: 'Backtick command execution is not available in Opal. In Opal, backticks are used for native JavaScript code.',
-    severity: 'warning'
-  },
-  // Socket and networking
-  {
-    pattern: /\b(TCPSocket|TCPServer|UDPSocket|UNIXSocket|Socket)\b/g,
-    message: 'Socket operations are not available in browser Opal. Use fetch or WebSocket instead.',
-    severity: 'error'
-  },
-  // ObjectSpace and GC
-  {
-    pattern: /\bObjectSpace\.(each_object|count_objects|define_finalizer|garbage_collect)\b/g,
-    message: 'ObjectSpace is limited in Opal. Most operations are not available.',
-    severity: 'warning'
-  },
-  {
-    pattern: /\bGC\.(start|enable|disable|stress)\b/g,
-    message: 'GC control is not available in Opal. JavaScript handles garbage collection automatically.',
-    severity: 'warning'
-  },
-  // Encoding issues
-  {
-    pattern: /\bEncoding\.(find|list|compatible\?|default_external|default_internal)\b/g,
-    message: 'Encoding operations are limited in Opal. JavaScript uses UTF-16 internally.',
-    severity: 'warning'
-  },
-  {
-    pattern: /\.force_encoding\s*\(/g,
-    message: 'force_encoding is not fully supported in Opal.',
-    severity: 'warning'
-  },
-  // Reflection and metaprogramming limitations
-  {
-    pattern: /\bTracePoint\.(new|trace|stat)\b/g,
-    message: 'TracePoint is not available in Opal.',
-    severity: 'error'
-  },
-  {
-    pattern: /\bBinding\.(of_caller)\b/g,
-    message: 'Binding.of_caller is not available in Opal.',
-    severity: 'error'
-  },
-  // Native extensions
-  {
-    pattern: /\brequire\s+['"]ffi['"]/g,
-    message: 'FFI (Foreign Function Interface) is not available in Opal.',
-    severity: 'error'
-  },
-  // C extensions
-  {
-    pattern: /\brequire\s+['"](nokogiri|mysql2|pg|sqlite3|redis|eventmachine)['"]/g,
-    message: 'This gem uses native C extensions and is not available in Opal.',
-    severity: 'error'
-  },
-  // refinements (partial support)
-  {
-    pattern: /\busing\s+\w+/g,
-    message: 'Refinements have limited support in Opal.',
-    severity: 'warning'
-  },
-  // Fiber (partial support)
-  {
-    pattern: /\bFiber\.(new|yield|current)\b/g,
-    message: 'Fiber has limited support in Opal. Consider using PromiseV2 for async operations.',
-    severity: 'warning'
-  }
-];
+import {
+  LanguageClient,
+  LanguageClientOptions,
+  ServerOptions,
+  TransportKind
+} from 'vscode-languageclient/node';
 
-// Additional patterns for helpful hints
-const HINT_PATTERNS: Array<{
-  pattern: RegExp;
-  message: string;
-}> = [
-  {
-    pattern: /\brequire\s+['"]json['"]/g,
-    message: 'Tip: In Opal, use Native JSON object directly: `JSON.parse(str)` or `JSON.stringify(obj)`'
-  },
-  {
-    pattern: /\bTime\.now\b/g,
-    message: 'Tip: Time.now works in Opal but returns a wrapped JavaScript Date object.'
-  },
-  {
-    pattern: /\bRandom\.(rand|new|seed)\b/g,
-    message: 'Tip: Random works in Opal using JavaScript Math.random() internally.'
-  }
-];
-
-let diagnosticCollection: vscode.DiagnosticCollection;
+let client: LanguageClient | undefined;
 let statusBarItem: vscode.StatusBarItem;
 let diagnosticsEnabled = true;
 
-export function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext) {
   console.log('Opal Vite extension is now active');
-
-  // Create diagnostic collection
-  diagnosticCollection = vscode.languages.createDiagnosticCollection('opal');
-  context.subscriptions.push(diagnosticCollection);
 
   // Create status bar item
   statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
@@ -156,145 +22,223 @@ export function activate(context: vscode.ExtensionContext) {
   statusBarItem.show();
   context.subscriptions.push(statusBarItem);
 
-  // Register commands
-  context.subscriptions.push(
-    vscode.commands.registerCommand('opalVite.toggleDiagnostics', toggleDiagnostics),
-    vscode.commands.registerCommand('opalVite.compileFile', compileCurrentFile)
-  );
-
   // Get configuration
   const config = vscode.workspace.getConfiguration('opalVite');
   diagnosticsEnabled = config.get('enableDiagnostics', true);
 
-  // Watch for document changes
+  // Start the language server
+  await startLanguageServer(context);
+
+  // Register commands
   context.subscriptions.push(
-    vscode.workspace.onDidOpenTextDocument(analyzeDocument),
-    vscode.workspace.onDidChangeTextDocument(event => analyzeDocument(event.document)),
-    vscode.workspace.onDidCloseTextDocument(doc => diagnosticCollection.delete(doc.uri))
+    vscode.commands.registerCommand('opalVite.toggleDiagnostics', toggleDiagnostics),
+    vscode.commands.registerCommand('opalVite.compileFile', compileCurrentFile),
+    vscode.commands.registerCommand('opalVite.restartServer', async () => {
+      await restartLanguageServer(context);
+    })
   );
 
   // Watch for configuration changes
   context.subscriptions.push(
-    vscode.workspace.onDidChangeConfiguration(event => {
+    vscode.workspace.onDidChangeConfiguration(async event => {
       if (event.affectsConfiguration('opalVite')) {
         const config = vscode.workspace.getConfiguration('opalVite');
         diagnosticsEnabled = config.get('enableDiagnostics', true);
         updateStatusBar();
-
-        // Re-analyze all open documents
-        vscode.workspace.textDocuments.forEach(analyzeDocument);
       }
     })
   );
-
-  // Analyze all already open documents
-  vscode.workspace.textDocuments.forEach(analyzeDocument);
 }
 
-function isOpalFile(document: vscode.TextDocument): boolean {
-  // Check if it's a Ruby file
-  if (document.languageId !== 'ruby' && document.languageId !== 'opal') {
-    return false;
-  }
+async function startLanguageServer(context: vscode.ExtensionContext): Promise<void> {
+  // The server is provided by opal-language-server package
+  // In development, we use the local build; in production, we bundle it
 
-  const config = vscode.workspace.getConfiguration('opalVite');
-  const autoDetect = config.get('autoDetectOpalFiles', true);
+  // Try to find the server module
+  const serverModule = findServerModule(context);
 
-  if (!autoDetect) {
-    return document.languageId === 'opal';
-  }
-
-  // Check if file is in app/opal directory
-  const filePath = document.uri.fsPath;
-  if (filePath.includes('/app/opal/') || filePath.includes('\\app\\opal\\')) {
-    return true;
-  }
-
-  // Check for Opal-specific patterns in the file
-  const text = document.getText();
-  const opalPatterns = [
-    /`[^`]+`/, // Native JS blocks
-    /\bNative\b/,
-    /\bJS::/,
-    /\bPromiseV2\b/,
-    /\bOpalVite::/,
-    /require\s+['"]opal/
-  ];
-
-  return opalPatterns.some(pattern => pattern.test(text));
-}
-
-function analyzeDocument(document: vscode.TextDocument): void {
-  if (!diagnosticsEnabled) {
-    diagnosticCollection.delete(document.uri);
+  if (!serverModule) {
+    vscode.window.showWarningMessage(
+      'Opal Language Server not found. Diagnostics will use fallback mode.'
+    );
+    // Use fallback mode (original implementation without LSP)
+    activateFallbackMode(context);
     return;
   }
 
-  if (!isOpalFile(document)) {
-    return;
-  }
-
-  const text = document.getText();
-  const diagnostics: vscode.Diagnostic[] = [];
-  const config = vscode.workspace.getConfiguration('opalVite');
-  const severityMap: Record<string, vscode.DiagnosticSeverity> = {
-    error: vscode.DiagnosticSeverity.Error,
-    warning: vscode.DiagnosticSeverity.Warning,
-    information: vscode.DiagnosticSeverity.Information,
-    hint: vscode.DiagnosticSeverity.Hint
+  const serverOptions: ServerOptions = {
+    run: {
+      module: serverModule,
+      transport: TransportKind.ipc
+    },
+    debug: {
+      module: serverModule,
+      transport: TransportKind.ipc,
+      options: {
+        execArgv: ['--nolazy', '--inspect=6009']
+      }
+    }
   };
 
-  const configuredSeverity = config.get<string>('diagnosticSeverity', 'warning');
+  const clientOptions: LanguageClientOptions = {
+    documentSelector: [
+      { scheme: 'file', language: 'ruby' },
+      { scheme: 'file', language: 'opal' },
+      { scheme: 'file', pattern: '**/app/opal/**/*.rb' }
+    ],
+    synchronize: {
+      configurationSection: 'opalVite',
+      fileEvents: vscode.workspace.createFileSystemWatcher('**/*.rb')
+    },
+    outputChannelName: 'Opal Language Server'
+  };
 
-  // Check for incompatible patterns
-  for (const { pattern, message, severity } of INCOMPATIBLE_PATTERNS) {
-    // Reset regex state
-    pattern.lastIndex = 0;
+  client = new LanguageClient(
+    'opalLanguageServer',
+    'Opal Language Server',
+    serverOptions,
+    clientOptions
+  );
 
-    let match;
-    while ((match = pattern.exec(text)) !== null) {
-      const startPos = document.positionAt(match.index);
-      const endPos = document.positionAt(match.index + match[0].length);
-      const range = new vscode.Range(startPos, endPos);
+  await client.start();
+  console.log('Opal Language Server started');
+}
 
-      // Use configured severity or pattern-specific severity
-      const diagnosticSeverity = severity === 'error'
-        ? vscode.DiagnosticSeverity.Error
-        : severityMap[configuredSeverity] || vscode.DiagnosticSeverity.Warning;
+function findServerModule(context: vscode.ExtensionContext): string | null {
+  // Try multiple locations for the server module
 
-      const diagnostic = new vscode.Diagnostic(
-        range,
-        `[Opal] ${message}`,
-        diagnosticSeverity
-      );
-      diagnostic.source = 'Opal Vite';
-      diagnostic.code = 'opal-incompatible';
-      diagnostics.push(diagnostic);
+  // 1. Bundled with extension (production)
+  const bundledPath = context.asAbsolutePath(
+    path.join('server', 'dist', 'server.js')
+  );
+
+  // 2. Node modules (when installed as dependency)
+  const nodeModulesPath = context.asAbsolutePath(
+    path.join('node_modules', 'opal-language-server', 'dist', 'server.js')
+  );
+
+  // 3. Monorepo sibling package (development)
+  const monoRepoPath = path.resolve(
+    context.extensionPath,
+    '..',
+    'opal-language-server',
+    'dist',
+    'server.js'
+  );
+
+  const fs = require('fs');
+
+  for (const serverPath of [bundledPath, nodeModulesPath, monoRepoPath]) {
+    if (fs.existsSync(serverPath)) {
+      console.log(`Found Opal Language Server at: ${serverPath}`);
+      return serverPath;
     }
   }
 
-  // Check for hint patterns
-  for (const { pattern, message } of HINT_PATTERNS) {
-    pattern.lastIndex = 0;
+  console.log('Opal Language Server not found, using fallback mode');
+  return null;
+}
 
-    let match;
-    while ((match = pattern.exec(text)) !== null) {
-      const startPos = document.positionAt(match.index);
-      const endPos = document.positionAt(match.index + match[0].length);
-      const range = new vscode.Range(startPos, endPos);
+async function restartLanguageServer(context: vscode.ExtensionContext): Promise<void> {
+  if (client) {
+    await client.stop();
+  }
+  await startLanguageServer(context);
+  vscode.window.showInformationMessage('Opal Language Server restarted');
+}
 
-      const diagnostic = new vscode.Diagnostic(
-        range,
-        message,
-        vscode.DiagnosticSeverity.Hint
-      );
-      diagnostic.source = 'Opal Vite';
-      diagnostic.code = 'opal-hint';
-      diagnostics.push(diagnostic);
+// Fallback mode: Use local diagnostics when LSP server is not available
+function activateFallbackMode(context: vscode.ExtensionContext): void {
+  const diagnosticCollection = vscode.languages.createDiagnosticCollection('opal');
+  context.subscriptions.push(diagnosticCollection);
+
+  // Import patterns inline for fallback
+  const INCOMPATIBLE_PATTERNS: Array<{
+    pattern: RegExp;
+    message: string;
+    severity: 'warning' | 'error';
+  }> = [
+    {
+      pattern: /\bThread\.(new|start|fork|current|list|main|exclusive|kill)\b/g,
+      message: 'Thread is not supported in Opal. JavaScript is single-threaded.',
+      severity: 'error'
+    },
+    {
+      pattern: /\bFile\.(read|write|open|delete|exist\?|exists\?|expand_path|dirname|basename|join|size|mtime|stat)\b/g,
+      message: 'File operations are not available in browser Opal.',
+      severity: 'error'
+    },
+    {
+      pattern: /\bDir\.(pwd|chdir|glob|entries|mkdir|rmdir|exist\?|exists\?)\b/g,
+      message: 'Dir operations are not available in browser Opal.',
+      severity: 'error'
+    },
+    {
+      pattern: /\b(TCPSocket|TCPServer|UDPSocket|UNIXSocket|Socket)\b/g,
+      message: 'Socket operations are not available in browser Opal.',
+      severity: 'error'
+    },
+    {
+      pattern: /\brequire\s+['\"](nokogiri|mysql2|pg|sqlite3|redis|eventmachine)[\"\']/g,
+      message: 'This gem uses native C extensions and is not available in Opal.',
+      severity: 'error'
     }
+  ];
+
+  function analyzeDocument(document: vscode.TextDocument): void {
+    if (!diagnosticsEnabled) {
+      diagnosticCollection.delete(document.uri);
+      return;
+    }
+
+    if (!isOpalFile(document)) {
+      return;
+    }
+
+    const text = document.getText();
+    const diagnostics: vscode.Diagnostic[] = [];
+
+    for (const { pattern, message, severity } of INCOMPATIBLE_PATTERNS) {
+      pattern.lastIndex = 0;
+      let match;
+      while ((match = pattern.exec(text)) !== null) {
+        const startPos = document.positionAt(match.index);
+        const endPos = document.positionAt(match.index + match[0].length);
+        const range = new vscode.Range(startPos, endPos);
+
+        diagnostics.push(new vscode.Diagnostic(
+          range,
+          `[Opal] ${message}`,
+          severity === 'error'
+            ? vscode.DiagnosticSeverity.Error
+            : vscode.DiagnosticSeverity.Warning
+        ));
+      }
+    }
+
+    diagnosticCollection.set(document.uri, diagnostics);
   }
 
-  diagnosticCollection.set(document.uri, diagnostics);
+  function isOpalFile(document: vscode.TextDocument): boolean {
+    if (document.languageId === 'opal') return true;
+    if (document.languageId !== 'ruby') return false;
+
+    const filePath = document.uri.fsPath;
+    if (filePath.includes('/app/opal/') || filePath.includes('\\app\\opal\\')) {
+      return true;
+    }
+
+    const text = document.getText();
+    return /`[^`]+`|\bNative\b|\bJS::|\bPromiseV2\b|\bOpalVite::/.test(text);
+  }
+
+  context.subscriptions.push(
+    vscode.workspace.onDidOpenTextDocument(analyzeDocument),
+    vscode.workspace.onDidChangeTextDocument(e => analyzeDocument(e.document)),
+    vscode.workspace.onDidCloseTextDocument(doc => diagnosticCollection.delete(doc.uri))
+  );
+
+  vscode.workspace.textDocuments.forEach(analyzeDocument);
 }
 
 function toggleDiagnostics(): void {
@@ -305,12 +249,6 @@ function toggleDiagnostics(): void {
 
   updateStatusBar();
 
-  if (!diagnosticsEnabled) {
-    diagnosticCollection.clear();
-  } else {
-    vscode.workspace.textDocuments.forEach(analyzeDocument);
-  }
-
   vscode.window.showInformationMessage(
     `Opal diagnostics ${diagnosticsEnabled ? 'enabled' : 'disabled'}`
   );
@@ -320,9 +258,11 @@ function updateStatusBar(): void {
   if (diagnosticsEnabled) {
     statusBarItem.text = '$(ruby) Opal';
     statusBarItem.tooltip = 'Opal Vite: Diagnostics enabled (click to toggle)';
+    statusBarItem.backgroundColor = undefined;
   } else {
     statusBarItem.text = '$(ruby) Opal (off)';
     statusBarItem.tooltip = 'Opal Vite: Diagnostics disabled (click to toggle)';
+    statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
   }
 }
 
@@ -334,12 +274,13 @@ async function compileCurrentFile(): Promise<void> {
   }
 
   const document = editor.document;
-  if (!isOpalFile(document)) {
-    vscode.window.showWarningMessage('Current file is not an Opal file');
+  const isRuby = document.languageId === 'ruby' || document.languageId === 'opal';
+
+  if (!isRuby) {
+    vscode.window.showWarningMessage('Current file is not a Ruby/Opal file');
     return;
   }
 
-  // Save the file first
   await document.save();
 
   const terminal = vscode.window.createTerminal('Opal Vite');
@@ -347,9 +288,9 @@ async function compileCurrentFile(): Promise<void> {
   terminal.sendText(`bundle exec opal -c "${document.uri.fsPath}"`);
 }
 
-export function deactivate() {
-  if (diagnosticCollection) {
-    diagnosticCollection.dispose();
+export async function deactivate(): Promise<void> {
+  if (client) {
+    await client.stop();
   }
   if (statusBarItem) {
     statusBarItem.dispose();
