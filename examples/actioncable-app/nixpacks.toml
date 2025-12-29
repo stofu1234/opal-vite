@@ -2,11 +2,11 @@
 # Requires both Ruby (for Opal compilation) and Node.js
 
 [phases.setup]
-nixPkgs = ["ruby_3_2", "nodejs_22", "libyaml", "gcc", "gnumake"]
+nixPkgs = ["ruby_3_2", "nodejs_22", "libyaml"]
 
 [phases.install]
 cmds = [
-  "gem install opal opal-vite opal_stimulus bundler",
+  "gem install opal opal-vite bundler",
   "npm install"
 ]
 
