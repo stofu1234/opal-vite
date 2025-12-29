@@ -104,10 +104,10 @@
     <p>Test different console logging methods:</p>
 
     <div class="button-group">
-      <button data-action="click->debug-demo#logMessage">debug_log</button>
-      <button data-action="click->debug-demo#warnMessage">debug_warn</button>
-      <button data-action="click->debug-demo#errorMessage">debug_error</button>
-      <button data-action="click->debug-demo#inspectObject">debug_inspect</button>
+      <button data-action="click->debug-demo#log_message">debug_log</button>
+      <button data-action="click->debug-demo#warn_message">debug_warn</button>
+      <button data-action="click->debug-demo#error_message">debug_error</button>
+      <button data-action="click->debug-demo#inspect_object">debug_inspect</button>
     </div>
 
     <div class="status" data-debug-demo-target="status">Click a button to test logging</div>
@@ -119,8 +119,8 @@
     <p>Organize related debug messages in collapsible groups:</p>
 
     <div class="button-group">
-      <button data-action="click->group-demo#openGroup">debug_group</button>
-      <button data-action="click->group-demo#collapsedGroup">debug_group_collapsed</button>
+      <button data-action="click->group-demo#open_group">debug_group</button>
+      <button data-action="click->group-demo#collapsed_group">debug_group_collapsed</button>
     </div>
 
     <div class="status" data-group-demo-target="status">Groups help organize console output</div>
@@ -132,8 +132,8 @@
     <p>Measure execution time:</p>
 
     <div class="button-group">
-      <button data-action="click->perf-demo#measureTime">debug_measure</button>
-      <button data-action="click->perf-demo#timerDemo">debug_time/time_end</button>
+      <button data-action="click->perf-demo#measure_time">debug_measure</button>
+      <button data-action="click->perf-demo#timer_demo">debug_time/time_end</button>
     </div>
 
     <div class="status" data-perf-demo-target="status">Performance metrics help identify bottlenecks</div>
@@ -145,9 +145,9 @@
     <p>Enable/disable debug output at runtime:</p>
 
     <div class="button-group">
-      <button data-action="click->toggle-demo#enableDebug">debug_enable!</button>
-      <button data-action="click->toggle-demo#disableDebug" class="secondary">debug_disable!</button>
-      <button data-action="click->toggle-demo#checkStatus">Check Status</button>
+      <button data-action="click->toggle-demo#enable_debug">debug_enable!</button>
+      <button data-action="click->toggle-demo#disable_debug" class="secondary">debug_disable!</button>
+      <button data-action="click->toggle-demo#check_status">Check Status</button>
     </div>
 
     <div class="status" data-toggle-demo-target="status">Debug mode: enabled</div>
@@ -159,9 +159,9 @@
     <p>Test assertions and call stack tracing:</p>
 
     <div class="button-group">
-      <button data-action="click->assert-demo#passAssertion">Assert (pass)</button>
-      <button data-action="click->assert-demo#failAssertion">Assert (fail)</button>
-      <button data-action="click->assert-demo#showTrace">debug_trace</button>
+      <button data-action="click->assert-demo#pass_assertion">Assert (pass)</button>
+      <button data-action="click->assert-demo#fail_assertion">Assert (fail)</button>
+      <button data-action="click->assert-demo#show_trace">debug_trace</button>
     </div>
 
     <div class="status" data-assert-demo-target="status">Assertions help catch bugs early</div>
@@ -173,8 +173,8 @@
     <p>Track how many times something is called:</p>
 
     <div class="button-group">
-      <button data-action="click->count-demo#incrementCount">debug_count</button>
-      <button data-action="click->count-demo#resetCount" class="secondary">debug_count_reset</button>
+      <button data-action="click->count-demo#increment_count">debug_count</button>
+      <button data-action="click->count-demo#reset_count" class="secondary">debug_count_reset</button>
     </div>
 
     <div class="status" data-count-demo-target="status">Click counter: 0</div>
@@ -186,8 +186,8 @@
     <p>Display structured data as a table:</p>
 
     <div class="button-group">
-      <button data-action="click->table-demo#showArrayTable">Array Table</button>
-      <button data-action="click->table-demo#showHashTable">Hash Table</button>
+      <button data-action="click->table-demo#show_array_table">Array Table</button>
+      <button data-action="click->table-demo#show_hash_table">Hash Table</button>
     </div>
 
     <div class="status" data-table-demo-target="status">Tables are great for viewing data</div>
@@ -199,8 +199,8 @@
     <p>Debug Stimulus controller lifecycle:</p>
 
     <div class="button-group">
-      <button data-action="click->stimulus-demo#logConnect">Log Connect</button>
-      <button data-action="click->stimulus-demo#logAction">Log Action</button>
+      <button data-action="click->stimulus-demo#log_connect">Log Connect</button>
+      <button data-action="click->stimulus-demo#log_action">Log Action</button>
     </div>
 
     <div class="status" data-stimulus-demo-target="status">Stimulus helpers log controller events</div>
