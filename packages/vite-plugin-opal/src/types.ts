@@ -140,6 +140,84 @@ export interface OpalPluginOptions {
    * ```
    */
   includeConcerns?: boolean
+
+  // ============================================
+  // Performance Optimization Options (v0.3.2+)
+  // ============================================
+
+  /**
+   * Enable disk-based caching for compiled files.
+   * Persists cache across dev server restarts for faster rebuilds.
+   * Cache is stored in node_modules/.cache/opal-vite/
+   *
+   * @default true
+   * @example
+   * ```ts
+   * {
+   *   diskCache: true // Enable persistent caching
+   * }
+   * ```
+   */
+  diskCache?: boolean
+
+  /**
+   * Custom directory for disk cache.
+   * If not specified, uses node_modules/.cache/opal-vite/
+   *
+   * @default undefined (auto-detect)
+   * @example
+   * ```ts
+   * {
+   *   cacheDir: '.cache/opal'
+   * }
+   * ```
+   */
+  cacheDir?: string
+
+  /**
+   * Modules to stub (replace with empty implementations).
+   * Useful for excluding server-side only gems or large unused libraries.
+   * Reduces bundle size by replacing modules with empty exports.
+   *
+   * @default []
+   * @example
+   * ```ts
+   * {
+   *   stubs: ['active_support', 'sprockets', 'listen']
+   * }
+   * ```
+   */
+  stubs?: string[]
+
+  /**
+   * Maximum number of concurrent Ruby processes for compilation.
+   * Higher values can speed up initial builds with many files.
+   * Set to 1 to disable parallel compilation.
+   *
+   * @default 4
+   * @example
+   * ```ts
+   * {
+   *   parallelCompilation: 8 // Allow 8 concurrent compilations
+   * }
+   * ```
+   */
+  parallelCompilation?: number
+
+  /**
+   * Enable compilation metrics logging.
+   * Logs timing information for each compilation step.
+   * Useful for identifying performance bottlenecks.
+   *
+   * @default false
+   * @example
+   * ```ts
+   * {
+   *   metrics: true // Enable performance metrics
+   * }
+   * ```
+   */
+  metrics?: boolean
 }
 
 /**
@@ -176,4 +254,44 @@ export interface CacheEntry extends CompileResult {
    * File modification time (used for cache invalidation)
    */
   mtime: number
+}
+
+/**
+ * Structured error information from Opal compilation failures
+ */
+export interface OpalCompilationError {
+  /**
+   * Human-readable error message
+   */
+  message: string
+
+  /**
+   * Source file where the error occurred
+   */
+  file?: string
+
+  /**
+   * Line number in the source file (1-based)
+   */
+  line?: number
+
+  /**
+   * Column number in the source file (1-based)
+   */
+  column?: number
+
+  /**
+   * Type of error (SyntaxError, NameError, LoadError, etc.)
+   */
+  errorType?: string
+
+  /**
+   * Helpful hint for resolving the error
+   */
+  hint?: string
+
+  /**
+   * Raw error output from Ruby for debugging
+   */
+  rawOutput?: string
 }

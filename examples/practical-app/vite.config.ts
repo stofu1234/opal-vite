@@ -8,7 +8,8 @@ export default defineConfig({
       loadPaths: ['./app/opal/controllers'],
       sourceMap: true,
       includeConcerns: true,
-      debug: process.env.DEBUG === '1'
+      debug: process.env.DEBUG === '1',
+      metrics: true
     })
   ],
   server: {
