@@ -83,6 +83,20 @@ Snabberb SPAフレームワークのサンプル。仮想DOMを使用したカ�
 
 ---
 
+### Utilities App
+URIHelpers、Base64Helpersなどのユーティリティモジュールのデモ。
+
+[**Open Demo**](https://stofu1234.github.io/opal-vite/playground/utilities-app/)
+
+---
+
+### Debug App
+DebugHelpersモジュールのデモ。コンソールログ、パフォーマンス計測、アサーションなど。
+
+[**Open Demo**](https://stofu1234.github.io/opal-vite/playground/debug-app/)
+
+---
+
 ### Chat App (Railway)
 WebSocketを使用したリアルタイムチャットアプリ。複数ユーザー対応。
 
