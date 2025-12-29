@@ -28,6 +28,8 @@ end
 | [URIHelpers](uri_helpers.md) | URL encoding/decoding utilities |
 | [Base64Helpers](base64_helpers.md) | Base64 encoding/decoding utilities |
 | [DebugHelpers](debug_helpers.md) | Debugging and console logging utilities |
+| [ActionCableHelpers](action_cable_helpers.md) | ActionCable WebSocket integration |
+| [TurboHelpers](turbo_helpers.md) | Hotwire Turbo integration |
 
 ## Backward Compatibility
 
