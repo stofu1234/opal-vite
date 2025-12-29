@@ -201,12 +201,33 @@ module OpalVite
         # @param on_rejected [Proc] Rejected callback
         # @return [Native] Subscription instance
         def cable_subscribe(channel_name, params: {}, on_connected: nil, on_disconnected: nil, on_received: nil, on_rejected: nil)
-          subscribe_to(channel_name, params) do |subscription|
-            on_cable_connected(subscription) { on_connected.call } if on_connected
-            on_cable_disconnected(subscription) { on_disconnected.call } if on_disconnected
-            on_cable_received(subscription) { |data| on_received.call(data) } if on_received
-            on_cable_rejected(subscription) { on_rejected.call } if on_rejected
-          end
+          raise "Cable not connected. Call cable_connect first." unless @_cable_consumer
+
+          @_cable_subscriptions ||= {}
+          subscription_params = { channel: channel_name }.merge(params)
+          native_params = subscription_params.to_n
+
+          # Create subscription with callbacks directly
+          subscription = `#{@_cable_consumer}.subscriptions.create(#{native_params}, {
+            connected: function() {
+              #{on_connected.call if on_connected}
+            },
+            disconnected: function() {
+              #{on_disconnected.call if on_disconnected}
+            },
+            received: function(data) {
+              #{on_received.call(`data`) if on_received}
+            },
+            rejected: function() {
+              #{on_rejected.call if on_rejected}
+            }
+          })`
+
+          # Store subscription with a key
+          key = cable_subscription_key(channel_name, params)
+          @_cable_subscriptions[key] = subscription
+
+          subscription
         end
 
         # Quick subscription setup for simple channels
