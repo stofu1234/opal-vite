@@ -19,6 +19,6 @@
     "ws": "^8.16.0"
   },
   "devDependencies": {
-    "vite-plugin-opal": "workspace:*"
+    "vite-plugin-opal": "^0.3.4"
   }
 }
