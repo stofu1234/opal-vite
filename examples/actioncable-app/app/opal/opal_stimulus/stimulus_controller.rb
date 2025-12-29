@@ -1,9 +1,23 @@
 # backtick_javascript: true
-# Copied from opal_stimulus gem v0.2.0 for Railway deployment compatibility
+# Simplified StimulusController for Railway deployment
+# Based on opal_stimulus gem v0.2.0, with js/proxy dependency removed
 
 require "opal"
 require "native"
-require "js/proxy"
+
+# Simple JS::Proxy replacement using Native
+module JS
+  class Proxy
+    def initialize(native_obj)
+      @native = native_obj
+    end
+
+    def self.new(native_obj)
+      return nil if `#{native_obj} == null || #{native_obj} === undefined`
+      Native(native_obj)
+    end
+  end
+end
 
 class StimulusController < `Controller`
   DEFAULT_METHODS = %i[initialize connect disconnect dispatch]
@@ -31,7 +45,7 @@ class StimulusController < `Controller`
         try {
           var wrappedArgs = args.map(function(arg) {
             if (arg && typeof arg === "object" && !arg.$$class) {
-              return Opal.JS.Proxy.$new(arg);
+              return Opal.Native(arg);
             }
             return arg;
           });
@@ -67,12 +81,12 @@ class StimulusController < `Controller`
       ruby_name = self.to_ruby_name(target)
 
       define_method(ruby_name + "_target") do
-        JS::Proxy.new(`this[#{js_name + "Target"}]`)
+        Native(`this[#{js_name + "Target"}]`)
       end
 
       define_method(ruby_name + "_targets") do
         `this[#{js_name + "Targets"}]`.map do |el|
-          JS::Proxy.new(el)
+          Native(el)
         end
       end
 
@@ -214,14 +228,14 @@ class StimulusController < `Controller`
   end
 
   def element
-    JS::Proxy.new(`this.element`)
+    Native(`this.element`)
   end
 
   def window
-    @window ||= JS::Proxy.new($$.window)
+    @window ||= Native($$.window)
   end
 
   def document
-    @document ||= JS::Proxy.new($$.document)
+    @document ||= Native($$.document)
   end
 end
