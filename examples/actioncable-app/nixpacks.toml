@@ -2,7 +2,7 @@
 # Requires both Ruby (for Opal compilation) and Node.js
 
 [phases.setup]
-nixPkgs = ["ruby_3_2", "nodejs_22", "libyaml"]
+nixPkgs = ["ruby_3_2", "nodejs_22", "libyaml", "gcc", "gnumake"]
 
 [phases.install]
 cmds = [
