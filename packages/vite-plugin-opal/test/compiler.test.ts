@@ -4,6 +4,9 @@ import * as path from 'path'
 import * as fs from 'fs'
 import * as os from 'os'
 
+// Path to local gem for testing (monorepo structure)
+const LOCAL_GEM_PATH = path.resolve(__dirname, '../../../gems/opal-vite')
+
 describe('OpalCompiler', () => {
   let compiler: OpalCompiler
   let tempDir: string
@@ -12,7 +15,8 @@ describe('OpalCompiler', () => {
   beforeAll(() => {
     compiler = new OpalCompiler({
       loadPaths: [process.cwd()],
-      sourceMap: true
+      sourceMap: true,
+      gemPath: LOCAL_GEM_PATH
     })
 
     // Create temporary directory for test files
@@ -141,7 +145,8 @@ puts Helper.greet
       // Update compiler load paths to include temp dir
       compiler = new OpalCompiler({
         loadPaths: [tempDir],
-        sourceMap: true
+        sourceMap: true,
+        gemPath: LOCAL_GEM_PATH
       })
 
       const result = await compiler.compile(testFile)
@@ -211,7 +216,8 @@ describe('OpalCompiler Performance Features', () => {
     it('creates cache files on disk', async () => {
       const compiler = new OpalCompiler({
         diskCache: true,
-        cacheDir: cacheDir
+        cacheDir: cacheDir,
+        gemPath: LOCAL_GEM_PATH
       })
 
       const testFile = path.join(tempDir, 'disk_cache_test.rb')
@@ -229,7 +235,8 @@ describe('OpalCompiler Performance Features', () => {
       const compiler = new OpalCompiler({
         diskCache: true,
         cacheDir: cacheDir,
-        metrics: true
+        metrics: true,
+        gemPath: LOCAL_GEM_PATH
       })
 
       const testFile = path.join(tempDir, 'disk_cache_load_test.rb')
@@ -254,7 +261,8 @@ describe('OpalCompiler Performance Features', () => {
     it('invalidates disk cache when content changes', async () => {
       const compiler = new OpalCompiler({
         diskCache: true,
-        cacheDir: cacheDir
+        cacheDir: cacheDir,
+        gemPath: LOCAL_GEM_PATH
       })
 
       const testFile = path.join(tempDir, 'disk_cache_invalidate.rb')
@@ -278,7 +286,8 @@ describe('OpalCompiler Performance Features', () => {
     it('clears disk cache with clearDiskCache()', async () => {
       const compiler = new OpalCompiler({
         diskCache: true,
-        cacheDir: cacheDir
+        cacheDir: cacheDir,
+        gemPath: LOCAL_GEM_PATH
       })
 
       const testFile = path.join(tempDir, 'disk_cache_clear.rb')
@@ -301,7 +310,8 @@ describe('OpalCompiler Performance Features', () => {
     it('respects diskCache: false option', async () => {
       const compiler = new OpalCompiler({
         diskCache: false,
-        cacheDir: cacheDir
+        cacheDir: cacheDir,
+        gemPath: LOCAL_GEM_PATH
       })
 
       const testFile = path.join(tempDir, 'no_disk_cache.rb')
@@ -321,7 +331,8 @@ describe('OpalCompiler Performance Features', () => {
     it('returns empty implementation for stubbed modules', async () => {
       const compiler = new OpalCompiler({
         diskCache: false,
-        stubs: ['active_support', 'my_server_gem']
+        stubs: ['active_support', 'my_server_gem'],
+        gemPath: LOCAL_GEM_PATH
       })
 
       const testFile = path.join(tempDir, 'active_support.rb')
@@ -337,7 +348,8 @@ describe('OpalCompiler Performance Features', () => {
     it('does not stub non-matching modules', async () => {
       const compiler = new OpalCompiler({
         diskCache: false,
-        stubs: ['active_support']
+        stubs: ['active_support'],
+        gemPath: LOCAL_GEM_PATH
       })
 
       const testFile = path.join(tempDir, 'my_module.rb')
@@ -354,7 +366,8 @@ describe('OpalCompiler Performance Features', () => {
     it('records compilation metrics when enabled', async () => {
       const compiler = new OpalCompiler({
         diskCache: false,
-        metrics: true
+        metrics: true,
+        gemPath: LOCAL_GEM_PATH
       })
 
       const testFile = path.join(tempDir, 'metrics_test.rb')
@@ -372,7 +385,8 @@ describe('OpalCompiler Performance Features', () => {
     it('does not record metrics when disabled', async () => {
       const compiler = new OpalCompiler({
         diskCache: false,
-        metrics: false
+        metrics: false,
+        gemPath: LOCAL_GEM_PATH
       })
 
       const testFile = path.join(tempDir, 'no_metrics.rb')
@@ -387,7 +401,8 @@ describe('OpalCompiler Performance Features', () => {
     it('getMetricsSummary returns correct stats', async () => {
       const compiler = new OpalCompiler({
         diskCache: false,
-        metrics: true
+        metrics: true,
+        gemPath: LOCAL_GEM_PATH
       })
 
       const testFile1 = path.join(tempDir, 'metrics1.rb')
@@ -410,7 +425,8 @@ describe('OpalCompiler Performance Features', () => {
     it('clearMetrics resets all metrics', async () => {
       const compiler = new OpalCompiler({
         diskCache: false,
-        metrics: true
+        metrics: true,
+        gemPath: LOCAL_GEM_PATH
       })
 
       const testFile = path.join(tempDir, 'clear_metrics.rb')
@@ -428,7 +444,8 @@ describe('OpalCompiler Performance Features', () => {
     it('compileMany processes multiple files', async () => {
       const compiler = new OpalCompiler({
         diskCache: false,
-        parallelCompilation: 4
+        parallelCompilation: 4,
+        gemPath: LOCAL_GEM_PATH
       })
 
       const files: string[] = []
@@ -452,7 +469,8 @@ describe('OpalCompiler Performance Features', () => {
       const compiler = new OpalCompiler({
         diskCache: false,
         parallelCompilation: 2,
-        metrics: true
+        metrics: true,
+        gemPath: LOCAL_GEM_PATH
       })
 
       const files: string[] = []
@@ -471,7 +489,8 @@ describe('OpalCompiler Performance Features', () => {
     it('handles compilation errors gracefully', async () => {
       const compiler = new OpalCompiler({
         diskCache: false,
-        parallelCompilation: 2
+        parallelCompilation: 2,
+        gemPath: LOCAL_GEM_PATH
       })
 
       const goodFile = path.join(tempDir, 'good.rb')

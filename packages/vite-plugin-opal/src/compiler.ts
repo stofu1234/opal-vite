@@ -457,11 +457,11 @@ export class OpalCompiler {
           filePath
         ]
       } else {
+        const gemLibPath = this.resolveGemLibPath()
         command = 'ruby'
         args = [
-          '-I', this.resolveGemLibPath(),
-          '-r', 'opal-vite',
-          '-e', this.getCompilerScript(),
+          '-I', gemLibPath,
+          '-e', `$LOAD_PATH.unshift('${gemLibPath}'); require 'opal-vite'; ${this.getCompilerScript()}`,
           filePath
         ]
       }
@@ -516,11 +516,11 @@ export class OpalCompiler {
           '-e', 'puts Opal::Vite::Compiler.runtime_code'
         ]
       } else {
+        const gemLibPath = this.resolveGemLibPath()
         command = 'ruby'
         args = [
-          '-I', this.resolveGemLibPath(),
-          '-r', 'opal-vite',
-          '-e', 'puts Opal::Vite::Compiler.runtime_code'
+          '-I', gemLibPath,
+          '-e', `$LOAD_PATH.unshift('${gemLibPath}'); require 'opal-vite'; puts Opal::Vite::Compiler.runtime_code`
         ]
       }
 
@@ -556,10 +556,13 @@ export class OpalCompiler {
   private getCompilerScript(): string {
     const includeConcerns = this.options.includeConcerns
     const sourceMap = this.options.sourceMap
+    const stubs = JSON.stringify(this.options.stubs)
+    // Note: opal-vite is already required via -r flag or -I flag
+    // The $LOAD_PATH is set up by -I option, so require 'opal-vite' will find it
     return `
-      require 'opal-vite'
       file_path = ARGV[0]
-      Opal::Vite.compile_for_vite(file_path, include_concerns: ${includeConcerns}, source_map: ${sourceMap})
+      stubs = ${stubs}
+      Opal::Vite.compile_for_vite(file_path, include_concerns: ${includeConcerns}, source_map: ${sourceMap}, stubs: stubs)
     `.trim()
   }
 
