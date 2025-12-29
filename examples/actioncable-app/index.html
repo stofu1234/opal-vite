@@ -244,8 +244,8 @@
       <input type="text"
              placeholder="Enter your username"
              data-chat-target="usernameInput"
-             data-action="keydown.enter->chat#setUsername">
-      <button data-action="click->chat#setUsername">Join Chat</button>
+             data-action="keydown.enter->chat#set_username">
+      <button data-action="click->chat#set_username">Join Chat</button>
     </div>
 
     <!-- Chat Container -->
@@ -264,8 +264,8 @@
         <input type="text"
                placeholder="Type a message..."
                data-chat-target="input"
-               data-action="keydown.enter->chat#sendMessage input->chat#onTyping">
-        <button data-action="click->chat#sendMessage" data-chat-target="sendButton">
+               data-action="keydown.enter->chat#send_message input->chat#on_typing">
+        <button data-action="click->chat#send_message" data-chat-target="sendButton">
           Send
         </button>
       </div>

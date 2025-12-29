@@ -13,7 +13,10 @@ class ChatController < StimulusController
     sendButton usersPanel userList
   ]
 
+  # ===== Public action methods (called from HTML) =====
+
   def connect
+    puts "ChatController#connect called"
     @username = nil
     @typing_timeout = nil
     update_status("disconnected", "Disconnected")
@@ -24,7 +27,9 @@ class ChatController < StimulusController
   end
 
   def set_username
+    puts "set_username called"
     username = target_value(:username_input).to_s.strip
+    puts "username: #{username}"
     return if username.empty?
 
     @username = username
@@ -32,6 +37,23 @@ class ChatController < StimulusController
     connect_to_chat
   end
 
+  def send_message
+    text = target_value(:input).to_s.strip
+    return if text.empty?
+
+    cable_perform(:speak, text: text, user: @username)
+    target_set_value(:input, "")
+    target_focus(:input)
+  end
+
+  def on_typing
+    # Debounce typing notifications
+    throttled(1000, "typing") do
+      cable_perform(:typing, user: @username)
+    end
+  end
+
+  # ===== Private helper methods =====
   private
 
   def show_chat_panel
@@ -149,26 +171,6 @@ class ChatController < StimulusController
 
     set_html(user_list, html)
   end
-
-  public
-
-  def send_message
-    text = target_value(:input).to_s.strip
-    return if text.empty?
-
-    cable_perform(:speak, text: text, user: @username)
-    target_set_value(:input, "")
-    target_focus(:input)
-  end
-
-  def on_typing
-    # Debounce typing notifications
-    throttled(1000, "typing") do
-      cable_perform(:typing, user: @username)
-    end
-  end
-
-  private
 
   def update_status(status, text)
     status_el = get_target(:status)
