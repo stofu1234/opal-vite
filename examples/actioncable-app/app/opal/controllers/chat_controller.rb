@@ -46,7 +46,7 @@ class ChatController < StimulusController
     update_status("connecting", "Connecting...")
 
     # Connect to WebSocket server
-    cable_connect("ws://localhost:3018/cable")
+    cable_connect("ws://localhost:3117/cable")
 
     # Subscribe to ChatChannel
     cable_subscribe("ChatChannel",
