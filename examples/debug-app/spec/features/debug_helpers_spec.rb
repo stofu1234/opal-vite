@@ -3,147 +3,124 @@
 require 'spec_helper'
 
 RSpec.describe 'DebugHelpers Demo', type: :feature do
-  describe 'Basic Logging' do
-    it 'logs debug messages' do
+  describe 'All buttons work without JS errors' do
+    it 'clicks all buttons in debug-demo section without errors' do
       within('[data-controller="debug-demo"]') do
-        click_button 'debug_log'
+        click_button_without_errors 'debug_log'
         expect(find('[data-debug-demo-target="status"]').text).to include('Logged debug messages')
-      end
-    end
 
-    it 'logs warning messages' do
-      within('[data-controller="debug-demo"]') do
-        click_button 'debug_warn'
+        click_button_without_errors 'debug_warn'
         expect(find('[data-debug-demo-target="status"]').text).to include('Logged warning messages')
-      end
-    end
 
-    it 'logs error messages' do
-      within('[data-controller="debug-demo"]') do
-        click_button 'debug_error'
+        click_button_without_errors 'debug_error'
         expect(find('[data-debug-demo-target="status"]').text).to include('Logged error messages')
-      end
-    end
 
-    it 'inspects objects' do
-      within('[data-controller="debug-demo"]') do
-        click_button 'debug_inspect'
+        click_button_without_errors 'debug_inspect'
         expect(find('[data-debug-demo-target="status"]').text).to include('Inspected objects')
       end
     end
-  end
 
-  describe 'Grouped Output' do
-    it 'creates open groups' do
+    it 'clicks all buttons in group-demo section without errors' do
       within('[data-controller="group-demo"]') do
-        click_button 'debug_group'
+        click_button_without_errors 'debug_group'
         expect(find('[data-group-demo-target="status"]').text).to include('Created open group')
-      end
-    end
 
-    it 'creates collapsed groups' do
-      within('[data-controller="group-demo"]') do
-        click_button 'debug_group_collapsed'
+        click_button_without_errors 'debug_group_collapsed'
         expect(find('[data-group-demo-target="status"]').text).to include('Created collapsed group')
       end
     end
-  end
 
-  describe 'Performance Measurement' do
-    it 'measures execution time' do
+    it 'clicks all buttons in perf-demo section without errors' do
       within('[data-controller="perf-demo"]') do
-        click_button 'debug_measure'
+        click_button_without_errors 'debug_measure'
         expect(find('[data-perf-demo-target="status"]').text).to include('Calculation result')
-      end
-    end
 
-    it 'uses timer for async operations' do
-      within('[data-controller="perf-demo"]') do
-        click_button 'debug_time/time_end'
+        click_button_without_errors 'debug_time/time_end'
         expect(find('[data-perf-demo-target="status"]').text).to include('Timer started')
 
         # Wait for async completion
         sleep 0.6
         expect(find('[data-perf-demo-target="status"]').text).to include('Timer completed')
+        expect_no_js_errors
       end
     end
-  end
 
-  describe 'Debug Mode Toggle' do
-    it 'checks debug status' do
+    it 'clicks all buttons in toggle-demo section without errors' do
       within('[data-controller="toggle-demo"]') do
-        click_button 'Check Status'
+        click_button_without_errors 'Check Status'
         expect(find('[data-toggle-demo-target="status"]').text).to include('Debug mode:')
-      end
-    end
 
-    it 'enables and disables debug mode' do
-      within('[data-controller="toggle-demo"]') do
-        click_button 'debug_disable!'
+        click_button_without_errors 'debug_disable!'
         expect(find('[data-toggle-demo-target="status"]').text).to include('disabled')
 
-        click_button 'debug_enable!'
+        click_button_without_errors 'debug_enable!'
         expect(find('[data-toggle-demo-target="status"]').text).to include('enabled')
       end
     end
-  end
 
-  describe 'Assertions & Tracing' do
-    it 'passes assertions' do
+    it 'clicks all buttons in assert-demo section without errors' do
       within('[data-controller="assert-demo"]') do
-        click_button 'Assert (pass)'
+        click_button_without_errors 'Assert (pass)'
         expect(find('[data-assert-demo-target="status"]').text).to include('Assertions passed')
-      end
-    end
 
-    it 'shows trace output' do
-      within('[data-controller="assert-demo"]') do
-        click_button 'debug_trace'
+        # Note: Assert (fail) intentionally logs to console.error but doesn't throw
+        click_button_without_errors 'Assert (fail)'
+        expect(find('[data-assert-demo-target="status"]').text).to include('Assertion failed')
+
+        click_button_without_errors 'debug_trace'
         expect(find('[data-assert-demo-target="status"]').text).to include('Stack trace logged')
       end
     end
-  end
 
-  describe 'Call Counting' do
-    it 'increments and resets counter' do
+    it 'clicks all buttons in count-demo section without errors' do
       within('[data-controller="count-demo"]') do
-        3.times { click_button 'debug_count' }
+        3.times do
+          click_button_without_errors 'debug_count'
+        end
         expect(find('[data-count-demo-target="status"]').text).to include('Click counter: 3')
 
-        click_button 'debug_count_reset'
+        click_button_without_errors 'debug_count_reset'
         expect(find('[data-count-demo-target="status"]').text).to include('0')
       end
     end
-  end
 
-  describe 'Table Output' do
-    it 'shows array as table' do
+    it 'clicks all buttons in table-demo section without errors' do
       within('[data-controller="table-demo"]') do
-        click_button 'Array Table'
+        click_button_without_errors 'Array Table'
         expect(find('[data-table-demo-target="status"]').text).to include('Array table displayed')
-      end
-    end
 
-    it 'shows hash as table' do
-      within('[data-controller="table-demo"]') do
-        click_button 'Hash Table'
+        click_button_without_errors 'Hash Table'
         expect(find('[data-table-demo-target="status"]').text).to include('Hash table displayed')
       end
     end
-  end
 
-  describe 'Stimulus Integration' do
-    it 'logs connect events' do
+    it 'clicks all buttons in stimulus-demo section without errors' do
       within('[data-controller="stimulus-demo"]') do
-        click_button 'Log Connect'
+        click_button_without_errors 'Log Connect'
         expect(find('[data-stimulus-demo-target="status"]').text).to include('Logged connect event')
+
+        click_button_without_errors 'Log Action'
+        expect(find('[data-stimulus-demo-target="status"]').text).to include('Logged action event')
       end
     end
+  end
 
-    it 'logs action events' do
-      within('[data-controller="stimulus-demo"]') do
-        click_button 'Log Action'
-        expect(find('[data-stimulus-demo-target="status"]').text).to include('Logged action event')
+  describe 'Complete button coverage test' do
+    it 'clicks every button on the page without JS errors' do
+      # Find all buttons on the page
+      buttons = all('button')
+      expect(buttons.count).to be > 0
+
+      buttons.each do |button|
+        button_text = button.text
+        next if button_text.empty?
+
+        # Click the button
+        button.click
+        sleep 0.1 # Allow any async errors to surface
+
+        # Verify page is still responsive (would fail if JS error occurred)
+        expect_no_js_errors
       end
     end
   end

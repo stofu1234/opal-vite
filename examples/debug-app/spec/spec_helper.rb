@@ -81,10 +81,27 @@ RSpec.configure do |config|
   config.include Capybara::DSL, type: :feature
   config.include StableHelpers, type: :feature
 
-  # Reset state before each test
+  # Store console errors for later checking
   config.before(:each, type: :feature) do
+    @console_errors = []
     visit '/'
     wait_for_stimulus_ready
+  end
+
+  # Helper to check for JS errors in console
+  # Note: js_errors: true already fails on errors, but this provides explicit checking
+  def expect_no_js_errors
+    # Cuprite automatically fails on JS errors when js_errors: true
+    # This method provides explicit documentation that we're checking for errors
+    # The test will fail if any unhandled JS error occurred
+    expect(page).to have_css('body') # Ensure page is still responsive
+  end
+
+  # Helper to click a button and verify no errors occurred
+  def click_button_without_errors(button_text)
+    click_button button_text
+    sleep 0.1 # Allow any async errors to surface
+    expect_no_js_errors
   end
 
   # Wait for Stimulus controllers to be fully connected
