@@ -86,7 +86,7 @@ Snabberb SPAフレームワークのサンプル。仮想DOMを使用したカ�
 ### ActionCable App (Railway)
 ActionCableHelpersを使用したリアルタイムチャットのデモ。WebSocket通信、タイピングインジケーター、オンラインプレゼンス。
 
-[**デモを開く**](https://opal-vite-actioncable-demo-production.up.railway.app)
+[**デモを開く**](https://opal-vite-actioncable-demo-production.up.railway.app/)
 
 ---
 
