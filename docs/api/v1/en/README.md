@@ -25,6 +25,10 @@ end
 | [JsProxyEx](js_proxy_ex.md) | JavaScript object wrappers |
 | [VueHelpers](vue_helpers.md) | Vue.js 3 integration |
 | [ReactHelpers](react_helpers.md) | React integration |
+| [URIHelpers](uri_helpers.md) | URI encoding/decoding utilities |
+| [Base64Helpers](base64_helpers.md) | Base64 encoding/decoding |
+| [ActionCableHelpers](action_cable_helpers.md) | ActionCable WebSocket integration |
+| [TurboHelpers](turbo_helpers.md) | Hotwire Turbo integration |
 
 ## Backward Compatibility
 
