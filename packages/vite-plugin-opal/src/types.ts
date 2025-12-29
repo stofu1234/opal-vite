@@ -255,3 +255,43 @@ export interface CacheEntry extends CompileResult {
    */
   mtime: number
 }
+
+/**
+ * Structured error information from Opal compilation failures
+ */
+export interface OpalCompilationError {
+  /**
+   * Human-readable error message
+   */
+  message: string
+
+  /**
+   * Source file where the error occurred
+   */
+  file?: string
+
+  /**
+   * Line number in the source file (1-based)
+   */
+  line?: number
+
+  /**
+   * Column number in the source file (1-based)
+   */
+  column?: number
+
+  /**
+   * Type of error (SyntaxError, NameError, LoadError, etc.)
+   */
+  errorType?: string
+
+  /**
+   * Helpful hint for resolving the error
+   */
+  hint?: string
+
+  /**
+   * Raw error output from Ruby for debugging
+   */
+  rawOutput?: string
+}
