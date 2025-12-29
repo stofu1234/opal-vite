@@ -148,6 +148,13 @@ export default function opalPlugin(options: OpalPluginOptions = {}): Plugin {
           hmrManager.cleanup()
         }
       }
+    },
+
+    // Print metrics after build completes
+    closeBundle() {
+      if (options.metrics) {
+        compiler.printMetricsSummary()
+      }
     }
   }
 }

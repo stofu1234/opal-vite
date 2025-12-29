@@ -11,6 +11,7 @@ module Opal
         @options = options
         @config = options[:config] || Opal::Vite.config
         @include_concerns = options.fetch(:include_concerns, true)
+        @stubs = options.fetch(:stubs, [])
       end
 
       # Compile Ruby source code to JavaScript
@@ -18,7 +19,7 @@ module Opal
       def compile(source, file_path)
         begin
           # Use Opal::Builder and add the file's directory to load paths
-          builder = Opal::Builder.new
+          builder = Opal::Builder.new(stubs: @stubs)
 
           # Add the directory containing the file to load paths
           # This allows require statements to work relative to the file
