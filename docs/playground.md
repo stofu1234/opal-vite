@@ -97,6 +97,13 @@ DebugHelpersモジュールのデモ。コンソールログ、パフォーマ�
 
 ---
 
+### ActionCable App
+ActionCableHelpersを使用したリアルタイムチャットのデモ。WebSocket通信、タイピングインジケーター、オンラインプレゼンス。
+
+[**Open Demo**](https://stofu1234.github.io/opal-vite/playground/actioncable-app/)
+
+---
+
 ### Chat App (Railway)
 WebSocketを使用したリアルタイムチャットアプリ。複数ユーザー対応。
 
@@ -126,6 +133,9 @@ Rails + Opal + Viteの統合サンプル。サーバーサイドRailsとクラ�
 - [vue-app](https://github.com/stofu1234/opal-vite/tree/master/examples/vue-app)
 - [react-app](https://github.com/stofu1234/opal-vite/tree/master/examples/react-app)
 - [snabberb-app](https://github.com/stofu1234/opal-vite/tree/master/examples/snabberb-app)
+- [utilities-app](https://github.com/stofu1234/opal-vite/tree/master/examples/utilities-app)
+- [debug-app](https://github.com/stofu1234/opal-vite/tree/master/examples/debug-app)
+- [actioncable-app](https://github.com/stofu1234/opal-vite/tree/master/examples/actioncable-app)
 - [chat-app](https://github.com/stofu1234/opal-vite/tree/master/examples/chat-app)
 - [rails-app](https://github.com/stofu1234/opal-vite/tree/master/examples/rails-app)
 
