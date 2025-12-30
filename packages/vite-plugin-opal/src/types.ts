@@ -229,17 +229,17 @@ export interface OpalPluginOptions {
    *
    * Supported values:
    * - `false` or `undefined`: Bundle runtime locally (default)
-   * - `'unpkg'`: Use unpkg CDN (https://unpkg.com)
-   * - `'jsdelivr'`: Use jsDelivr CDN (https://cdn.jsdelivr.net)
-   * - `'cdnjs'`: Use cdnjs CDN (https://cdnjs.cloudflare.com)
-   * - Custom URL string: Use a custom CDN URL (must end with opal.min.js or opal.js)
+   * - `'opalrb'`: Use official Opal CDN (https://cdn.opalrb.com) - Recommended
+   * - `'jsdelivr'`: Use jsDelivr CDN with opal-cdn repository
+   * - `'unpkg'`: Alias for opalrb CDN
+   * - Custom URL string: Use a custom CDN URL
    *
    * @default false
    * @example
    * ```ts
-   * // Use jsDelivr CDN
+   * // Use official Opal CDN (recommended)
    * {
-   *   cdn: 'jsdelivr'
+   *   cdn: 'opalrb'
    * }
    *
    * // Use custom CDN URL
@@ -248,7 +248,7 @@ export interface OpalPluginOptions {
    * }
    * ```
    */
-  cdn?: 'unpkg' | 'jsdelivr' | 'cdnjs' | string | false
+  cdn?: 'opalrb' | 'jsdelivr' | 'unpkg' | string | false
 
   /**
    * Opal version to use when loading from CDN.

@@ -131,10 +131,11 @@ const CACHE_VERSION = '1.0.0'
 const DEFAULT_OPAL_VERSION = '1.8.2'
 
 // CDN URL templates
+// Official Opal CDN: https://github.com/opal/opal-cdn
 const CDN_URLS: Record<string, string> = {
-  unpkg: 'https://unpkg.com/opal-runtime@{version}/dist/opal.min.js',
-  jsdelivr: 'https://cdn.jsdelivr.net/npm/opal-runtime@{version}/dist/opal.min.js',
-  cdnjs: 'https://cdnjs.cloudflare.com/ajax/libs/opal/{version}/opal.min.js'
+  opalrb: 'https://cdn.opalrb.com/opal/{version}/opal.min.js',
+  jsdelivr: 'https://cdn.jsdelivr.net/gh/opal/opal-cdn@{version}/opal/{version}/opal.min.js',
+  unpkg: 'https://cdn.opalrb.com/opal/{version}/opal.min.js' // Fallback to official CDN
 }
 
 export class OpalCompiler {
@@ -291,7 +292,8 @@ export class OpalCompiler {
 
     // Check if it's a known CDN provider
     if (cdn in CDN_URLS) {
-      return CDN_URLS[cdn].replace('{version}', this.options.opalVersion)
+      // Use global regex to replace all occurrences of {version}
+      return CDN_URLS[cdn].replace(/\{version\}/g, this.options.opalVersion)
     }
 
     // Assume it's a custom URL

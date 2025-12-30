@@ -20,7 +20,7 @@ import opal from 'vite-plugin-opal'
 export default defineConfig({
   plugins: [
     opal({
-      cdn: 'jsdelivr',  // or 'unpkg', 'cdnjs'
+      cdn: 'opalrb',  // Recommended: Official Opal CDN
       opalVersion: '1.8.2'
     })
   ]
@@ -31,9 +31,9 @@ export default defineConfig({
 
 | Provider | Option Value | URL Pattern |
 |----------|-------------|-------------|
-| jsDelivr | `'jsdelivr'` | `https://cdn.jsdelivr.net/npm/opal-runtime@{version}/dist/opal.min.js` |
-| unpkg | `'unpkg'` | `https://unpkg.com/opal-runtime@{version}/dist/opal.min.js` |
-| cdnjs | `'cdnjs'` | `https://cdnjs.cloudflare.com/ajax/libs/opal/{version}/opal.min.js` |
+| Opal CDN (Recommended) | `'opalrb'` | `https://cdn.opalrb.com/opal/{version}/opal.min.js` |
+| jsDelivr | `'jsdelivr'` | `https://cdn.jsdelivr.net/gh/opal/opal-cdn@{version}/opal/{version}/opal.min.js` |
+| unpkg | `'unpkg'` | Falls back to Opal CDN |
 
 ### Using a Custom CDN URL
 
@@ -49,7 +49,7 @@ opal({
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `cdn` | `'unpkg' \| 'jsdelivr' \| 'cdnjs' \| string \| false` | `false` | CDN provider or custom URL |
+| `cdn` | `'opalrb' \| 'jsdelivr' \| 'unpkg' \| string \| false` | `false` | CDN provider or custom URL |
 | `opalVersion` | `string` | `'1.8.2'` | Opal version to load from CDN |
 
 ## How It Works
@@ -63,9 +63,9 @@ When CDN mode is enabled:
 ### Generated HTML
 
 ```html
-<!-- CDN mode -->
+<!-- CDN mode (using opalrb) -->
 <head>
-  <script src="https://cdn.jsdelivr.net/npm/opal-runtime@1.8.2/dist/opal.min.js"></script>
+  <script src="https://cdn.opalrb.com/opal/1.8.2/opal.min.js"></script>
 </head>
 
 <!-- Local mode (default) -->
@@ -99,7 +99,7 @@ export default defineConfig({
   plugins: [
     opal({
       // Use CDN in production, local in development
-      cdn: process.env.NODE_ENV === 'production' ? 'jsdelivr' : false,
+      cdn: process.env.NODE_ENV === 'production' ? 'opalrb' : false,
       opalVersion: '1.8.2',
       sourceMap: process.env.NODE_ENV !== 'production'
     })
@@ -127,7 +127,7 @@ bundle show opal
 
 # Update vite.config.ts to match
 opal({
-  cdn: 'jsdelivr',
+  cdn: 'opalrb',
   opalVersion: '1.8.2'  // Match your gem version
 })
 ```

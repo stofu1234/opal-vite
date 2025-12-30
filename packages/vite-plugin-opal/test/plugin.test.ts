@@ -176,9 +176,9 @@ describe('opalPlugin', () => {
 
   describe('CDN mode', () => {
     it('accepts cdn option with provider name', () => {
+      expect(() => opalPlugin({ cdn: 'opalrb' })).not.toThrow()
       expect(() => opalPlugin({ cdn: 'jsdelivr' })).not.toThrow()
       expect(() => opalPlugin({ cdn: 'unpkg' })).not.toThrow()
-      expect(() => opalPlugin({ cdn: 'cdnjs' })).not.toThrow()
     })
 
     it('accepts cdn option with custom URL', () => {
@@ -194,7 +194,7 @@ describe('opalPlugin', () => {
     })
 
     it('transformIndexHtml injects CDN script tag when cdn is enabled', () => {
-      const plugin = opalPlugin({ cdn: 'jsdelivr' })
+      const plugin = opalPlugin({ cdn: 'opalrb' })
 
       if (typeof plugin.transformIndexHtml === 'function') {
         const html = `
@@ -210,32 +210,32 @@ describe('opalPlugin', () => {
 `
         const result = plugin.transformIndexHtml(html, {} as any)
 
-        expect(result).toContain('https://cdn.jsdelivr.net/npm/opal-runtime@')
+        expect(result).toContain('https://cdn.opalrb.com/opal/')
         expect(result).toContain('<script src="')
         // Should NOT contain the virtual runtime module
         expect(result).not.toContain('type="module"')
       }
     })
 
-    it('transformIndexHtml uses correct CDN URL for unpkg', () => {
+    it('transformIndexHtml uses correct CDN URL for jsdelivr', () => {
+      const plugin = opalPlugin({ cdn: 'jsdelivr' })
+
+      if (typeof plugin.transformIndexHtml === 'function') {
+        const html = '<head></head>'
+        const result = plugin.transformIndexHtml(html, {} as any)
+
+        expect(result).toContain('https://cdn.jsdelivr.net/gh/opal/opal-cdn@')
+      }
+    })
+
+    it('transformIndexHtml uses correct CDN URL for unpkg (opalrb fallback)', () => {
       const plugin = opalPlugin({ cdn: 'unpkg' })
 
       if (typeof plugin.transformIndexHtml === 'function') {
         const html = '<head></head>'
         const result = plugin.transformIndexHtml(html, {} as any)
 
-        expect(result).toContain('https://unpkg.com/opal-runtime@')
-      }
-    })
-
-    it('transformIndexHtml uses correct CDN URL for cdnjs', () => {
-      const plugin = opalPlugin({ cdn: 'cdnjs' })
-
-      if (typeof plugin.transformIndexHtml === 'function') {
-        const html = '<head></head>'
-        const result = plugin.transformIndexHtml(html, {} as any)
-
-        expect(result).toContain('https://cdnjs.cloudflare.com/ajax/libs/opal/')
+        expect(result).toContain('https://cdn.opalrb.com/opal/')
       }
     })
 
