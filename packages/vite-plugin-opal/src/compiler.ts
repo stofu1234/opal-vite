@@ -127,8 +127,19 @@ interface DiskCacheEntry {
 
 const CACHE_VERSION = '1.0.0'
 
+// Default Opal version for CDN
+const DEFAULT_OPAL_VERSION = '1.8.2'
+
+// CDN URL templates
+// Official Opal CDN: https://github.com/opal/opal-cdn
+const CDN_URLS: Record<string, string> = {
+  opalrb: 'https://cdn.opalrb.com/opal/{version}/opal.min.js',
+  jsdelivr: 'https://cdn.jsdelivr.net/gh/opal/opal-cdn@{version}/opal/{version}/opal.min.js',
+  unpkg: 'https://cdn.opalrb.com/opal/{version}/opal.min.js' // Fallback to official CDN
+}
+
 export class OpalCompiler {
-  private options: Required<OpalPluginOptions>
+  private options: Required<OpalPluginOptions> & { cdn: string | false; opalVersion: string }
   private cache: Map<string, CacheEntry> = new Map()
   private runtimeCache: string | null = null
   private useBundler: boolean
@@ -147,11 +158,15 @@ export class OpalCompiler {
       debug: options.debug || false,
       useBundler: options.useBundler !== undefined ? options.useBundler : this.detectGemfile(),
       includeConcerns: options.includeConcerns !== false,
+      // Performance options (v0.3.2+)
       diskCache: options.diskCache !== false,
       cacheDir: options.cacheDir || '',
       stubs: options.stubs || [],
       parallelCompilation: options.parallelCompilation || 4,
-      metrics: options.metrics || false
+      metrics: options.metrics || false,
+      // CDN options (v0.3.5+)
+      cdn: options.cdn || false,
+      opalVersion: options.opalVersion || DEFAULT_OPAL_VERSION
     }
     this.useBundler = this.options.useBundler
     this.cacheDir = this.resolveCacheDir()
@@ -173,6 +188,10 @@ export class OpalCompiler {
         console.log(`[vite-plugin-opal] Stubs: ${this.options.stubs.join(', ')}`)
       }
       console.log(`[vite-plugin-opal] Parallel compilation: ${this.options.parallelCompilation}`)
+      if (this.options.cdn) {
+        console.log(`[vite-plugin-opal] CDN mode: ${this.options.cdn}`)
+        console.log(`[vite-plugin-opal] CDN URL: ${this.getCdnUrl()}`)
+      }
     }
   }
 
@@ -255,6 +274,30 @@ export class OpalCompiler {
     } catch (e) {
       this.log(`Disk cache write error for ${filePath}: ${e}`)
     }
+  }
+
+  /**
+   * Check if CDN mode is enabled
+   */
+  isCdnEnabled(): boolean {
+    return !!this.options.cdn
+  }
+
+  /**
+   * Get the CDN URL for Opal runtime
+   */
+  getCdnUrl(): string | null {
+    const cdn = this.options.cdn
+    if (!cdn) return null
+
+    // Check if it's a known CDN provider
+    if (cdn in CDN_URLS) {
+      // Use global regex to replace all occurrences of {version}
+      return CDN_URLS[cdn].replace(/\{version\}/g, this.options.opalVersion)
+    }
+
+    // Assume it's a custom URL
+    return cdn
   }
 
   private detectGemfile(): boolean {

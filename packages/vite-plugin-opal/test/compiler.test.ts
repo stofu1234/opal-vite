@@ -191,6 +191,76 @@ puts Helper.greet
       expect(result).toBeDefined()
     })
   })
+
+  describe('CDN support', () => {
+    it('isCdnEnabled returns false by default', () => {
+      const cdnCompiler = new OpalCompiler()
+      expect(cdnCompiler.isCdnEnabled()).toBe(false)
+    })
+
+    it('isCdnEnabled returns false when cdn is explicitly false', () => {
+      const cdnCompiler = new OpalCompiler({ cdn: false })
+      expect(cdnCompiler.isCdnEnabled()).toBe(false)
+    })
+
+    it('isCdnEnabled returns true when cdn option is set to provider', () => {
+      const cdnCompiler = new OpalCompiler({ cdn: 'jsdelivr' })
+      expect(cdnCompiler.isCdnEnabled()).toBe(true)
+    })
+
+    it('isCdnEnabled returns true when cdn option is set to custom URL', () => {
+      const cdnCompiler = new OpalCompiler({ cdn: 'https://my-cdn.example.com/opal.js' })
+      expect(cdnCompiler.isCdnEnabled()).toBe(true)
+    })
+
+    it('getCdnUrl returns null when cdn is disabled', () => {
+      const cdnCompiler = new OpalCompiler()
+      expect(cdnCompiler.getCdnUrl()).toBeNull()
+    })
+
+    it('getCdnUrl returns null when cdn is explicitly false', () => {
+      const cdnCompiler = new OpalCompiler({ cdn: false })
+      expect(cdnCompiler.getCdnUrl()).toBeNull()
+    })
+
+    it('getCdnUrl returns opalrb URL with default version', () => {
+      const cdnCompiler = new OpalCompiler({ cdn: 'opalrb' })
+      const url = cdnCompiler.getCdnUrl()
+      expect(url).toBe('https://cdn.opalrb.com/opal/1.8.2/opal.min.js')
+    })
+
+    it('getCdnUrl returns jsdelivr URL with default version', () => {
+      const cdnCompiler = new OpalCompiler({ cdn: 'jsdelivr' })
+      const url = cdnCompiler.getCdnUrl()
+      expect(url).toBe('https://cdn.jsdelivr.net/gh/opal/opal-cdn@1.8.2/opal/1.8.2/opal.min.js')
+    })
+
+    it('getCdnUrl returns unpkg URL (opalrb fallback) with default version', () => {
+      const cdnCompiler = new OpalCompiler({ cdn: 'unpkg' })
+      const url = cdnCompiler.getCdnUrl()
+      expect(url).toBe('https://cdn.opalrb.com/opal/1.8.2/opal.min.js')
+    })
+
+    it('getCdnUrl respects opalVersion option', () => {
+      const cdnCompiler = new OpalCompiler({ cdn: 'opalrb', opalVersion: '1.7.0' })
+      const url = cdnCompiler.getCdnUrl()
+      expect(url).toBe('https://cdn.opalrb.com/opal/1.7.0/opal.min.js')
+    })
+
+    it('getCdnUrl returns custom URL as-is', () => {
+      const customUrl = 'https://my-cdn.example.com/opal/1.8.2/opal.min.js'
+      const cdnCompiler = new OpalCompiler({ cdn: customUrl })
+      const url = cdnCompiler.getCdnUrl()
+      expect(url).toBe(customUrl)
+    })
+
+    it('getCdnUrl ignores opalVersion for custom URL', () => {
+      const customUrl = 'https://my-cdn.example.com/opal/custom/opal.min.js'
+      const cdnCompiler = new OpalCompiler({ cdn: customUrl, opalVersion: '1.7.0' })
+      const url = cdnCompiler.getCdnUrl()
+      expect(url).toBe(customUrl)
+    })
+  })
 })
 
 // ============================================

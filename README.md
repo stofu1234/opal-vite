@@ -310,11 +310,11 @@ Contributions are welcome! Please follow these guidelines:
 ## Roadmap
 
 - [x] Support for more Opal standard library features (v0.3.1: URIHelpers, Base64Helpers)
+- [x] CDN support for Opal runtime (v0.3.5)
 - [ ] Better error messages and debugging
 - [ ] Performance optimizations
 - [ ] Additional Rails integrations (ActionCable, etc.)
 - [ ] VS Code extension for `.rb` file support
-- [ ] CDN support for Opal runtime
 
 ## License
 

@@ -173,4 +173,117 @@ describe('opalPlugin', () => {
       expect(options).toBeDefined()
     })
   })
+
+  describe('CDN mode', () => {
+    it('accepts cdn option with provider name', () => {
+      expect(() => opalPlugin({ cdn: 'opalrb' })).not.toThrow()
+      expect(() => opalPlugin({ cdn: 'jsdelivr' })).not.toThrow()
+      expect(() => opalPlugin({ cdn: 'unpkg' })).not.toThrow()
+    })
+
+    it('accepts cdn option with custom URL', () => {
+      expect(() => opalPlugin({ cdn: 'https://my-cdn.example.com/opal.js' })).not.toThrow()
+    })
+
+    it('accepts cdn option set to false', () => {
+      expect(() => opalPlugin({ cdn: false })).not.toThrow()
+    })
+
+    it('accepts opalVersion option', () => {
+      expect(() => opalPlugin({ cdn: 'jsdelivr', opalVersion: '1.7.0' })).not.toThrow()
+    })
+
+    it('transformIndexHtml injects CDN script tag when cdn is enabled', () => {
+      const plugin = opalPlugin({ cdn: 'opalrb' })
+
+      if (typeof plugin.transformIndexHtml === 'function') {
+        const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test</title>
+</head>
+<body>
+  <h1>Test</h1>
+</body>
+</html>
+`
+        const result = plugin.transformIndexHtml(html, {} as any)
+
+        expect(result).toContain('https://cdn.opalrb.com/opal/')
+        expect(result).toContain('<script src="')
+        // Should NOT contain the virtual runtime module
+        expect(result).not.toContain('type="module"')
+      }
+    })
+
+    it('transformIndexHtml uses correct CDN URL for jsdelivr', () => {
+      const plugin = opalPlugin({ cdn: 'jsdelivr' })
+
+      if (typeof plugin.transformIndexHtml === 'function') {
+        const html = '<head></head>'
+        const result = plugin.transformIndexHtml(html, {} as any)
+
+        expect(result).toContain('https://cdn.jsdelivr.net/gh/opal/opal-cdn@')
+      }
+    })
+
+    it('transformIndexHtml uses correct CDN URL for unpkg (opalrb fallback)', () => {
+      const plugin = opalPlugin({ cdn: 'unpkg' })
+
+      if (typeof plugin.transformIndexHtml === 'function') {
+        const html = '<head></head>'
+        const result = plugin.transformIndexHtml(html, {} as any)
+
+        expect(result).toContain('https://cdn.opalrb.com/opal/')
+      }
+    })
+
+    it('transformIndexHtml uses custom CDN URL', () => {
+      const customUrl = 'https://my-cdn.example.com/opal/1.8.2/opal.min.js'
+      const plugin = opalPlugin({ cdn: customUrl })
+
+      if (typeof plugin.transformIndexHtml === 'function') {
+        const html = '<head></head>'
+        const result = plugin.transformIndexHtml(html, {} as any)
+
+        expect(result).toContain(customUrl)
+      }
+    })
+
+    it('transformIndexHtml respects opalVersion in CDN URL', () => {
+      const plugin = opalPlugin({ cdn: 'jsdelivr', opalVersion: '1.7.0' })
+
+      if (typeof plugin.transformIndexHtml === 'function') {
+        const html = '<head></head>'
+        const result = plugin.transformIndexHtml(html, {} as any)
+
+        expect(result).toContain('@1.7.0')
+      }
+    })
+
+    it('transformIndexHtml injects virtual runtime when cdn is disabled', () => {
+      const plugin = opalPlugin({ cdn: false })
+
+      if (typeof plugin.transformIndexHtml === 'function') {
+        const html = '<head></head>'
+        const result = plugin.transformIndexHtml(html, {} as any)
+
+        expect(result).toContain('/@opal-runtime')
+        expect(result).toContain('type="module"')
+      }
+    })
+
+    it('transformIndexHtml injects virtual runtime when cdn is not specified', () => {
+      const plugin = opalPlugin()
+
+      if (typeof plugin.transformIndexHtml === 'function') {
+        const html = '<head></head>'
+        const result = plugin.transformIndexHtml(html, {} as any)
+
+        expect(result).toContain('/@opal-runtime')
+        expect(result).toContain('type="module"')
+      }
+    })
+  })
 })

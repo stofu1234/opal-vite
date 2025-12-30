@@ -29,6 +29,21 @@ const VIRTUAL_RUNTIME_PREFIX = '\0' + VIRTUAL_RUNTIME_ID
  * })
  * ```
  *
+ * @example CDN mode
+ * ```ts
+ * import { defineConfig } from 'vite'
+ * import opal from 'vite-plugin-opal'
+ *
+ * export default defineConfig({
+ *   plugins: [
+ *     opal({
+ *       cdn: 'opalrb', // Recommended. Also: 'jsdelivr', 'unpkg', or custom URL
+ *       opalVersion: '1.8.2'
+ *     })
+ *   ]
+ * })
+ * ```
+ *
  * @see {@link OpalPluginOptions} for all available options
  */
 export default function opalPlugin(options: OpalPluginOptions = {}): Plugin {
@@ -37,6 +52,8 @@ export default function opalPlugin(options: OpalPluginOptions = {}): Plugin {
   let server: ViteDevServer | undefined
   let hmrManager: OpalHMRManager | undefined
   let isBuild = false
+  const useCdn = compiler.isCdnEnabled()
+  const cdnUrl = compiler.getCdnUrl()
 
   return {
     name: 'vite-plugin-opal',
@@ -73,6 +90,17 @@ export default function opalPlugin(options: OpalPluginOptions = {}): Plugin {
     async load(id: string) {
       // Handle virtual runtime module
       if (id === VIRTUAL_RUNTIME_PREFIX) {
+        // In CDN mode, return a small stub that expects Opal to be globally available
+        if (useCdn) {
+          if (options.debug) {
+            console.log(`[vite-plugin-opal] Using CDN for Opal runtime: ${cdnUrl}`)
+          }
+          return {
+            code: `// Opal runtime loaded from CDN: ${cdnUrl}\n// The runtime is loaded via script tag in index.html\nif (typeof Opal === 'undefined') {\n  console.error('[vite-plugin-opal] Opal runtime not found. Make sure the CDN script is loaded before your application code.');\n}\n`,
+            map: null
+          }
+        }
+
         if (options.debug) {
           console.log(`[vite-plugin-opal] Loading Opal runtime...`)
         }
@@ -114,15 +142,25 @@ export default function opalPlugin(options: OpalPluginOptions = {}): Plugin {
       return null
     },
 
-    // Auto-inject Opal runtime into HTML (development only)
+    // Auto-inject Opal runtime into HTML
     transformIndexHtml(html: string) {
-      // Skip injection during build - runtime is bundled into JS
-      if (isBuild) {
-        return html
-      }
+      let runtimeScript: string
 
-      // Inject runtime before closing </head> tag (development only)
-      const runtimeScript = `<script type="module" src="${VIRTUAL_RUNTIME_ID}"></script>`
+      if (useCdn && cdnUrl) {
+        // CDN mode: inject script tag that loads Opal from CDN
+        // This works for both development and production builds
+        runtimeScript = `<script src="${cdnUrl}"></script>`
+        if (options.debug) {
+          console.log(`[vite-plugin-opal] Injecting CDN script: ${cdnUrl}`)
+        }
+      } else {
+        // Local mode: skip injection during build - runtime is bundled into JS
+        if (isBuild) {
+          return html
+        }
+        // Inject runtime module reference (development only)
+        runtimeScript = `<script type="module" src="${VIRTUAL_RUNTIME_ID}"></script>`
+      }
 
       if (html.includes('</head>')) {
         return html.replace('</head>', `  ${runtimeScript}\n</head>`)
