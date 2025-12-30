@@ -1,6 +1,6 @@
 # CDN Support
 
-opal-vite v0.3.2+ supports loading the Opal runtime from CDN, which can significantly reduce bundle size and improve caching.
+opal-vite v0.3.5+ supports loading the Opal runtime from CDN, which can significantly reduce bundle size and improve caching.
 
 ## Benefits
 
