@@ -1,0 +1,17 @@
+# Nixpacks configuration for actioncable-app
+# Requires both Ruby (for Opal compilation) and Node.js
+
+[phases.setup]
+nixPkgs = ["ruby_3_2", "nodejs_22", "libyaml"]
+
+[phases.install]
+cmds = [
+  "gem install opal opal-vite bundler",
+  "npm install"
+]
+
+[phases.build]
+cmds = ["npm run build"]
+
+[start]
+cmd = "npm run start"

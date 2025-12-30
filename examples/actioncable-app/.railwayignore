@@ -1,0 +1,5 @@
+# Exclude test-related files from Railway deployment
+Gemfile
+Gemfile.lock
+spec/
+.rspec

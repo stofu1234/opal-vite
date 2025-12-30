@@ -5,14 +5,12 @@ export default defineConfig({
   base: process.env.VITE_BASE || '/',
   plugins: [
     opal({
-      loadPaths: ['./app/opal/controllers'],
+      loadPaths: ['./app/opal', './app/opal/controllers', './app/opal/services'],
       sourceMap: true,
-      includeConcerns: true,
-      debug: process.env.DEBUG === '1',
-      metrics: true
+      includeConcerns: true
     })
   ],
   server: {
-    port: 3001
+    port: 3017
   }
 })

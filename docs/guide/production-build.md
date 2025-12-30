@@ -147,6 +147,88 @@ JavaScript in the browser is always accessible to users. For truly sensitive log
 
 Minification and obfuscation are deterrents, not security measures. They increase the effort required to understand your code but cannot prevent determined reverse engineering.
 
+## Performance Optimizations (v0.3.2+)
+
+### Disk Cache
+
+Enable persistent disk caching to speed up dev server restarts and rebuilds:
+
+```typescript
+// vite.config.ts
+export default defineConfig({
+  plugins: [
+    opal({
+      diskCache: true,           // Enable disk cache (default: true)
+      cacheDir: '.cache/opal'    // Custom cache directory (optional)
+    })
+  ]
+})
+```
+
+Cache is stored in `node_modules/.cache/opal-vite/` by default. Files are cached based on content hash, so unchanged files are served instantly.
+
+### Parallel Compilation
+
+Speed up initial builds by compiling multiple Ruby files simultaneously:
+
+```typescript
+// vite.config.ts
+export default defineConfig({
+  plugins: [
+    opal({
+      parallelCompilation: 8  // Allow 8 concurrent compilations (default: 4)
+    })
+  ]
+})
+```
+
+::: tip
+Higher values can speed up initial builds but may increase memory usage. Adjust based on your system's capabilities.
+:::
+
+### Module Stubs
+
+Exclude server-side only gems or large unused libraries to reduce bundle size:
+
+```typescript
+// vite.config.ts
+export default defineConfig({
+  plugins: [
+    opal({
+      stubs: [
+        'active_support',   // Exclude Active Support
+        'sprockets',        // Exclude Sprockets
+        'listen',           // Exclude file watching gems
+        'logger'            // Exclude logging gems
+      ]
+    })
+  ]
+})
+```
+
+Stubbed modules are replaced with empty implementations that simply mark themselves as loaded.
+
+### Compilation Metrics
+
+Enable metrics to analyze compilation performance:
+
+```typescript
+// vite.config.ts
+export default defineConfig({
+  plugins: [
+    opal({
+      metrics: true   // Enable performance metrics
+    })
+  ]
+})
+```
+
+Metrics output shows:
+- Total files compiled
+- Cache hit rate (memory vs disk)
+- Average compilation duration
+- Per-file timing details (with `debug: true`)
+
 ## Performance Tips
 
 ### 1. Code Splitting

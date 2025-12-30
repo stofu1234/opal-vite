@@ -25,6 +25,9 @@ end
 | [JsProxyEx](en/js_proxy_ex.md) | JavaScript object wrappers |
 | [VueHelpers](en/vue_helpers.md) | Vue.js 3 integration |
 | [ReactHelpers](en/react_helpers.md) | React integration |
+| [URIHelpers](en/uri_helpers.md) | URL encoding/decoding utilities |
+| [Base64Helpers](en/base64_helpers.md) | Base64 encoding/decoding utilities |
+| [DebugHelpers](en/debug_helpers.md) | Debugging and console logging utilities |
 
 ## Backward Compatibility
 

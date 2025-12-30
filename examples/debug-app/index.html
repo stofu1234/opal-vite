@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Debug Helpers Demo - opal-vite</title>
+  <script type="module" src="/src/main.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #1a1a2e;
+      color: #eee;
+    }
+    h1 {
+      color: #00d9ff;
+      border-bottom: 2px solid #00d9ff;
+      padding-bottom: 10px;
+    }
+    h2 {
+      color: #ff6b6b;
+      margin-top: 30px;
+    }
+    .demo-section {
+      background: #16213e;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      border: 1px solid #0f3460;
+    }
+    button {
+      background: #e94560;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 5px;
+      font-size: 14px;
+      transition: background 0.2s;
+    }
+    button:hover {
+      background: #ff6b6b;
+    }
+    button.secondary {
+      background: #0f3460;
+    }
+    button.secondary:hover {
+      background: #1a4a7a;
+    }
+    .status {
+      margin-top: 15px;
+      padding: 10px;
+      border-radius: 5px;
+      font-family: monospace;
+      background: #0a0a1a;
+      border: 1px solid #333;
+    }
+    .console-hint {
+      background: #2a2a4a;
+      padding: 15px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+      border-left: 4px solid #00d9ff;
+    }
+    .console-hint code {
+      background: #1a1a2e;
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+    input[type="text"] {
+      padding: 10px;
+      border: 1px solid #0f3460;
+      border-radius: 5px;
+      background: #0a0a1a;
+      color: #eee;
+      margin: 5px;
+      width: 200px;
+    }
+    .button-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>DebugHelpers Demo</h1>
+
+  <div class="console-hint">
+    <strong>Open your browser's Developer Console (F12)</strong> to see the debug output.
+    Debug mode is <code>enabled</code> by default in this demo.
+  </div>
+
+  <!-- Basic Logging Demo -->
+  <div class="demo-section" data-controller="debug-demo">
+    <h2>Basic Logging</h2>
+    <p>Test different console logging methods:</p>
+
+    <div class="button-group">
+      <button data-action="click->debug-demo#log_message">debug_log</button>
+      <button data-action="click->debug-demo#warn_message">debug_warn</button>
+      <button data-action="click->debug-demo#error_message">debug_error</button>
+      <button data-action="click->debug-demo#inspect_object">debug_inspect</button>
+    </div>
+
+    <div class="status" data-debug-demo-target="status">Click a button to test logging</div>
+  </div>
+
+  <!-- Grouping Demo -->
+  <div class="demo-section" data-controller="group-demo">
+    <h2>Grouped Output</h2>
+    <p>Organize related debug messages in collapsible groups:</p>
+
+    <div class="button-group">
+      <button data-action="click->group-demo#open_group">debug_group</button>
+      <button data-action="click->group-demo#collapsed_group">debug_group_collapsed</button>
+    </div>
+
+    <div class="status" data-group-demo-target="status">Groups help organize console output</div>
+  </div>
+
+  <!-- Performance Demo -->
+  <div class="demo-section" data-controller="perf-demo">
+    <h2>Performance Measurement</h2>
+    <p>Measure execution time:</p>
+
+    <div class="button-group">
+      <button data-action="click->perf-demo#measure_time">debug_measure</button>
+      <button data-action="click->perf-demo#timer_demo">debug_time/time_end</button>
+    </div>
+
+    <div class="status" data-perf-demo-target="status">Performance metrics help identify bottlenecks</div>
+  </div>
+
+  <!-- Debug Mode Toggle -->
+  <div class="demo-section" data-controller="toggle-demo">
+    <h2>Debug Mode Toggle</h2>
+    <p>Enable/disable debug output at runtime:</p>
+
+    <div class="button-group">
+      <button data-action="click->toggle-demo#enable_debug">debug_enable!</button>
+      <button data-action="click->toggle-demo#disable_debug" class="secondary">debug_disable!</button>
+      <button data-action="click->toggle-demo#check_status">Check Status</button>
+    </div>
+
+    <div class="status" data-toggle-demo-target="status">Debug mode: enabled</div>
+  </div>
+
+  <!-- Assertion & Tracing -->
+  <div class="demo-section" data-controller="assert-demo">
+    <h2>Assertions & Tracing</h2>
+    <p>Test assertions and call stack tracing:</p>
+
+    <div class="button-group">
+      <button data-action="click->assert-demo#pass_assertion">Assert (pass)</button>
+      <button data-action="click->assert-demo#fail_assertion">Assert (fail)</button>
+      <button data-action="click->assert-demo#show_trace">debug_trace</button>
+    </div>
+
+    <div class="status" data-assert-demo-target="status">Assertions help catch bugs early</div>
+  </div>
+
+  <!-- Counting Demo -->
+  <div class="demo-section" data-controller="count-demo">
+    <h2>Call Counting</h2>
+    <p>Track how many times something is called:</p>
+
+    <div class="button-group">
+      <button data-action="click->count-demo#increment_count">debug_count</button>
+      <button data-action="click->count-demo#reset_count" class="secondary">debug_count_reset</button>
+    </div>
+
+    <div class="status" data-count-demo-target="status">Click counter: 0</div>
+  </div>
+
+  <!-- Table Output -->
+  <div class="demo-section" data-controller="table-demo">
+    <h2>Table Output</h2>
+    <p>Display structured data as a table:</p>
+
+    <div class="button-group">
+      <button data-action="click->table-demo#show_array_table">Array Table</button>
+      <button data-action="click->table-demo#show_hash_table">Hash Table</button>
+    </div>
+
+    <div class="status" data-table-demo-target="status">Tables are great for viewing data</div>
+  </div>
+
+  <!-- Stimulus Integration -->
+  <div class="demo-section" data-controller="stimulus-demo">
+    <h2>Stimulus Integration</h2>
+    <p>Debug Stimulus controller lifecycle:</p>
+
+    <div class="button-group">
+      <button data-action="click->stimulus-demo#log_connect">Log Connect</button>
+      <button data-action="click->stimulus-demo#log_action">Log Action</button>
+    </div>
+
+    <div class="status" data-stimulus-demo-target="status">Stimulus helpers log controller events</div>
+  </div>
+</body>
+</html>
