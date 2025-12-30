@@ -37,7 +37,7 @@ const VIRTUAL_RUNTIME_PREFIX = '\0' + VIRTUAL_RUNTIME_ID
  * export default defineConfig({
  *   plugins: [
  *     opal({
- *       cdn: 'jsdelivr', // or 'unpkg', 'cdnjs', or custom URL
+ *       cdn: 'opalrb', // Recommended. Also: 'jsdelivr', 'unpkg', or custom URL
  *       opalVersion: '1.8.2'
  *     })
  *   ]

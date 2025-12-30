@@ -79,7 +79,7 @@ export default defineConfig({
 | `sourceMap` | `boolean` | `true` | Generate source maps for debugging |
 | `debug` | `boolean` | `false` | Enable debug output |
 | `compilerOptions` | `object` | `{}` | Additional Opal compiler options |
-| `cdn` | `'unpkg' \| 'jsdelivr' \| 'cdnjs' \| string` | `false` | Load Opal runtime from CDN |
+| `cdn` | `'opalrb' \| 'jsdelivr' \| 'unpkg' \| string` | `false` | Load Opal runtime from CDN |
 | `opalVersion` | `string` | `'1.8.2'` | Opal version when using CDN |
 
 See [CDN Guide](/guide/cdn) for details on CDN configuration.
