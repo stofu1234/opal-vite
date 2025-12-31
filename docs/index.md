@@ -108,3 +108,24 @@ Try opal-vite with live demo applications:
 - [React App](https://stofu1234.github.io/opal-vite/playground/react-app/) - React integration
 
 See all demos on the [Playground](/playground) page.
+
+## Developer Tools
+
+<div style="display: flex; align-items: center; gap: 20px; margin: 20px 0; padding: 20px; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 12px;">
+  <img src="/opal-devtools-icon.png" alt="Opal DevTools" style="width: 80px; height: 80px; border-radius: 12px;" />
+  <div>
+    <h3 style="margin: 0 0 8px 0; color: #fff;">Opal DevTools</h3>
+    <p style="margin: 0 0 12px 0; color: #ccc;">Supercharge your Opal development with browser DevTools integration. Inspect Ruby objects, debug compiled code, and accelerate your workflow.</p>
+    <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+      <a href="https://chromewebstore.google.com/detail/opal-devtools/bfhlgblnmbaecglnakfajahfblnjaebo" target="_blank" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: #4285f4; color: white; border-radius: 6px; text-decoration: none; font-weight: 500;">
+        <span>Chrome</span>
+      </a>
+      <span style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: #444; color: #999; border-radius: 6px; font-weight: 500;">
+        Firefox (Coming Soon)
+      </span>
+      <span style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: #444; color: #999; border-radius: 6px; font-weight: 500;">
+        Edge (Coming Soon)
+      </span>
+    </div>
+  </div>
+</div>
