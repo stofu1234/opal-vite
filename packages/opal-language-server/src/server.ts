@@ -11,17 +11,17 @@ import {
   InitializeResult,
   CompletionItem,
   TextDocumentPositionParams,
-  DidChangeConfigurationNotification
-} from 'vscode-languageserver/node';
+  DidChangeConfigurationNotification,
+  DidChangeConfigurationParams,
+  TextDocumentChangeEvent
+} from 'vscode-languageserver/node.js';
 
 import { TextDocument } from 'vscode-languageserver-textdocument';
 
 import {
   getIncompatiblePatterns,
   getHintPatterns,
-  compilePattern,
-  IncompatiblePattern,
-  HintPattern
+  compilePattern
 } from './patterns.js';
 
 import { getAllCompletionItems } from './snippets.js';
@@ -45,7 +45,7 @@ const defaultSettings: OpalServerSettings = {
 };
 
 let globalSettings: OpalServerSettings = defaultSettings;
-const documentSettings: Map<string, Thenable<OpalServerSettings>> = new Map();
+const documentSettings: Map<string, Promise<OpalServerSettings>> = new Map();
 
 connection.onInitialize((params: InitializeParams) => {
   const capabilities = params.capabilities;
@@ -89,17 +89,17 @@ connection.onInitialized(() => {
   connection.console.log('Opal Language Server initialized');
 });
 
-connection.onDidChangeConfiguration(change => {
+connection.onDidChangeConfiguration((change: DidChangeConfigurationParams) => {
   if (hasConfigurationCapability) {
     documentSettings.clear();
   } else {
-    globalSettings = (change.settings.opalVite || defaultSettings) as OpalServerSettings;
+    globalSettings = ((change.settings as Record<string, unknown>)?.opalVite || defaultSettings) as OpalServerSettings;
   }
 
   documents.all().forEach(validateTextDocument);
 });
 
-function getDocumentSettings(resource: string): Thenable<OpalServerSettings> {
+function getDocumentSettings(resource: string): Promise<OpalServerSettings> {
   if (!hasConfigurationCapability) {
     return Promise.resolve(globalSettings);
   }
@@ -108,17 +108,17 @@ function getDocumentSettings(resource: string): Thenable<OpalServerSettings> {
     result = connection.workspace.getConfiguration({
       scopeUri: resource,
       section: 'opalVite'
-    });
+    }) as Promise<OpalServerSettings>;
     documentSettings.set(resource, result);
   }
   return result;
 }
 
-documents.onDidClose(e => {
+documents.onDidClose((e: TextDocumentChangeEvent<TextDocument>) => {
   documentSettings.delete(e.document.uri);
 });
 
-documents.onDidChangeContent(change => {
+documents.onDidChangeContent((change: TextDocumentChangeEvent<TextDocument>) => {
   validateTextDocument(change.document);
 });
 

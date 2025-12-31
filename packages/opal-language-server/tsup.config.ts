@@ -6,10 +6,9 @@ export default defineConfig({
     patterns: 'src/patterns.ts',
     snippets: 'src/snippets.ts'
   },
-  format: ['esm', 'cjs'],
+  format: ['esm'],
   dts: true,
   clean: true,
   sourcemap: true,
-  target: 'node18',
-  shims: true
+  target: 'node18'
 });

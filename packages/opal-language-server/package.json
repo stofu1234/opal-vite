@@ -2,23 +2,21 @@
   "name": "opal-language-server",
   "version": "0.3.6",
   "description": "Language Server Protocol implementation for Opal (Ruby to JavaScript)",
+  "type": "module",
   "main": "./dist/server.js",
   "types": "./dist/server.d.ts",
   "exports": {
     ".": {
       "types": "./dist/server.d.ts",
-      "import": "./dist/server.js",
-      "require": "./dist/server.cjs"
+      "import": "./dist/server.js"
     },
     "./patterns": {
       "types": "./dist/patterns.d.ts",
-      "import": "./dist/patterns.js",
-      "require": "./dist/patterns.cjs"
+      "import": "./dist/patterns.js"
     },
     "./snippets": {
       "types": "./dist/snippets.d.ts",
-      "import": "./dist/snippets.js",
-      "require": "./dist/snippets.cjs"
+      "import": "./dist/snippets.js"
     }
   },
   "bin": {
