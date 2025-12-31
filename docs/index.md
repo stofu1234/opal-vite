@@ -111,21 +111,15 @@ See all demos on the [Playground](/playground) page.
 
 ## Developer Tools
 
-<div style="display: flex; align-items: center; gap: 20px; margin: 20px 0; padding: 20px; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 12px;">
-  <img src="/opal-devtools-icon.png" alt="Opal DevTools" style="width: 80px; height: 80px; border-radius: 12px;" />
-  <div>
-    <h3 style="margin: 0 0 8px 0; color: #fff;">Opal DevTools</h3>
-    <p style="margin: 0 0 12px 0; color: #ccc;">Supercharge your Opal development with browser DevTools integration. Inspect Ruby objects, debug compiled code, and accelerate your workflow.</p>
-    <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-      <a href="https://chromewebstore.google.com/detail/opal-devtools/bfhlgblnmbaecglnakfajahfblnjaebo" target="_blank" style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: #4285f4; color: white; border-radius: 6px; text-decoration: none; font-weight: 500;">
-        <span>Chrome</span>
-      </a>
-      <span style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: #444; color: #999; border-radius: 6px; font-weight: 500;">
-        Firefox (Coming Soon)
-      </span>
-      <span style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: #444; color: #999; border-radius: 6px; font-weight: 500;">
-        Edge (Coming Soon)
-      </span>
+<div style="display: flex; align-items: center; gap: 16px; margin: 20px 0; padding: 16px; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 12px;">
+  <img src="/opal-devtools-icon-64.png" alt="Opal DevTools" style="width: 48px; height: 48px; border-radius: 8px; flex-shrink: 0;" />
+  <div style="flex: 1; min-width: 0;">
+    <h3 style="margin: 0 0 6px 0; color: #fff; font-size: 1.1em;">Opal DevTools</h3>
+    <p style="margin: 0 0 10px 0; color: #ccc; font-size: 0.9em; line-height: 1.4;">Supercharge your Opal development. Inspect Ruby objects, debug compiled code, and accelerate your workflow.</p>
+    <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+      <a href="https://chromewebstore.google.com/detail/opal-devtools/bfhlgblnmbaecglnakfajahfblnjaebo" target="_blank" style="display: inline-block; padding: 6px 12px; background: #4285f4; color: white; border-radius: 4px; text-decoration: none; font-size: 0.85em; font-weight: 500;">Chrome</a>
+      <span style="display: inline-block; padding: 6px 12px; background: #333; color: #888; border-radius: 4px; font-size: 0.85em;">Firefox (Soon)</span>
+      <span style="display: inline-block; padding: 6px 12px; background: #333; color: #888; border-radius: 4px; font-size: 0.85em;">Edge (Soon)</span>
     </div>
   </div>
 </div>
