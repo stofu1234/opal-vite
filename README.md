@@ -16,6 +16,8 @@ Integrate [Opal](https://opalrb.com/) with [Vite](https://vitejs.dev/) - Write R
 This is a monorepo containing:
 
 - **packages/vite-plugin-opal**: Vite plugin for Opal compilation
+- **packages/opal-language-server**: LSP server for IDE integration (VS Code, IntelliJ, Vim, etc.)
+- **packages/vscode-opal-vite**: VS Code extension for Opal development
 - **gems/opal-vite**: Ruby gem for Opal-Vite integration
 - **gems/opal-vite-rails**: Rails integration gem
 - **examples/standalone**: Standalone SPA example
@@ -310,11 +312,11 @@ Contributions are welcome! Please follow these guidelines:
 ## Roadmap
 
 - [x] Support for more Opal standard library features (v0.3.1: URIHelpers, Base64Helpers)
+- [x] Performance optimizations (v0.3.2)
+- [x] Better error messages and debugging (v0.3.3: DebugHelpers module)
+- [x] Additional Rails integrations (v0.3.4: ActionCable, Turbo modules)
 - [x] CDN support for Opal runtime (v0.3.5)
-- [ ] Better error messages and debugging
-- [ ] Performance optimizations
-- [ ] Additional Rails integrations (ActionCable, etc.)
-- [ ] VS Code extension for `.rb` file support
+- [x] VS Code extension for `.rb` file support (v0.3.6: LSP server, Syntax highlighting, Diagnostics, Snippets)
 
 ## License
 

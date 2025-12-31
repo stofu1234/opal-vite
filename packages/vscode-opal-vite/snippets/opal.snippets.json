@@ -1,0 +1,420 @@
+{
+  "Opal Stimulus Controller": {
+    "prefix": ["opal-controller", "stimulus-controller"],
+    "body": [
+      "require 'opal_stimulus'",
+      "",
+      "class ${1:Name}Controller < StimulusController",
+      "  def initialize",
+      "    super",
+      "  end",
+      "",
+      "  def connect",
+      "    $2",
+      "  end",
+      "",
+      "  def disconnect",
+      "    $3",
+      "  end",
+      "end"
+    ],
+    "description": "Create a new Opal Stimulus controller"
+  },
+  "Opal Stimulus Controller with Concerns": {
+    "prefix": ["opal-controller-concerns", "stimulus-controller-concerns"],
+    "body": [
+      "require 'opal_stimulus'",
+      "require 'opal_vite'",
+      "",
+      "class ${1:Name}Controller < StimulusController",
+      "  include OpalVite::Concerns::V1::DomHelpers",
+      "  include OpalVite::Concerns::V1::${2|StimulusHelpers,Storable,Toastable,JsProxyEx,URIHelpers,Base64Helpers,ValidationHelpers,FormHelpers|}",
+      "",
+      "  def initialize",
+      "    super",
+      "  end",
+      "",
+      "  def connect",
+      "    $3",
+      "  end",
+      "",
+      "  def disconnect",
+      "    $4",
+      "  end",
+      "end"
+    ],
+    "description": "Create a new Opal Stimulus controller with OpalVite concerns"
+  },
+  "Include DomHelpers": {
+    "prefix": ["dom-helpers", "include-dom"],
+    "body": [
+      "include OpalVite::Concerns::V1::DomHelpers"
+    ],
+    "description": "Include OpalVite DomHelpers concern"
+  },
+  "Include StimulusHelpers": {
+    "prefix": ["stimulus-helpers", "include-stimulus"],
+    "body": [
+      "include OpalVite::Concerns::V1::StimulusHelpers"
+    ],
+    "description": "Include OpalVite StimulusHelpers concern"
+  },
+  "Include Storable": {
+    "prefix": ["storable", "include-storable"],
+    "body": [
+      "include OpalVite::Concerns::V1::Storable"
+    ],
+    "description": "Include OpalVite Storable concern for localStorage/sessionStorage"
+  },
+  "Include Toastable": {
+    "prefix": ["toastable", "include-toastable"],
+    "body": [
+      "include OpalVite::Concerns::V1::Toastable"
+    ],
+    "description": "Include OpalVite Toastable concern for toast notifications"
+  },
+  "Include JsProxyEx": {
+    "prefix": ["js-proxy", "include-jsproxy"],
+    "body": [
+      "include OpalVite::Concerns::V1::JsProxyEx"
+    ],
+    "description": "Include OpalVite JsProxyEx concern for JavaScript interop"
+  },
+  "Include URIHelpers": {
+    "prefix": ["uri-helpers", "include-uri"],
+    "body": [
+      "include OpalVite::Concerns::V1::URIHelpers"
+    ],
+    "description": "Include OpalVite URIHelpers concern for URL encoding/decoding"
+  },
+  "Include Base64Helpers": {
+    "prefix": ["base64-helpers", "include-base64"],
+    "body": [
+      "include OpalVite::Concerns::V1::Base64Helpers"
+    ],
+    "description": "Include OpalVite Base64Helpers concern for Base64 encoding/decoding"
+  },
+  "Include ValidationHelpers": {
+    "prefix": ["validation-helpers", "include-validation"],
+    "body": [
+      "include OpalVite::Concerns::V1::ValidationHelpers"
+    ],
+    "description": "Include OpalVite ValidationHelpers concern for form validation"
+  },
+  "Include FormHelpers": {
+    "prefix": ["form-helpers", "include-form"],
+    "body": [
+      "include OpalVite::Concerns::V1::FormHelpers"
+    ],
+    "description": "Include OpalVite FormHelpers concern for form handling"
+  },
+  "Native JavaScript Block": {
+    "prefix": ["native-js", "js-block"],
+    "body": [
+      "`${1:// JavaScript code here}`"
+    ],
+    "description": "Insert native JavaScript block in Opal"
+  },
+  "Native JavaScript Multiline": {
+    "prefix": ["native-js-multi", "js-multiline"],
+    "body": [
+      "`",
+      "  ${1:// JavaScript code}",
+      "  ${2:// More JavaScript code}",
+      "`"
+    ],
+    "description": "Insert multiline native JavaScript block"
+  },
+  "Query Selector": {
+    "prefix": "query-selector",
+    "body": [
+      "query_selector('${1:selector}')"
+    ],
+    "description": "Query DOM element by selector"
+  },
+  "Query Selector All": {
+    "prefix": "query-selector-all",
+    "body": [
+      "query_selector_all('${1:selector}')"
+    ],
+    "description": "Query all DOM elements by selector"
+  },
+  "Element By ID": {
+    "prefix": "element-by-id",
+    "body": [
+      "element_by_id('${1:id}')"
+    ],
+    "description": "Get DOM element by ID"
+  },
+  "Create Element": {
+    "prefix": "create-element",
+    "body": [
+      "create_element('${1:tag}')"
+    ],
+    "description": "Create new DOM element"
+  },
+  "Add Event Listener": {
+    "prefix": "add-event-listener",
+    "body": [
+      "add_event_listener(${1:element}, '${2:event}') do |event|",
+      "  ${3:# Handle event}",
+      "end"
+    ],
+    "description": "Add event listener to element"
+  },
+  "Local Storage Get": {
+    "prefix": "ls-get",
+    "body": [
+      "local_storage_get('${1:key}')"
+    ],
+    "description": "Get value from localStorage"
+  },
+  "Local Storage Set": {
+    "prefix": "ls-set",
+    "body": [
+      "local_storage_set('${1:key}', ${2:value})"
+    ],
+    "description": "Set value in localStorage"
+  },
+  "Session Storage Get": {
+    "prefix": "ss-get",
+    "body": [
+      "session_storage_get('${1:key}')"
+    ],
+    "description": "Get value from sessionStorage"
+  },
+  "Session Storage Set": {
+    "prefix": "ss-set",
+    "body": [
+      "session_storage_set('${1:key}', ${2:value})"
+    ],
+    "description": "Set value in sessionStorage"
+  },
+  "Toast Success": {
+    "prefix": "toast-success",
+    "body": [
+      "toast_success('${1:message}')"
+    ],
+    "description": "Show success toast notification"
+  },
+  "Toast Error": {
+    "prefix": "toast-error",
+    "body": [
+      "toast_error('${1:message}')"
+    ],
+    "description": "Show error toast notification"
+  },
+  "Toast Warning": {
+    "prefix": "toast-warning",
+    "body": [
+      "toast_warning('${1:message}')"
+    ],
+    "description": "Show warning toast notification"
+  },
+  "Toast Info": {
+    "prefix": "toast-info",
+    "body": [
+      "toast_info('${1:message}')"
+    ],
+    "description": "Show info toast notification"
+  },
+  "Base64 Encode": {
+    "prefix": "base64-encode",
+    "body": [
+      "base64_encode(${1:data})"
+    ],
+    "description": "Encode data to Base64"
+  },
+  "Base64 Decode": {
+    "prefix": "base64-decode",
+    "body": [
+      "base64_decode('${1:encoded_string}')"
+    ],
+    "description": "Decode Base64 string"
+  },
+  "URI Encode": {
+    "prefix": "uri-encode",
+    "body": [
+      "uri_encode('${1:string}')"
+    ],
+    "description": "URI encode a string"
+  },
+  "URI Decode": {
+    "prefix": "uri-decode",
+    "body": [
+      "uri_decode('${1:encoded_string}')"
+    ],
+    "description": "URI decode a string"
+  },
+  "Parse Query String": {
+    "prefix": "parse-query",
+    "body": [
+      "parse_query_string('${1:query_string}')"
+    ],
+    "description": "Parse query string to hash"
+  },
+  "Build Query String": {
+    "prefix": "build-query",
+    "body": [
+      "build_query_string(${1:hash})"
+    ],
+    "description": "Build query string from hash"
+  },
+  "PromiseV2": {
+    "prefix": "promise",
+    "body": [
+      "PromiseV2.new do |resolve, reject|",
+      "  ${1:# async operation}",
+      "  resolve.call(${2:result})",
+      "end"
+    ],
+    "description": "Create a new PromiseV2"
+  },
+  "PromiseV2 Then": {
+    "prefix": "promise-then",
+    "body": [
+      ".then do |${1:result}|",
+      "  ${2:# handle success}",
+      "end"
+    ],
+    "description": "Add then handler to promise"
+  },
+  "PromiseV2 Catch": {
+    "prefix": "promise-catch",
+    "body": [
+      ".fail do |${1:error}|",
+      "  ${2:# handle error}",
+      "end"
+    ],
+    "description": "Add fail/catch handler to promise"
+  },
+  "Fetch API": {
+    "prefix": "fetch",
+    "body": [
+      "`fetch(#{url.to_json})`.then do |response|",
+      "  response.json",
+      "end.then do |data|",
+      "  ${1:# handle data}",
+      "end"
+    ],
+    "description": "Fetch API call with native JavaScript"
+  },
+  "Console Log": {
+    "prefix": "clog",
+    "body": [
+      "`console.log(#{${1:message}.to_json})`"
+    ],
+    "description": "Console log using native JavaScript"
+  },
+  "Native Object Access": {
+    "prefix": "native-obj",
+    "body": [
+      "Native(`${1:window.someObject}`)"
+    ],
+    "description": "Access native JavaScript object"
+  },
+  "JS Global Object": {
+    "prefix": "js-global",
+    "body": [
+      "$$global.${1:propertyName}"
+    ],
+    "description": "Access JavaScript global object"
+  },
+  "Service Class": {
+    "prefix": "opal-service",
+    "body": [
+      "require 'opal_vite'",
+      "",
+      "class ${1:Name}Service",
+      "  include OpalVite::Concerns::V1::DomHelpers",
+      "  include OpalVite::Concerns::V1::Storable",
+      "",
+      "  def initialize",
+      "    ${2:# initialize service}",
+      "  end",
+      "",
+      "  def ${3:method_name}",
+      "    ${4:# service logic}",
+      "  end",
+      "end"
+    ],
+    "description": "Create a new Opal service class"
+  },
+  "Presenter Class": {
+    "prefix": "opal-presenter",
+    "body": [
+      "require 'opal_vite'",
+      "",
+      "class ${1:Name}Presenter",
+      "  include OpalVite::Concerns::V1::DomHelpers",
+      "",
+      "  def initialize(container)",
+      "    @container = container",
+      "  end",
+      "",
+      "  def render",
+      "    ${2:# render logic}",
+      "  end",
+      "",
+      "  def update(data)",
+      "    ${3:# update logic}",
+      "  end",
+      "end"
+    ],
+    "description": "Create a new Opal presenter class"
+  },
+  "Stimulus Targets": {
+    "prefix": "targets",
+    "body": [
+      "def self.targets",
+      "  %w[${1:target1 target2}]",
+      "end"
+    ],
+    "description": "Define Stimulus targets"
+  },
+  "Stimulus Values": {
+    "prefix": "values",
+    "body": [
+      "def self.values",
+      "  { ${1:name}: ${2:String} }",
+      "end"
+    ],
+    "description": "Define Stimulus values"
+  },
+  "Stimulus Classes": {
+    "prefix": "classes",
+    "body": [
+      "def self.classes",
+      "  %w[${1:class1 class2}]",
+      "end"
+    ],
+    "description": "Define Stimulus CSS classes"
+  },
+  "Stimulus Action Method": {
+    "prefix": "action",
+    "body": [
+      "def ${1:method_name}(event = nil)",
+      "  ${2:# action logic}",
+      "end"
+    ],
+    "description": "Define Stimulus action method"
+  },
+  "Opal Application Entry": {
+    "prefix": "opal-app",
+    "body": [
+      "require 'opal'",
+      "require 'opal_stimulus'",
+      "require 'opal_vite'",
+      "",
+      "# Import controllers",
+      "require_tree './controllers'",
+      "",
+      "# Initialize Stimulus",
+      "application = Stimulus::Application.start",
+      "",
+      "puts 'Opal application started!'",
+      ""
+    ],
+    "description": "Opal application entry point"
+  }
+}

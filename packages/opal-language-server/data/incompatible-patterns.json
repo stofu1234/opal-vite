@@ -1,0 +1,205 @@
+{
+  "$schema": "./incompatible-patterns.schema.json",
+  "version": "1.0.0",
+  "description": "Opal incompatible Ruby patterns - shared across all IDE integrations",
+  "patterns": [
+    {
+      "id": "thread-new",
+      "category": "threading",
+      "pattern": "\\bThread\\.(new|start|fork|current|list|main|exclusive|kill)\\b",
+      "message": "Thread is not supported in Opal. JavaScript is single-threaded. Consider using PromiseV2 for async operations.",
+      "severity": "error",
+      "documentation": "https://opalrb.com/docs/guides/unsupported_features#threading"
+    },
+    {
+      "id": "mutex",
+      "category": "threading",
+      "pattern": "\\bMutex\\.(new|lock|unlock|synchronize)\\b",
+      "message": "Mutex is not available in Opal. JavaScript is single-threaded.",
+      "severity": "error"
+    },
+    {
+      "id": "queue",
+      "category": "threading",
+      "pattern": "\\bQueue\\.(new|push|pop|shift)\\b",
+      "message": "Queue (thread-safe) is not available in Opal.",
+      "severity": "error"
+    },
+    {
+      "id": "file-operations",
+      "category": "filesystem",
+      "pattern": "\\bFile\\.(read|write|open|delete|exist\\?|exists\\?|expand_path|dirname|basename|join|size|mtime|stat)\\b",
+      "message": "File operations are not available in browser Opal. Use fetch API for remote files.",
+      "severity": "error",
+      "documentation": "https://opalrb.com/docs/guides/unsupported_features#file-io"
+    },
+    {
+      "id": "dir-operations",
+      "category": "filesystem",
+      "pattern": "\\bDir\\.(pwd|chdir|glob|entries|mkdir|rmdir|exist\\?|exists\\?)\\b",
+      "message": "Dir operations are not available in browser Opal.",
+      "severity": "error"
+    },
+    {
+      "id": "io-operations",
+      "category": "filesystem",
+      "pattern": "\\bIO\\.(read|write|popen|pipe|select)\\b",
+      "message": "IO operations are not available in browser Opal.",
+      "severity": "error"
+    },
+    {
+      "id": "process-operations",
+      "category": "process",
+      "pattern": "\\bProcess\\.(pid|ppid|kill|fork|wait|spawn|exec)\\b",
+      "message": "Process operations are not available in Opal.",
+      "severity": "error"
+    },
+    {
+      "id": "system-commands",
+      "category": "process",
+      "pattern": "\\b(system|exec|fork|spawn)\\s*[\\(\\s]",
+      "message": "System commands are not available in browser Opal.",
+      "severity": "error"
+    },
+    {
+      "id": "backtick-command",
+      "category": "process",
+      "pattern": "\\b`[^`]+`",
+      "message": "Backtick command execution is not available in Opal. In Opal, backticks are used for native JavaScript code.",
+      "severity": "warning",
+      "note": "This may be intentional native JS - context dependent"
+    },
+    {
+      "id": "socket-operations",
+      "category": "networking",
+      "pattern": "\\b(TCPSocket|TCPServer|UDPSocket|UNIXSocket|Socket)\\b",
+      "message": "Socket operations are not available in browser Opal. Use fetch or WebSocket instead.",
+      "severity": "error"
+    },
+    {
+      "id": "objectspace",
+      "category": "runtime",
+      "pattern": "\\bObjectSpace\\.(each_object|count_objects|define_finalizer|garbage_collect)\\b",
+      "message": "ObjectSpace is limited in Opal. Most operations are not available.",
+      "severity": "warning"
+    },
+    {
+      "id": "gc-control",
+      "category": "runtime",
+      "pattern": "\\bGC\\.(start|enable|disable|stress)\\b",
+      "message": "GC control is not available in Opal. JavaScript handles garbage collection automatically.",
+      "severity": "warning"
+    },
+    {
+      "id": "encoding-operations",
+      "category": "encoding",
+      "pattern": "\\bEncoding\\.(find|list|compatible\\?|default_external|default_internal)\\b",
+      "message": "Encoding operations are limited in Opal. JavaScript uses UTF-16 internally.",
+      "severity": "warning"
+    },
+    {
+      "id": "force-encoding",
+      "category": "encoding",
+      "pattern": "\\.force_encoding\\s*\\(",
+      "message": "force_encoding is not fully supported in Opal.",
+      "severity": "warning"
+    },
+    {
+      "id": "tracepoint",
+      "category": "metaprogramming",
+      "pattern": "\\bTracePoint\\.(new|trace|stat)\\b",
+      "message": "TracePoint is not available in Opal.",
+      "severity": "error"
+    },
+    {
+      "id": "binding-of-caller",
+      "category": "metaprogramming",
+      "pattern": "\\bBinding\\.(of_caller)\\b",
+      "message": "Binding.of_caller is not available in Opal.",
+      "severity": "error"
+    },
+    {
+      "id": "ffi",
+      "category": "native-extensions",
+      "pattern": "\\brequire\\s+['\"]ffi['\"]",
+      "message": "FFI (Foreign Function Interface) is not available in Opal.",
+      "severity": "error"
+    },
+    {
+      "id": "c-extension-gems",
+      "category": "native-extensions",
+      "pattern": "\\brequire\\s+['\"](nokogiri|mysql2|pg|sqlite3|redis|eventmachine)['\"]",
+      "message": "This gem uses native C extensions and is not available in Opal.",
+      "severity": "error"
+    },
+    {
+      "id": "refinements",
+      "category": "metaprogramming",
+      "pattern": "\\busing\\s+\\w+",
+      "message": "Refinements have limited support in Opal.",
+      "severity": "warning"
+    },
+    {
+      "id": "fiber",
+      "category": "concurrency",
+      "pattern": "\\bFiber\\.(new|yield|current)\\b",
+      "message": "Fiber has limited support in Opal. Consider using PromiseV2 for async operations.",
+      "severity": "warning"
+    }
+  ],
+  "hints": [
+    {
+      "id": "json-require",
+      "pattern": "\\brequire\\s+['\"]json['\"]",
+      "message": "Tip: In Opal, use Native JSON object directly: `JSON.parse(str)` or `JSON.stringify(obj)`"
+    },
+    {
+      "id": "time-now",
+      "pattern": "\\bTime\\.now\\b",
+      "message": "Tip: Time.now works in Opal but returns a wrapped JavaScript Date object."
+    },
+    {
+      "id": "random",
+      "pattern": "\\bRandom\\.(rand|new|seed)\\b",
+      "message": "Tip: Random works in Opal using JavaScript Math.random() internally."
+    }
+  ],
+  "categories": {
+    "threading": {
+      "name": "Threading & Concurrency",
+      "description": "JavaScript is single-threaded, so Ruby threading constructs are not available"
+    },
+    "filesystem": {
+      "name": "File System",
+      "description": "Browser JavaScript cannot access the local file system"
+    },
+    "process": {
+      "name": "Process Control",
+      "description": "System process operations are not available in browser environment"
+    },
+    "networking": {
+      "name": "Low-level Networking",
+      "description": "Raw socket operations are not available; use fetch/WebSocket instead"
+    },
+    "runtime": {
+      "name": "Ruby Runtime",
+      "description": "Some Ruby runtime features are not available or limited in Opal"
+    },
+    "encoding": {
+      "name": "String Encoding",
+      "description": "JavaScript uses UTF-16 internally; encoding operations are limited"
+    },
+    "metaprogramming": {
+      "name": "Metaprogramming",
+      "description": "Some advanced metaprogramming features are not available"
+    },
+    "native-extensions": {
+      "name": "Native Extensions",
+      "description": "C extensions cannot run in browser JavaScript environment"
+    },
+    "concurrency": {
+      "name": "Concurrency",
+      "description": "Fiber and other concurrency features have limited support"
+    }
+  }
+}
