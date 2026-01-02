@@ -1,9 +1,12 @@
-.vscode/**
-.vscode-test/**
-src/**
-.gitignore
-.yarnrc
-tsconfig.json
-**/*.map
-**/*.ts
-node_modules/**
+# Exclude everything first
+**
+
+# Include only what we need
+!package.json
+!README.md
+!LICENSE
+!language-configuration.json
+!dist/**
+!images/**
+!snippets/**
+!syntaxes/**
