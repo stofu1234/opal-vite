@@ -3,7 +3,7 @@
   "displayName": "Opal Vite",
   "description": "VS Code extension for Opal (Ruby to JavaScript) development with Vite",
   "version": "0.3.6",
-  "publisher": "opal-vite",
+  "publisher": "stofu1234",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -37,8 +37,13 @@
     "languages": [
       {
         "id": "opal",
-        "aliases": ["Opal", "opal"],
-        "extensions": [".opal"],
+        "aliases": [
+          "Opal",
+          "opal"
+        ],
+        "extensions": [
+          ".opal"
+        ],
         "configuration": "./language-configuration.json"
       }
     ],
@@ -51,7 +56,9 @@
       {
         "scopeName": "source.opal",
         "path": "./syntaxes/opal.tmLanguage.json",
-        "injectTo": ["source.ruby"]
+        "injectTo": [
+          "source.ruby"
+        ]
       }
     ],
     "snippets": [
@@ -75,7 +82,12 @@
         "opalVite.diagnosticSeverity": {
           "type": "string",
           "default": "warning",
-          "enum": ["error", "warning", "information", "hint"],
+          "enum": [
+            "error",
+            "warning",
+            "information",
+            "hint"
+          ],
           "description": "Severity level for Opal incompatible syntax warnings"
         },
         "opalVite.autoDetectOpalFiles": {
@@ -85,7 +97,11 @@
         },
         "opalVite.trace.server": {
           "type": "string",
-          "enum": ["off", "messages", "verbose"],
+          "enum": [
+            "off",
+            "messages",
+            "verbose"
+          ],
           "default": "off",
           "description": "Traces the communication between VS Code and the language server"
         }
@@ -110,9 +126,10 @@
     ]
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./",
+    "vscode:prepublish": "npm run esbuild-base -- --minify",
+    "esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node",
+    "compile": "npm run esbuild-base -- --sourcemap",
+    "watch": "npm run esbuild-base -- --sourcemap --watch",
     "lint": "eslint src --ext ts",
     "package": "vsce package",
     "publish": "vsce publish"
@@ -125,8 +142,9 @@
     "@types/vscode": "^1.85.0",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
+    "@vscode/vsce": "^2.22.0",
+    "esbuild": "^0.27.2",
     "eslint": "^8.0.0",
-    "typescript": "^5.3.0",
-    "@vscode/vsce": "^2.22.0"
+    "typescript": "^5.3.0"
   }
 }
