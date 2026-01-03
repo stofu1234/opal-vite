@@ -1,0 +1,294 @@
+<templateSet group="Opal">
+    <!-- Stimulus Controllers -->
+    <template name="opal-controller" value="require 'opal_stimulus'&#10;&#10;class $NAME$Controller &lt; StimulusController&#10;  def initialize&#10;    super&#10;  end&#10;&#10;  def connect&#10;    $END$&#10;  end&#10;&#10;  def disconnect&#10;  end&#10;end" description="Create a new Opal Stimulus controller" toReformat="true" toShortenFQNames="true">
+        <variable name="NAME" expression="" defaultValue="&quot;Name&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="OPAL" value="true"/>
+        </context>
+    </template>
+
+    <template name="opal-controller-concerns" value="require 'opal_stimulus'&#10;require 'opal_vite'&#10;&#10;class $NAME$Controller &lt; StimulusController&#10;  include OpalVite::Concerns::V1::DomHelpers&#10;  include OpalVite::Concerns::V1::$CONCERN$&#10;&#10;  def initialize&#10;    super&#10;  end&#10;&#10;  def connect&#10;    $END$&#10;  end&#10;&#10;  def disconnect&#10;  end&#10;end" description="Create a new Opal Stimulus controller with OpalVite concerns" toReformat="true" toShortenFQNames="true">
+        <variable name="NAME" expression="" defaultValue="&quot;Name&quot;" alwaysStopAt="true"/>
+        <variable name="CONCERN" expression="enum(&quot;StimulusHelpers&quot;, &quot;Storable&quot;, &quot;Toastable&quot;, &quot;JsProxyEx&quot;, &quot;URIHelpers&quot;, &quot;Base64Helpers&quot;)" defaultValue="&quot;StimulusHelpers&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="OPAL" value="true"/>
+        </context>
+    </template>
+
+    <template name="opal-service" value="require 'opal_vite'&#10;&#10;class $NAME$Service&#10;  include OpalVite::Concerns::V1::DomHelpers&#10;  include OpalVite::Concerns::V1::Storable&#10;&#10;  def initialize&#10;    $END$&#10;  end&#10;&#10;  def $METHOD$&#10;  end&#10;end" description="Create a new Opal service class" toReformat="true" toShortenFQNames="true">
+        <variable name="NAME" expression="" defaultValue="&quot;Name&quot;" alwaysStopAt="true"/>
+        <variable name="METHOD" expression="" defaultValue="&quot;call&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="OPAL" value="true"/>
+        </context>
+    </template>
+
+    <template name="opal-presenter" value="require 'opal_vite'&#10;&#10;class $NAME$Presenter&#10;  include OpalVite::Concerns::V1::DomHelpers&#10;&#10;  def initialize(container)&#10;    @container = container&#10;  end&#10;&#10;  def render&#10;    $END$&#10;  end&#10;&#10;  def update(data)&#10;  end&#10;end" description="Create a new Opal presenter class" toReformat="true" toShortenFQNames="true">
+        <variable name="NAME" expression="" defaultValue="&quot;Name&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="OPAL" value="true"/>
+        </context>
+    </template>
+
+    <!-- OpalVite Concerns -->
+    <template name="include-dom" value="include OpalVite::Concerns::V1::DomHelpers" description="Include OpalVite DomHelpers concern" toReformat="false" toShortenFQNames="true">
+        <context>
+            <option name="OPAL" value="true"/>
+        </context>
+    </template>
+
+    <template name="include-stimulus" value="include OpalVite::Concerns::V1::StimulusHelpers" description="Include OpalVite StimulusHelpers concern" toReformat="false" toShortenFQNames="true">
+        <context>
+            <option name="OPAL" value="true"/>
+        </context>
+    </template>
+
+    <template name="include-storable" value="include OpalVite::Concerns::V1::Storable" description="Include OpalVite Storable concern" toReformat="false" toShortenFQNames="true">
+        <context>
+            <option name="OPAL" value="true"/>
+        </context>
+    </template>
+
+    <template name="include-toastable" value="include OpalVite::Concerns::V1::Toastable" description="Include OpalVite Toastable concern" toReformat="false" toShortenFQNames="true">
+        <context>
+            <option name="OPAL" value="true"/>
+        </context>
+    </template>
+
+    <template name="include-jsproxy" value="include OpalVite::Concerns::V1::JsProxyEx" description="Include OpalVite JsProxyEx concern" toReformat="false" toShortenFQNames="true">
+        <context>
+            <option name="OPAL" value="true"/>
+        </context>
+    </template>
+
+    <template name="include-uri" value="include OpalVite::Concerns::V1::URIHelpers" description="Include OpalVite URIHelpers concern" toReformat="false" toShortenFQNames="true">
+        <context>
+            <option name="OPAL" value="true"/>
+        </context>
+    </template>
+
+    <template name="include-base64" value="include OpalVite::Concerns::V1::Base64Helpers" description="Include OpalVite Base64Helpers concern" toReformat="false" toShortenFQNames="true">
+        <context>
+            <option name="OPAL" value="true"/>
+        </context>
+    </template>
+
+    <template name="include-debug" value="include OpalVite::Concerns::V1::DebugHelpers" description="Include OpalVite DebugHelpers concern" toReformat="false" toShortenFQNames="true">
+        <context>
+            <option name="OPAL" value="true"/>
+        </context>
+    </template>
+
+    <template name="include-actioncable" value="include OpalVite::Concerns::V1::ActionCableHelpers" description="Include OpalVite ActionCableHelpers concern" toReformat="false" toShortenFQNames="true">
+        <context>
+            <option name="OPAL" value="true"/>
+        </context>
+    </template>
+
+    <template name="include-turbo" value="include OpalVite::Concerns::V1::TurboHelpers" description="Include OpalVite TurboHelpers concern" toReformat="false" toShortenFQNames="true">
+        <context>
+            <option name="OPAL" value="true"/>
+        </context>
+    </template>
+
+    <!-- Native JavaScript -->
+    <template name="native-js" value="`$JS$`" description="Insert native JavaScript block in Opal" toReformat="false" toShortenFQNames="true">
+        <variable name="JS" expression="" defaultValue="&quot;// JavaScript code here&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="OPAL" value="true"/>
+        </context>
+    </template>
+
+    <template name="native-js-multi" value="`&#10;  $JS$&#10;`" description="Insert multiline native JavaScript block" toReformat="false" toShortenFQNames="true">
+        <variable name="JS" expression="" defaultValue="&quot;// JavaScript code&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="OPAL" value="true"/>
+        </context>
+    </template>
+
+    <!-- DOM Helpers -->
+    <template name="query-selector" value="query_selector('$SELECTOR$')" description="Query DOM element by selector" toReformat="false" toShortenFQNames="true">
+        <variable name="SELECTOR" expression="" defaultValue="&quot;.class&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="OPAL" value="true"/>
+        </context>
+    </template>
+
+    <template name="query-selector-all" value="query_selector_all('$SELECTOR$')" description="Query all DOM elements by selector" toReformat="false" toShortenFQNames="true">
+        <variable name="SELECTOR" expression="" defaultValue="&quot;.class&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="OPAL" value="true"/>
+        </context>
+    </template>
+
+    <template name="element-by-id" value="element_by_id('$ID$')" description="Get DOM element by ID" toReformat="false" toShortenFQNames="true">
+        <variable name="ID" expression="" defaultValue="&quot;id&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="OPAL" value="true"/>
+        </context>
+    </template>
+
+    <template name="create-element" value="create_element('$TAG$')" description="Create new DOM element" toReformat="false" toShortenFQNames="true">
+        <variable name="TAG" expression="" defaultValue="&quot;div&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="OPAL" value="true"/>
+        </context>
+    </template>
+
+    <template name="add-event-listener" value="add_event_listener($ELEMENT$, '$EVENT$') do |event|&#10;  $END$&#10;end" description="Add event listener to element" toReformat="true" toShortenFQNames="true">
+        <variable name="ELEMENT" expression="" defaultValue="&quot;element&quot;" alwaysStopAt="true"/>
+        <variable name="EVENT" expression="enum(&quot;click&quot;, &quot;change&quot;, &quot;input&quot;, &quot;submit&quot;, &quot;keydown&quot;, &quot;keyup&quot;)" defaultValue="&quot;click&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="OPAL" value="true"/>
+        </context>
+    </template>
+
+    <!-- Storage -->
+    <template name="ls-get" value="local_storage_get('$KEY$')" description="Get value from localStorage" toReformat="false" toShortenFQNames="true">
+        <variable name="KEY" expression="" defaultValue="&quot;key&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="OPAL" value="true"/>
+        </context>
+    </template>
+
+    <template name="ls-set" value="local_storage_set('$KEY$', $VALUE$)" description="Set value in localStorage" toReformat="false" toShortenFQNames="true">
+        <variable name="KEY" expression="" defaultValue="&quot;key&quot;" alwaysStopAt="true"/>
+        <variable name="VALUE" expression="" defaultValue="&quot;value&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="OPAL" value="true"/>
+        </context>
+    </template>
+
+    <template name="ss-get" value="session_storage_get('$KEY$')" description="Get value from sessionStorage" toReformat="false" toShortenFQNames="true">
+        <variable name="KEY" expression="" defaultValue="&quot;key&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="OPAL" value="true"/>
+        </context>
+    </template>
+
+    <template name="ss-set" value="session_storage_set('$KEY$', $VALUE$)" description="Set value in sessionStorage" toReformat="false" toShortenFQNames="true">
+        <variable name="KEY" expression="" defaultValue="&quot;key&quot;" alwaysStopAt="true"/>
+        <variable name="VALUE" expression="" defaultValue="&quot;value&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="OPAL" value="true"/>
+        </context>
+    </template>
+
+    <!-- Toast Notifications -->
+    <template name="toast-success" value="toast_success('$MESSAGE$')" description="Show success toast notification" toReformat="false" toShortenFQNames="true">
+        <variable name="MESSAGE" expression="" defaultValue="&quot;Success!&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="OPAL" value="true"/>
+        </context>
+    </template>
+
+    <template name="toast-error" value="toast_error('$MESSAGE$')" description="Show error toast notification" toReformat="false" toShortenFQNames="true">
+        <variable name="MESSAGE" expression="" defaultValue="&quot;Error!&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="OPAL" value="true"/>
+        </context>
+    </template>
+
+    <template name="toast-warning" value="toast_warning('$MESSAGE$')" description="Show warning toast notification" toReformat="false" toShortenFQNames="true">
+        <variable name="MESSAGE" expression="" defaultValue="&quot;Warning!&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="OPAL" value="true"/>
+        </context>
+    </template>
+
+    <template name="toast-info" value="toast_info('$MESSAGE$')" description="Show info toast notification" toReformat="false" toShortenFQNames="true">
+        <variable name="MESSAGE" expression="" defaultValue="&quot;Info&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="OPAL" value="true"/>
+        </context>
+    </template>
+
+    <!-- Async Operations -->
+    <template name="promise" value="PromiseV2.new do |resolve, reject|&#10;  $END$&#10;  resolve.call($RESULT$)&#10;end" description="Create a new PromiseV2" toReformat="true" toShortenFQNames="true">
+        <variable name="RESULT" expression="" defaultValue="&quot;result&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="OPAL" value="true"/>
+        </context>
+    </template>
+
+    <template name="promise-then" value=".then do |$RESULT$|&#10;  $END$&#10;end" description="Add then handler to promise" toReformat="true" toShortenFQNames="true">
+        <variable name="RESULT" expression="" defaultValue="&quot;result&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="OPAL" value="true"/>
+        </context>
+    </template>
+
+    <template name="promise-fail" value=".fail do |$ERROR$|&#10;  $END$&#10;end" description="Add fail/catch handler to promise" toReformat="true" toShortenFQNames="true">
+        <variable name="ERROR" expression="" defaultValue="&quot;error&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="OPAL" value="true"/>
+        </context>
+    </template>
+
+    <template name="fetch" value="`fetch(#{$URL$.to_json})`.then do |response|&#10;  response.json&#10;end.then do |data|&#10;  $END$&#10;end" description="Fetch API call" toReformat="true" toShortenFQNames="true">
+        <variable name="URL" expression="" defaultValue="&quot;url&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="OPAL" value="true"/>
+        </context>
+    </template>
+
+    <!-- Stimulus Definitions -->
+    <template name="targets" value="def self.targets&#10;  %w[$TARGETS$]&#10;end" description="Define Stimulus targets" toReformat="true" toShortenFQNames="true">
+        <variable name="TARGETS" expression="" defaultValue="&quot;target1 target2&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="OPAL" value="true"/>
+        </context>
+    </template>
+
+    <template name="values" value="def self.values&#10;  { $NAME$: $TYPE$ }&#10;end" description="Define Stimulus values" toReformat="true" toShortenFQNames="true">
+        <variable name="NAME" expression="" defaultValue="&quot;name&quot;" alwaysStopAt="true"/>
+        <variable name="TYPE" expression="enum(&quot;String&quot;, &quot;Number&quot;, &quot;Boolean&quot;, &quot;Array&quot;, &quot;Object&quot;)" defaultValue="&quot;String&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="OPAL" value="true"/>
+        </context>
+    </template>
+
+    <template name="classes" value="def self.classes&#10;  %w[$CLASSES$]&#10;end" description="Define Stimulus CSS classes" toReformat="true" toShortenFQNames="true">
+        <variable name="CLASSES" expression="" defaultValue="&quot;active hidden&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="OPAL" value="true"/>
+        </context>
+    </template>
+
+    <template name="action" value="def $NAME$(event = nil)&#10;  $END$&#10;end" description="Define Stimulus action method" toReformat="true" toShortenFQNames="true">
+        <variable name="NAME" expression="" defaultValue="&quot;handle_click&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="OPAL" value="true"/>
+        </context>
+    </template>
+
+    <!-- Debug Helpers -->
+    <template name="debug-log" value="debug_log($MESSAGE$)" description="Log debug message" toReformat="false" toShortenFQNames="true">
+        <variable name="MESSAGE" expression="" defaultValue="&quot;message&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="OPAL" value="true"/>
+        </context>
+    </template>
+
+    <template name="debug-inspect" value="debug_inspect($OBJECT$, '$LABEL$')" description="Inspect object with label" toReformat="false" toShortenFQNames="true">
+        <variable name="OBJECT" expression="" defaultValue="&quot;object&quot;" alwaysStopAt="true"/>
+        <variable name="LABEL" expression="" defaultValue="&quot;Object&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="OPAL" value="true"/>
+        </context>
+    </template>
+
+    <template name="debug-measure" value="debug_measure('$LABEL$') do&#10;  $END$&#10;end" description="Measure execution time" toReformat="true" toShortenFQNames="true">
+        <variable name="LABEL" expression="" defaultValue="&quot;Operation&quot;" alwaysStopAt="true"/>
+        <context>
+            <option name="OPAL" value="true"/>
+        </context>
+    </template>
+
+    <!-- Application Entry -->
+    <template name="opal-app" value="require 'opal'&#10;require 'opal_stimulus'&#10;require 'opal_vite'&#10;&#10;# Import controllers&#10;require_tree './controllers'&#10;&#10;# Initialize Stimulus&#10;application = Stimulus::Application.start&#10;&#10;puts 'Opal application started!'" description="Opal application entry point" toReformat="true" toShortenFQNames="true">
+        <context>
+            <option name="OPAL" value="true"/>
+        </context>
+    </template>
+</templateSet>
