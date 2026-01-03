@@ -1,5 +1,5 @@
 <idea-plugin>
-    <id>com.opalvite.intellij</id>
+    <id>com.opalvite.plugin</id>
     <name>Opal-Vite</name>
     <version>0.3.7</version>
     <vendor email="yamaboku@gmail.com" url="https://github.com/stofu1234/opal-vite">stofu1234</vendor>
