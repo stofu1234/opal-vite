@@ -2,7 +2,7 @@
   "name": "vscode-opal-vite",
   "displayName": "Opal Vite",
   "description": "VS Code extension for Opal (Ruby to JavaScript) development with Vite",
-  "version": "0.3.6",
+  "version": "0.3.7",
   "publisher": "stofu1234",
   "license": "MIT",
   "repository": {

@@ -1,0 +1,101 @@
+<idea-plugin>
+    <id>com.opalvite.intellij</id>
+    <name>Opal-Vite</name>
+    <version>0.3.7</version>
+    <vendor email="yamaboku@gmail.com" url="https://github.com/stofu1234/opal-vite">stofu1234</vendor>
+
+    <description><![CDATA[
+        <h1>Opal-Vite IntelliJ Plugin</h1>
+        <p>Enhanced Ruby/Opal development support for opal-vite projects.</p>
+
+        <h2>Features</h2>
+        <ul>
+            <li><b>LSP Integration</b>: Connects to opal-language-server for intelligent code assistance</li>
+            <li><b>Diagnostics</b>: Warnings for Opal-incompatible Ruby patterns (Thread, File, IO, etc.)</li>
+            <li><b>Live Templates</b>: Code snippets for Stimulus controllers, OpalVite concerns, and more</li>
+            <li><b>Syntax Highlighting</b>: Enhanced highlighting for Opal-specific constructs</li>
+        </ul>
+
+        <h2>Requirements</h2>
+        <ul>
+            <li>IntelliJ IDEA 2024.1 or later</li>
+            <li>Ruby plugin installed</li>
+            <li>LSP4IJ plugin installed</li>
+            <li>Node.js (for opal-language-server)</li>
+        </ul>
+
+        <h2>Quick Start</h2>
+        <ol>
+            <li>Install opal-language-server: <code>npm install -g opal-language-server</code></li>
+            <li>Open a Ruby file in an <code>app/opal/</code> directory</li>
+            <li>The plugin will automatically connect to the LSP server</li>
+        </ol>
+    ]]></description>
+
+    <change-notes><![CDATA[
+        <h2>0.3.7</h2>
+        <ul>
+            <li>Initial release</li>
+            <li>LSP integration with opal-language-server</li>
+            <li>Live templates for Stimulus controllers and OpalVite concerns</li>
+            <li>Diagnostics for Opal-incompatible Ruby patterns</li>
+        </ul>
+    ]]></change-notes>
+
+    <idea-version since-build="241" until-build="243.*"/>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>org.jetbrains.plugins.ruby</depends>
+    <depends>com.redhat.devtools.lsp4ij</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <!-- Live Templates -->
+        <defaultLiveTemplates file="/liveTemplates/Opal.xml"/>
+        <liveTemplateContext
+                implementation="com.opalvite.intellij.liveTemplates.OpalLiveTemplateContext"/>
+
+        <!-- Settings -->
+        <applicationConfigurable
+                parentId="tools"
+                instance="com.opalvite.intellij.settings.OpalViteSettingsConfigurable"
+                id="com.opalvite.intellij.settings"
+                displayName="Opal-Vite"/>
+
+        <applicationService
+                serviceImplementation="com.opalvite.intellij.settings.OpalViteSettings"/>
+
+        <!-- Notifications -->
+        <notificationGroup id="Opal-Vite" displayType="BALLOON"/>
+    </extensions>
+
+    <extensions defaultExtensionNs="com.redhat.devtools.lsp4ij">
+        <!-- LSP Server Definition -->
+        <server id="opalLanguageServer"
+                name="Opal Language Server"
+                factoryClass="com.opalvite.intellij.lsp.OpalLspServerFactory">
+            <description><![CDATA[
+                Language Server Protocol support for Opal (Ruby to JavaScript compiler).
+                Provides diagnostics for Opal-incompatible patterns and code completion.
+            ]]></description>
+        </server>
+
+        <!-- LSP File Type Mapping for Ruby files -->
+        <fileTypeMapping fileType="Ruby"
+                         serverId="opalLanguageServer"
+                         languageId="ruby"/>
+
+        <!-- Also map .opal files if they exist -->
+        <fileNamePatternMapping patterns="*.opal"
+                                serverId="opalLanguageServer"
+                                languageId="ruby"/>
+    </extensions>
+
+    <actions>
+        <action id="OpalVite.RestartServer"
+                class="com.opalvite.intellij.actions.RestartServerAction"
+                text="Restart Opal Language Server"
+                description="Restart the Opal Language Server">
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+        </action>
+    </actions>
+</idea-plugin>

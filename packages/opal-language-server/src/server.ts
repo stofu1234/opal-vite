@@ -108,7 +108,10 @@ function getDocumentSettings(resource: string): Promise<OpalServerSettings> {
     result = connection.workspace.getConfiguration({
       scopeUri: resource,
       section: 'opalVite'
-    }) as Promise<OpalServerSettings>;
+    }).then((settings: OpalServerSettings | null) => {
+      // Handle null settings (e.g., when client doesn't provide configuration)
+      return settings ?? defaultSettings;
+    });
     documentSettings.set(resource, result);
   }
   return result;
