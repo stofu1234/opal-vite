@@ -40,12 +40,18 @@ export default defineConfig({
               ]
             },
             {
+              text: 'Development',
+              items: [
+                { text: 'Editor Plugins', link: '/guide/editor-plugins' },
+                { text: 'Source Maps', link: '/guide/source-maps' },
+                { text: 'Testing', link: '/guide/testing' }
+              ]
+            },
+            {
               text: 'Advanced',
               items: [
                 { text: 'Production Build', link: '/guide/production-build' },
                 { text: 'Migration', link: '/guide/migration' },
-                { text: 'Source Maps', link: '/guide/source-maps' },
-                { text: 'Testing', link: '/guide/testing' },
                 { text: 'Troubleshooting', link: '/guide/troubleshooting' }
               ]
             }
@@ -93,12 +99,18 @@ export default defineConfig({
               ]
             },
             {
+              text: '開発',
+              items: [
+                { text: 'エディタプラグイン', link: '/guide/editor-plugins' },
+                { text: 'ソースマップ', link: '/ja/guide/source-maps' },
+                { text: 'テスト', link: '/ja/guide/testing' }
+              ]
+            },
+            {
               text: '詳細',
               items: [
                 { text: '本番ビルド', link: '/ja/guide/production-build' },
                 { text: 'マイグレーション', link: '/ja/guide/migration' },
-                { text: 'ソースマップ', link: '/ja/guide/source-maps' },
-                { text: 'テスト', link: '/ja/guide/testing' },
                 { text: 'トラブルシューティング', link: '/ja/guide/troubleshooting' }
               ]
             }

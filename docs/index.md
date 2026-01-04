@@ -35,6 +35,9 @@ features:
   - icon: 🎯
     title: Stimulus Integration
     details: Write Stimulus controllers in Ruby with OpalVite Helpers for DOM manipulation and more.
+  - icon: 🛠️
+    title: Editor Plugins
+    details: LSP support for VS Code, IntelliJ IDEA, and Vim/Neovim with diagnostics and code snippets.
 ---
 
 ## Quick Installation

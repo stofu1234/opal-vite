@@ -13,7 +13,9 @@ import {
   TextDocumentPositionParams,
   DidChangeConfigurationNotification,
   DidChangeConfigurationParams,
-  TextDocumentChangeEvent
+  TextDocumentChangeEvent,
+  DocumentDiagnosticReportKind,
+  type DocumentDiagnosticReport
 } from 'vscode-languageserver/node.js';
 
 import { TextDocument } from 'vscode-languageserver-textdocument';
@@ -176,16 +178,45 @@ function severityToLSP(severity: string, configuredSeverity: string): Diagnostic
   }
 }
 
+// Push diagnostics (for older clients that don't support Pull Diagnostics)
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
+  const diagnostics = await getDiagnosticsForDocument(textDocument);
+  connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
+}
+
+connection.onCompletion(
+  (_textDocumentPosition: TextDocumentPositionParams): CompletionItem[] => {
+    return getAllCompletionItems();
+  }
+);
+
+// Handle textDocument/diagnostic request (Pull Diagnostics - LSP 3.17+)
+connection.languages.diagnostics.on(async (params): Promise<DocumentDiagnosticReport> => {
+  const document = documents.get(params.textDocument.uri);
+  if (!document) {
+    return {
+      kind: DocumentDiagnosticReportKind.Full,
+      items: []
+    };
+  }
+
+  const diagnostics = await getDiagnosticsForDocument(document);
+  return {
+    kind: DocumentDiagnosticReportKind.Full,
+    items: diagnostics
+  };
+});
+
+// Extract diagnostics logic to reusable function
+async function getDiagnosticsForDocument(textDocument: TextDocument): Promise<Diagnostic[]> {
   const settings = await getDocumentSettings(textDocument.uri);
 
   if (!settings.enableDiagnostics) {
-    connection.sendDiagnostics({ uri: textDocument.uri, diagnostics: [] });
-    return;
+    return [];
   }
 
   if (!isOpalFile(textDocument, settings)) {
-    return;
+    return [];
   }
 
   const text = textDocument.getText();
@@ -243,14 +274,8 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
     }
   }
 
-  connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
+  return diagnostics;
 }
-
-connection.onCompletion(
-  (_textDocumentPosition: TextDocumentPositionParams): CompletionItem[] => {
-    return getAllCompletionItems();
-  }
-);
 
 documents.listen(connection);
 connection.listen();

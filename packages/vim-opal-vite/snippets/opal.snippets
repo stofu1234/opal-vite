@@ -1,0 +1,330 @@
+# Opal code snippets for UltiSnips
+# Provides snippets for Opal Stimulus controllers, services, and OpalVite concerns
+
+# =====================
+# Stimulus Controllers
+# =====================
+
+snippet opal-controller "Opal Stimulus Controller" b
+require 'opal_stimulus'
+
+class ${1:Name}Controller < StimulusController
+  def initialize
+    super
+  end
+
+  def connect
+    ${2}
+  end
+
+  def disconnect
+    ${3}
+  end
+end
+endsnippet
+
+snippet opal-controller-concerns "Opal Stimulus Controller with Concerns" b
+require 'opal_stimulus'
+require 'opal_vite'
+
+class ${1:Name}Controller < StimulusController
+  include OpalVite::Concerns::V1::DomHelpers
+  include OpalVite::Concerns::V1::${2:StimulusHelpers}
+
+  def initialize
+    super
+  end
+
+  def connect
+    ${3}
+  end
+
+  def disconnect
+    ${4}
+  end
+end
+endsnippet
+
+snippet opal-controller-full "Full Opal Stimulus Controller" b
+require 'opal_stimulus'
+require 'opal_vite'
+
+class ${1:Name}Controller < StimulusController
+  include OpalVite::Concerns::V1::DomHelpers
+  include OpalVite::Concerns::V1::StimulusHelpers
+  include OpalVite::Concerns::V1::Storable
+
+  targets :${2:element}
+
+  def initialize
+    super
+  end
+
+  def connect
+    load_state
+    render
+  end
+
+  def disconnect
+    save_state
+  end
+
+  private
+
+  def render
+    ${3}
+  end
+
+  def load_state
+    @state = storage_get('${1/(.)/\l$1/}') || {}
+  end
+
+  def save_state
+    storage_set('${1/(.)/\l$1/}', @state)
+  end
+end
+endsnippet
+
+# =====================
+# Service Pattern
+# =====================
+
+snippet opal-service "Opal Service Class" b
+require 'opal_vite'
+
+class ${1:Name}Service
+  include OpalVite::Concerns::V1::DomHelpers
+  include OpalVite::Concerns::V1::Storable
+
+  def initialize
+    ${2}
+  end
+
+  def ${3:method_name}
+    ${4}
+  end
+end
+endsnippet
+
+# =====================
+# Presenter Pattern
+# =====================
+
+snippet opal-presenter "Opal Presenter Class" b
+require 'opal_vite'
+
+class ${1:Name}Presenter
+  include OpalVite::Concerns::V1::DomHelpers
+
+  def initialize(container)
+    @container = container
+  end
+
+  def render
+    html = <<~HTML
+      <div class="${2:class}">
+        ${3}
+      </div>
+    HTML
+    @container.innerHTML = html
+  end
+end
+endsnippet
+
+# =====================
+# DOM Helpers
+# =====================
+
+snippet qs "Query Selector" w
+qs('${1:selector}')${2}
+endsnippet
+
+snippet qsa "Query Selector All" w
+qsa('${1:selector}')${2}
+endsnippet
+
+snippet qsi "Query Selector with ID" w
+qsi('${1:id}')${2}
+endsnippet
+
+snippet create_el "Create Element" b
+create_element('${1:tag}', {
+  class: '${2:class}',
+  ${3}
+})
+endsnippet
+
+snippet add_class "Add Class" w
+add_class(${1:element}, '${2:class}')
+endsnippet
+
+snippet remove_class "Remove Class" w
+remove_class(${1:element}, '${2:class}')
+endsnippet
+
+snippet toggle_class "Toggle Class" w
+toggle_class(${1:element}, '${2:class}')
+endsnippet
+
+snippet has_class "Has Class" w
+has_class?(${1:element}, '${2:class}')
+endsnippet
+
+snippet show "Show Element" w
+show(${1:element})
+endsnippet
+
+snippet hide "Hide Element" w
+hide(${1:element})
+endsnippet
+
+snippet on "Event Listener" b
+on(${1:element}, '${2:event}') do |e|
+  ${3}
+end
+endsnippet
+
+snippet off "Remove Event Listener" b
+off(${1:element}, '${2:event}', ${3:handler})
+endsnippet
+
+# =====================
+# Storage Helpers
+# =====================
+
+snippet storage_get "Storage Get" w
+storage_get('${1:key}')${2}
+endsnippet
+
+snippet storage_set "Storage Set" w
+storage_set('${1:key}', ${2:value})
+endsnippet
+
+snippet session_get "Session Storage Get" w
+session_get('${1:key}')${2}
+endsnippet
+
+snippet session_set "Session Storage Set" w
+session_set('${1:key}', ${2:value})
+endsnippet
+
+# =====================
+# Stimulus Helpers
+# =====================
+
+snippet targets "Stimulus Targets" b
+targets :${1:name}
+endsnippet
+
+snippet values "Stimulus Values" b
+values ${1:name}: ${2:String}
+endsnippet
+
+snippet classes "Stimulus Classes" b
+classes :${1:name}
+endsnippet
+
+# =====================
+# Promise/Async
+# =====================
+
+snippet promise "PromiseV2" b
+PromiseV2.new do |resolve, reject|
+  ${1}
+end
+endsnippet
+
+snippet fetch_json "Fetch JSON" b
+PromiseV2.new do |resolve, reject|
+  fetch('${1:url}')
+    .then { |response| response.json }
+    .then { |data| resolve.call(data) }
+    .catch { |error| reject.call(error) }
+end
+endsnippet
+
+snippet await "Await Promise" w
+.then do |${1:result}|
+  ${2}
+end
+endsnippet
+
+# =====================
+# Native JS Integration
+# =====================
+
+snippet native "Native JS Object" w
+Native(\`${1:javascript}\`)${2}
+endsnippet
+
+snippet backticks "Inline JavaScript" w
+\`${1:javascript}\`${2}
+endsnippet
+
+snippet native_class "Native JS Class Wrapper" b
+class ${1:Name}
+  include Native::Wrapper
+
+  def initialize(native_object = nil)
+    @native = native_object || \`new ${2:JSClass}()\`
+  end
+
+  def ${3:method}
+    \`#@native.${3}()\`
+  end
+end
+endsnippet
+
+# =====================
+# Toastable
+# =====================
+
+snippet toast_success "Toast Success" w
+toast_success('${1:message}')
+endsnippet
+
+snippet toast_error "Toast Error" w
+toast_error('${1:message}')
+endsnippet
+
+snippet toast_warning "Toast Warning" w
+toast_warning('${1:message}')
+endsnippet
+
+snippet toast_info "Toast Info" w
+toast_info('${1:message}')
+endsnippet
+
+# =====================
+# Validation Helpers
+# =====================
+
+snippet validate "Validate Field" b
+validate(:${1:field}, ${2:value}) do |v|
+  v.required
+  v.min_length(${3:3})
+end
+endsnippet
+
+snippet validation_rules "Validation Rules Block" b
+def validation_rules
+  {
+    ${1:field}: ->(v) {
+      v.required
+      ${2}
+    }
+  }
+end
+endsnippet
+
+# =====================
+# I18n Helpers
+# =====================
+
+snippet t "Translate" w
+t('${1:key}')${2}
+endsnippet
+
+snippet t_params "Translate with params" w
+t('${1:key}', ${2:param}: ${3:value})${4}
+endsnippet

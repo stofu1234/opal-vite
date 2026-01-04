@@ -1,0 +1,226 @@
+*opal-vite.txt*  Vim/Neovim plugin for Opal development with Vite
+
+                           OPAL-VITE.NVIM
+                   Opal development support for Vim/Neovim
+
+==============================================================================
+CONTENTS                                                 *opal-vite-contents*
+
+    1. Introduction ................................ |opal-vite-introduction|
+    2. Requirements ................................ |opal-vite-requirements|
+    3. Installation ................................ |opal-vite-installation|
+    4. Configuration ............................... |opal-vite-configuration|
+    5. Commands .................................... |opal-vite-commands|
+    6. LSP Features ................................ |opal-vite-lsp|
+    7. Snippets .................................... |opal-vite-snippets|
+    8. Key Mappings ................................ |opal-vite-mappings|
+
+==============================================================================
+1. INTRODUCTION                                      *opal-vite-introduction*
+
+opal-vite.nvim provides comprehensive development support for Opal
+(Ruby to JavaScript compiler) projects using Vite as the build tool.
+
+Features:
+  - LSP integration via opal-language-server
+  - Diagnostics for Opal-incompatible Ruby patterns
+  - Code snippets for Stimulus controllers, services, and OpalVite concerns
+  - Auto-detection of Opal files in app/opal/ directories
+
+==============================================================================
+2. REQUIREMENTS                                      *opal-vite-requirements*
+
+Neovim (recommended):
+  - Neovim 0.8.0 or later
+  - nvim-lspconfig (for LSP support)
+  - Node.js (for running the language server)
+  - Optional: LuaSnip or UltiSnips (for snippets)
+
+Vim:
+  - Vim 8.0 or later
+  - No LSP support in Vim (diagnostics not available)
+  - UltiSnips recommended for snippets
+
+==============================================================================
+3. INSTALLATION                                      *opal-vite-installation*
+
+Using lazy.nvim: >lua
+  {
+    "stofu1234/opal-vite",
+    config = function()
+      require("opal_vite").setup({
+        enable_diagnostics = true,
+        diagnostic_severity = "warn",
+      })
+    end,
+    dependencies = {
+      "neovim/nvim-lspconfig",
+    },
+  }
+<
+
+Using packer.nvim: >lua
+  use {
+    "stofu1234/opal-vite",
+    requires = { "neovim/nvim-lspconfig" },
+    config = function()
+      require("opal_vite").setup()
+    end,
+  }
+<
+
+Using vim-plug: >vim
+  Plug 'neovim/nvim-lspconfig'
+  Plug 'stofu1234/opal-vite', { 'rtp': 'packages/vim-opal-vite' }
+<
+
+Manual installation:
+  1. Clone the repository
+  2. Add packages/vim-opal-vite to your runtimepath
+  3. Install the language server: `npm install -g opal-language-server`
+
+==============================================================================
+4. CONFIGURATION                                    *opal-vite-configuration*
+
+Neovim Lua configuration: >lua
+  require("opal_vite").setup({
+    -- Enable LSP diagnostics (default: true)
+    enable_diagnostics = true,
+
+    -- Diagnostic severity: "error", "warn", "info", "hint"
+    diagnostic_severity = "warn",
+
+    -- Auto-detect Opal files in app/opal/ directories (default: true)
+    auto_detect_opal_files = true,
+
+    -- Custom path to opal-language-server (default: use npx)
+    server_cmd = nil,
+
+    -- Additional LSP settings
+    lsp_settings = {},
+
+    -- Additional options passed to lspconfig.setup()
+    lsp_opts = {},
+  })
+<
+
+Vim configuration: >vim
+  " Enable/disable diagnostics
+  let g:opal_vite_enable_diagnostics = 1
+
+  " Diagnostic severity: 'error', 'warn', 'info', 'hint'
+  let g:opal_vite_diagnostic_severity = 'warn'
+
+  " Auto-detect Opal files
+  let g:opal_vite_auto_detect = 1
+<
+
+Using a globally installed language server: >lua
+  require("opal_vite").setup({
+    server_cmd = "opal-language-server",
+  })
+<
+
+==============================================================================
+5. COMMANDS                                              *opal-vite-commands*
+
+                                                              *:OpalRestart*
+:OpalRestart
+    Restart the Opal Language Server. Useful when the server becomes
+    unresponsive or after configuration changes.
+
+                                                                 *:OpalInfo*
+:OpalInfo
+    Display information about the current Opal Language Server status,
+    including client ID and root directory.
+
+                                                    *:OpalToggleDiagnostics*
+:OpalToggleDiagnostics
+    Toggle Opal diagnostics on/off. When disabled, no warnings for
+    Opal-incompatible patterns will be shown.
+
+==============================================================================
+6. LSP FEATURES                                              *opal-vite-lsp*
+
+The Opal Language Server provides the following features:
+
+Diagnostics ~
+  Warnings for Opal-incompatible Ruby patterns:
+  - Threading (Thread, Mutex, Queue)
+  - File system operations (File, Dir, IO)
+  - Socket operations (TCPSocket, UDPSocket)
+  - Native C extensions (nokogiri, mysql2, pg)
+
+Completions ~
+  Code completions for OpalVite patterns:
+  - Stimulus controller templates
+  - DOM helper methods
+  - Storage helpers
+  - And more...
+
+The LSP server is automatically attached to Ruby files in:
+  - app/opal/**/*.rb
+  - opal/**/*.rb
+
+For other Ruby files, the server is not attached (to avoid false positives
+in server-side Ruby code).
+
+==============================================================================
+7. SNIPPETS                                              *opal-vite-snippets*
+
+UltiSnips ~
+  Copy snippets/opal.snippets to your UltiSnips snippets directory:
+  ~/.vim/UltiSnips/ or ~/.config/nvim/UltiSnips/
+
+LuaSnip ~
+  Load the Lua snippets: >lua
+    require("opal_vite.snippets").setup()
+<
+
+Available snippets:
+
+  Stimulus Controllers:
+    opal-controller           Basic Stimulus controller
+    opal-controller-concerns  Controller with OpalVite concerns
+    opal-controller-full      Full controller with state management
+
+  Patterns:
+    opal-service              Service class
+    opal-presenter            Presenter class
+
+  DOM Helpers:
+    qs                        Query selector
+    qsa                       Query selector all
+    qsi                       Query selector by ID
+    create_el                 Create element
+    on                        Event listener
+
+  Storage:
+    storage_get               Get from localStorage
+    storage_set               Set in localStorage
+
+  Async:
+    promise                   PromiseV2 block
+    fetch_json                Fetch JSON data
+
+  Native JS:
+    native                    Native() wrapper
+    backticks                 Inline JavaScript
+
+==============================================================================
+8. KEY MAPPINGS                                          *opal-vite-mappings*
+
+The following key mappings are set for Opal files when LSP is attached:
+
+  gd          Go to definition
+  K           Show hover information
+  <leader>rn  Rename symbol
+  <leader>ca  Code actions
+  [d          Go to previous diagnostic
+  ]d          Go to next diagnostic
+  <leader>e   Open diagnostic float
+
+These mappings are buffer-local and only active in Opal files.
+
+==============================================================================
+vim:tw=78:ts=8:ft=help:norl:
