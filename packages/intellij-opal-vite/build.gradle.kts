@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.opalvite"
-version = "0.3.7"
+version = "0.3.8"
 
 repositories {
     mavenCentral()
@@ -34,6 +34,12 @@ tasks {
         sinceBuild.set("241")
         untilBuild.set("243.*")
         changeNotes.set("""
+            <h2>0.3.8</h2>
+            <ul>
+                <li>Add Vim/Neovim plugin support</li>
+                <li>Add Pull Diagnostics support for Neovim 0.11+</li>
+                <li>Fix buffer reload errors in Neovim plugin</li>
+            </ul>
             <h2>0.3.7</h2>
             <ul>
                 <li>Initial release</li>
