@@ -63,8 +63,9 @@ function M.setup(opts)
     }
   end
 
-  -- Setup the server
+  -- Setup the server with custom cmd if provided
   lspconfig.opal_language_server.setup(vim.tbl_deep_extend("force", {
+    cmd = M.get_server_cmd(),
     on_attach = M.on_attach,
     capabilities = M.get_capabilities(),
     settings = config.lsp_settings,
