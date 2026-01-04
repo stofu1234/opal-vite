@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>com.opalvite.plugin</id>
     <name>Opal-Vite</name>
-    <version>0.3.7</version>
+    <version>0.3.8</version>
     <vendor email="yamaboku@gmail.com" url="https://github.com/stofu1234/opal-vite">stofu1234</vendor>
 
     <description><![CDATA[
@@ -33,6 +33,12 @@
     ]]></description>
 
     <change-notes><![CDATA[
+        <h2>0.3.8</h2>
+        <ul>
+            <li>Add Vim/Neovim plugin support</li>
+            <li>Add Pull Diagnostics support for Neovim 0.11+</li>
+            <li>Fix buffer reload errors in Neovim plugin</li>
+        </ul>
         <h2>0.3.7</h2>
         <ul>
             <li>Initial release</li>
