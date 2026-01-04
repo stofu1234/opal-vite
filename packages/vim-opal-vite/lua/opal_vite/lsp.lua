@@ -5,6 +5,23 @@ local M = {}
 
 local config = {}
 
+-- Compatibility: vim.lsp.get_clients was added in Neovim 0.10
+-- Older versions use vim.lsp.get_active_clients
+local function get_lsp_clients(opts)
+  if vim.lsp.get_clients then
+    return vim.lsp.get_clients(opts)
+  else
+    -- Fallback for Neovim < 0.10
+    local clients = vim.lsp.get_active_clients(opts)
+    if opts and opts.name then
+      return vim.tbl_filter(function(c)
+        return c.name == opts.name
+      end, clients)
+    end
+    return clients
+  end
+end
+
 -- Setup LSP for Opal
 function M.setup(opts)
   config = opts or {}
@@ -109,7 +126,7 @@ end
 
 -- Restart the Opal Language Server
 function M.restart()
-  local clients = vim.lsp.get_clients({ name = "opal_language_server" })
+  local clients = get_lsp_clients({ name = "opal_language_server" })
   for _, client in ipairs(clients) do
     local bufs = vim.lsp.get_buffers_by_client_id(client.id)
     vim.lsp.stop_client(client.id, true)
