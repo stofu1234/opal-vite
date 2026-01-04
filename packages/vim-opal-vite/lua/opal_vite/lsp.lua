@@ -132,12 +132,16 @@ function M.restart()
     local bufs = vim.lsp.get_buffers_by_client_id(client.id)
     vim.lsp.stop_client(client.id, true)
 
-    -- Wait a bit and restart
+    -- Wait a bit and restart by re-attaching to buffers
     vim.defer_fn(function()
       for _, buf in ipairs(bufs) do
-        vim.api.nvim_buf_call(buf, function()
-          vim.cmd("edit")
-        end)
+        if vim.api.nvim_buf_is_valid(buf) then
+          -- Start LSP for this buffer using lspconfig
+          local ok, lspconfig = pcall(require, "lspconfig")
+          if ok and lspconfig.opal_language_server then
+            lspconfig.opal_language_server.launch(buf)
+          end
+        end
       end
     end, 500)
   end

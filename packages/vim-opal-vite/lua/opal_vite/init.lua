@@ -107,8 +107,12 @@ function M.toggle_diagnostics()
 
   if M.config.enable_diagnostics then
     print("Opal diagnostics: Enabled")
-    -- Trigger diagnostics refresh
-    vim.cmd("edit")
+    -- Trigger diagnostics refresh by reloading buffer (force)
+    if vim.bo.modified then
+      -- Save first if modified
+      vim.cmd("write")
+    end
+    vim.cmd("edit!")
   else
     print("Opal diagnostics: Disabled")
     -- Clear diagnostics
