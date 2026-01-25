@@ -28,40 +28,42 @@ class CounterComponent
   def self.to_n
     r = react
 
-    `function() {
-      const [count, setCount] = #{r}.useState(0);
+    `(function(React) {
+      return function() {
+        const [count, setCount] = React.useState(0);
 
-      const increment = () => setCount(count + 1);
-      const decrement = () => setCount(count - 1);
-      const reset = () => setCount(0);
+        const increment = () => setCount(count + 1);
+        const decrement = () => setCount(count - 1);
+        const reset = () => setCount(0);
 
-      return #{r}.createElement('div', null,
-        #{r}.createElement('div', { className: 'counter-display' },
-          #{r}.createElement('div', { className: 'count-value' }, count)
-        ),
-        #{r}.createElement('div', { className: 'counter-controls' },
-          #{r}.createElement('button',
-            { className: 'btn btn-decrement', onClick: decrement },
-            '−'
+        return React.createElement('div', null,
+          React.createElement('div', { className: 'counter-display' },
+            React.createElement('div', { className: 'count-value' }, count)
           ),
-          #{r}.createElement('button',
-            { className: 'btn btn-reset', onClick: reset },
-            'Reset'
+          React.createElement('div', { className: 'counter-controls' },
+            React.createElement('button',
+              { className: 'btn btn-decrement', onClick: decrement },
+              '−'
+            ),
+            React.createElement('button',
+              { className: 'btn btn-reset', onClick: reset },
+              'Reset'
+            ),
+            React.createElement('button',
+              { className: 'btn btn-increment', onClick: increment },
+              '+'
+            )
           ),
-          #{r}.createElement('button',
-            { className: 'btn btn-increment', onClick: increment },
-            '+'
+          React.createElement('div', { className: 'counter-info' },
+            React.createElement('p', null, 'Current count: ' + count),
+            React.createElement('p', { className: 'status' },
+              count > 0 ? React.createElement('span', { className: 'positive' }, '↑ Positive') :
+              count < 0 ? React.createElement('span', { className: 'negative' }, '↓ Negative') :
+              React.createElement('span', { className: 'zero' }, '● Zero')
+            )
           )
-        ),
-        #{r}.createElement('div', { className: 'counter-info' },
-          #{r}.createElement('p', null, 'Current count: ' + count),
-          #{r}.createElement('p', { className: 'status' },
-            count > 0 ? #{r}.createElement('span', { className: 'positive' }, '↑ Positive') :
-            count < 0 ? #{r}.createElement('span', { className: 'negative' }, '↓ Negative') :
-            #{r}.createElement('span', { className: 'zero' }, '● Zero')
-          )
-        )
-      );
-    }`
+        );
+      };
+    })(#{r})`
   end
 end
