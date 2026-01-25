@@ -14,6 +14,10 @@ RSpec.describe 'Todo Functionality', type: :feature do
 
     stable_input(input_selector, text, submit_key: :enter)
 
+    # Wait for input to be cleared (confirms form submission was processed)
+    # The controller clears the input after 800ms timeout when todo is added
+    js_wait_for("document.querySelector('#{input_selector}').value === ''", timeout: 15)
+
     # Wait for the new todo item to appear (count should increase by 1)
     wait_for_count("#{list_selector} .todo-item", current_count + 1, timeout: 15)
     wait_for_text(list_selector, text, timeout: 10)
