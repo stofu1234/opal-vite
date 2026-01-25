@@ -1,3 +1,4 @@
+require "ostruct"
 require "opal-vite"
 require "rails"
 require "vite_rails"

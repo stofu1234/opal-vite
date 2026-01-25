@@ -1,5 +1,5 @@
 module Opal
   module Vite
-    VERSION = "0.3.9"
+    VERSION = "0.3.10"
   end
 end
