@@ -18,10 +18,6 @@ module Opal
             Opal::Vite::Rails.config.public_output_path = app.config.opal_vite.public_output_path
           end
 
-          # Set manifest path from ViteRails
-          if defined?(ViteRuby)
-            Opal::Vite::Rails.config.manifest_path = ViteRuby.manifest_path
-          end
         end
 
         initializer "opal_vite.view_helpers" do
