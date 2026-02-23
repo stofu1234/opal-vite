@@ -277,6 +277,19 @@ importers:
         specifier: workspace:*
         version: link:../../packages/vite-plugin-opal
 
+  examples/stimulus-components-app:
+    dependencies:
+      '@hotwired/stimulus':
+        specifier: ^3.2.2
+        version: 3.2.2
+      vite:
+        specifier: ^5.0.0
+        version: 5.4.21(@types/node@20.19.26)(terser@5.44.1)
+    devDependencies:
+      vite-plugin-opal:
+        specifier: workspace:*
+        version: link:../../packages/vite-plugin-opal
+
   examples/tabs-app:
     dependencies:
       '@hotwired/stimulus':
@@ -2846,6 +2859,7 @@ packages:
   glob@11.1.0:
     resolution: {integrity: sha512-vuNwKSaKiqm7g0THUBu2x7ckSs3XJLXE+2ssL7/MfTGPLLcrJQ/4Uq1CjPTtO5cCIiRxqvN6Twy1qOwhL0Xjcw==}
     engines: {node: 20 || >=22}
+    deprecated: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
     hasBin: true
 
   glob@7.2.3:
