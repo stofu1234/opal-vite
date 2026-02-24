@@ -638,6 +638,7 @@ jobs:
       matrix:
         example:
           - stimulus-app
+          - stimulus-components-app
           - practical-app
           - chart-app
           - chat-app

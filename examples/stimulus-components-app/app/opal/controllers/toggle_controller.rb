@@ -19,7 +19,7 @@ class ToggleController < StimulusController
     set_stimulus_value(:on, !current)
   end
 
-  def on_value_changed
+  def on_value_changed(*_)
     update_display
   end
 

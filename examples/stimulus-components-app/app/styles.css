@@ -227,11 +227,16 @@ footer a:hover {
 
 .dropdown-item {
   display: block;
+  width: 100%;
   padding: 0.75rem 1.25rem;
   color: #333;
-  text-decoration: none;
-  transition: background 0.15s;
+  background: none;
+  border: none;
+  text-align: left;
+  font-family: inherit;
   font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.15s;
 }
 
 .dropdown-item:first-child {
@@ -363,10 +368,10 @@ footer a:hover {
   white-space: nowrap;
   z-index: 200;
   pointer-events: none;
-  animation: tooltipFadeIn 0.15s ease;
+  animation: tooltip-fade-in 0.15s ease;
 }
 
-@keyframes tooltipFadeIn {
+@keyframes tooltip-fade-in {
   from {
     opacity: 0;
     transform: scale(0.95);

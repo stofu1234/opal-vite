@@ -5,7 +5,7 @@ export default defineConfig({
   base: process.env.VITE_BASE || '/',
   plugins: [
     opal({
-      loadPaths: ['./app/opal/controllers'],
+      loadPaths: ['./app/opal', './app/opal/controllers'],
       sourceMap: true,
       includeConcerns: true
     })
