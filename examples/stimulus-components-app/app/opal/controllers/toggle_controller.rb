@@ -9,64 +9,40 @@ class ToggleController < StimulusController
   self.values = { on: :boolean, label_on: :string, label_off: :string }
   self.classes = ["active"]
 
-  def initialize
-    super
-    @on_value = false
-    @label_on_value = 'ON'
-    @label_off_value = 'OFF'
-  end
-
   def connect
     puts "Toggle controller connected!"
     update_display
   end
 
   def toggle
-    self.on_value = !on_value
+    current = stimulus_value(:on)
+    set_stimulus_value(:on, !current)
   end
-
-  private
 
   def on_value_changed
     update_display
   end
 
+  private
+
   def update_display
-    switch_el = get_target(:switch)
-    return unless switch_el
+    sw = get_target(:switch)
+    return unless sw
 
-    active_classes = js_prop(:activeClasses) || ['toggle-switch--on']
+    on = stimulus_value(:on)
 
-    if on_value
-      class_list = js_get(switch_el, :classList)
-      js_call_on(class_list, :add, *active_classes)
-      update_status(label_on_value)
-      show_content
+    if on
+      add_class(sw, 'toggle-switch--on')
+      label = stimulus_value(:label_on)
+      label = 'ON' if !label || `#{label}.length === 0`
+      target_set_text(:status, label) if has_target?(:status)
+      set_target_style(:content, 'display', 'block') if has_target?(:content)
     else
-      class_list = js_get(switch_el, :classList)
-      js_call_on(class_list, :remove, *active_classes)
-      update_status(label_off_value)
-      hide_content
-    end
-  end
-
-  def update_status(text)
-    if has_target?(:status)
-      target_set_text(:status, text)
-    end
-  end
-
-  def show_content
-    if has_target?(:content)
-      content = get_target(:content)
-      set_style(content, :display, 'block')
-    end
-  end
-
-  def hide_content
-    if has_target?(:content)
-      content = get_target(:content)
-      set_style(content, :display, 'none')
+      remove_class(sw, 'toggle-switch--on')
+      label = stimulus_value(:label_off)
+      label = 'OFF' if !label || `#{label}.length === 0`
+      target_set_text(:status, label) if has_target?(:status)
+      set_target_style(:content, 'display', 'none') if has_target?(:content)
     end
   end
 end

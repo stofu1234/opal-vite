@@ -23,7 +23,7 @@ class AccordionController < StimulusController
 
     is_open = has_class?(item, 'accordion-content--open')
 
-    unless allow_multiple_value
+    unless `this.allowMultipleValue`
       close_all_items
     end
 

@@ -15,13 +15,13 @@
 
       <main>
         <!-- Accordion -->
-        <section class="card" data-controller="accordion" data-accordion-allow-multiple-value="true">
+        <section class="card" data-controller="accordion" data-accordion-allow_multiple-value="true">
           <h2>Accordion</h2>
           <p>Expandable/collapsible panels with Expand All and Collapse All support</p>
           <div class="demo">
             <div class="accordion-actions">
-              <button data-action="click->accordion#expandAll">Expand All</button>
-              <button class="btn-secondary" data-action="click->accordion#collapseAll">Collapse All</button>
+              <button data-action="click->accordion#expand_all">Expand All</button>
+              <button class="btn-secondary" data-action="click->accordion#collapse_all">Collapse All</button>
             </div>
 
             <div class="accordion" data-accordion-target="item">
@@ -89,7 +89,7 @@
           <div class="demo">
             <div class="toggle-group">
               <!-- Basic Toggle -->
-              <div class="toggle-item" data-controller="toggle" data-toggle-active-class="toggle-switch--on">
+              <div class="toggle-item" data-controller="toggle" data-toggle-active-class="toggle-switch--on" data-toggle-label_on-value="ON" data-toggle-label_off-value="OFF">
                 <label>Notifications</label>
                 <div class="toggle-row">
                   <div class="toggle-switch" data-toggle-target="switch" data-action="click->toggle#toggle">
@@ -100,7 +100,7 @@
               </div>
 
               <!-- Toggle with custom labels -->
-              <div class="toggle-item" data-controller="toggle" data-toggle-active-class="toggle-switch--on" data-toggle-label-on-value="Enabled" data-toggle-label-off-value="Disabled">
+              <div class="toggle-item" data-controller="toggle" data-toggle-active-class="toggle-switch--on" data-toggle-label_on-value="Enabled" data-toggle-label_off-value="Disabled">
                 <label>Dark Mode</label>
                 <div class="toggle-row">
                   <div class="toggle-switch" data-toggle-target="switch" data-action="click->toggle#toggle">
@@ -111,7 +111,7 @@
               </div>
 
               <!-- Toggle with content reveal -->
-              <div class="toggle-item" data-controller="toggle" data-toggle-active-class="toggle-switch--on" data-toggle-label-on-value="Visible" data-toggle-label-off-value="Hidden">
+              <div class="toggle-item" data-controller="toggle" data-toggle-active-class="toggle-switch--on" data-toggle-label_on-value="Visible" data-toggle-label_off-value="Hidden">
                 <label>Show Details</label>
                 <div class="toggle-row">
                   <div class="toggle-switch" data-toggle-target="switch" data-action="click->toggle#toggle">
