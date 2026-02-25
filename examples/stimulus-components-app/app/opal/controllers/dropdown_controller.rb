@@ -15,7 +15,6 @@ class DropdownController < StimulusController
   end
 
   def connect
-    puts "Dropdown controller connected!"
     @outside_click_handler = on_document_event(:click) do |event|
       handle_outside_click(event)
     end

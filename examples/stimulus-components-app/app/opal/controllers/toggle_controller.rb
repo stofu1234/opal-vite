@@ -10,7 +10,6 @@ class ToggleController < StimulusController
   self.classes = ["active"]
 
   def connect
-    puts "Toggle controller connected!"
     update_display
   end
 
@@ -30,19 +29,13 @@ class ToggleController < StimulusController
     return unless sw
 
     on = stimulus_value(:on)
+    on ? add_class(sw, 'toggle-switch--on') : remove_class(sw, 'toggle-switch--on')
 
-    if on
-      add_class(sw, 'toggle-switch--on')
-      label = stimulus_value(:label_on)
-      label = 'ON' if !label || `#{label}.length === 0`
-      target_set_text(:status, label) if has_target?(:status)
-      set_target_style(:content, 'display', 'block') if has_target?(:content)
-    else
-      remove_class(sw, 'toggle-switch--on')
-      label = stimulus_value(:label_off)
-      label = 'OFF' if !label || `#{label}.length === 0`
-      target_set_text(:status, label) if has_target?(:status)
-      set_target_style(:content, 'display', 'none') if has_target?(:content)
-    end
+    label = on ? stimulus_value(:label_on) : stimulus_value(:label_off)
+    default_label = on ? 'ON' : 'OFF'
+    label = default_label if !label || `#{label}.length === 0`
+    target_set_text(:status, label) if has_target?(:status)
+
+    set_target_style(:content, 'display', on ? 'block' : 'none') if has_target?(:content)
   end
 end

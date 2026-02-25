@@ -17,7 +17,6 @@ class TooltipController < StimulusController
   end
 
   def connect
-    puts "Tooltip controller connected!"
   end
 
   def disconnect

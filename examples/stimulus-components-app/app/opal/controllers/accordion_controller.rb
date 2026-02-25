@@ -9,7 +9,6 @@ class AccordionController < StimulusController
   self.values = { allow_multiple: :boolean }
 
   def connect
-    puts "Accordion controller connected!"
   end
 
   def toggle

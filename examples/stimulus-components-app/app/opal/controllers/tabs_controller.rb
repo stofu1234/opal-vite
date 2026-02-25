@@ -14,7 +14,6 @@ class TabsController < StimulusController
   end
 
   def connect
-    puts "Tabs controller connected!"
     show_tab(@index_value)
   end
 
