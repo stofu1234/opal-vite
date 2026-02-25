@@ -9,9 +9,6 @@ class TooltipController < StimulusController
 
   def initialize
     super
-    @text_value = 'Tooltip'
-    @position_value = 'top'
-    @delay_value = 0
     @tooltip_el = nil
     @show_timer = nil
   end
@@ -28,10 +25,15 @@ class TooltipController < StimulusController
   end
 
   def show
+    if @show_timer
+      clear_timeout(@show_timer)
+      @show_timer = nil
+    end
     delay = delay_value
     if delay > 0
       @show_timer = set_timeout(delay) do
         create_tooltip
+        @show_timer = nil
       end
     else
       create_tooltip
