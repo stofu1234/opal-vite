@@ -20,6 +20,10 @@ class TooltipController < StimulusController
   end
 
   def disconnect
+    if @show_timer
+      clear_timeout(@show_timer)
+      @show_timer = nil
+    end
     remove_tooltip
   end
 

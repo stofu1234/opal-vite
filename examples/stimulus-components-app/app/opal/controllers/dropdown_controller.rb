@@ -10,20 +10,17 @@ class DropdownController < StimulusController
 
   def initialize
     super
-    @open_value = false
     @outside_click_handler = nil
   end
 
   def connect
-    @outside_click_handler = on_document_event(:click) do |event|
-      handle_outside_click(event)
-    end
+    @outside_click_handler = proc { |event| handle_outside_click(event) }
+    `document.addEventListener('click', #{@outside_click_handler})`
   end
 
   def disconnect
-    if @outside_click_handler
-      off_element_event(js_global('document'), :click, @outside_click_handler)
-    end
+    return unless @outside_click_handler
+    `document.removeEventListener('click', #{@outside_click_handler})`
   end
 
   def toggle
