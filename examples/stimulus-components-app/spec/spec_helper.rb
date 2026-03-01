@@ -115,6 +115,12 @@ RSpec.configure do |config|
 
           if (accordionContent.length === 0 || !dropdownMenu || !toggleSwitch || tabsPanels.length === 0) return false;
 
+          // Check if controllers are actually connected (action handlers registered)
+          var tooltipController = Stimulus.getControllerForElementAndIdentifier(tooltipEls[0], 'tooltip');
+          var accordionController = Stimulus.getControllerForElementAndIdentifier(accordionEl, 'accordion');
+          var dropdownController = Stimulus.getControllerForElementAndIdentifier(dropdownEl, 'dropdown');
+          if (!tooltipController || !accordionController || !dropdownController) return false;
+
           return true;
         })()
       JS
