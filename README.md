@@ -26,6 +26,15 @@ This is a monorepo containing:
 - **examples/practical-app**: Full-featured Todo app with real-world patterns
 - **examples/rails-app**: Rails integration example (coming soon)
 
+## Compatibility
+
+| opal-vite / opal-vite-rails | Ruby | Rails | vite_rails | Vite | Node |
+| --- | --- | --- | --- | --- | --- |
+| 0.3.x | 2.7 – 3.4 | 6.0 – 8.x | 3.0 – 3.x | 5 – 8 | 18+ |
+| 0.2.x | 2.7 – 3.3 | 6.0 – 7.2 | 3.0.x | 5.x | 18+ |
+
+> **Note**: `opal-vite-rails` 0.3.12+ adds `ostruct` as an explicit dependency for Ruby 3.4 compatibility and no longer touches `ViteRuby.manifest_path`, so it boots cleanly on modern `vite_rails` and Rails 8.
+
 ## Quick Start
 
 ### Try the Practical App Example (Recommended)

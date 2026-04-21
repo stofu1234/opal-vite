@@ -39,7 +39,9 @@ module Opal
         private
 
         def default_manifest_path
-          if defined?(::Rails)
+          if defined?(::ViteRuby) && ::ViteRuby.instance.config.respond_to?(:build_output_dir)
+            ::ViteRuby.instance.config.build_output_dir.join('manifest.json')
+          elsif defined?(::Rails)
             ::Rails.public_path.join('vite', 'manifest.json')
           else
             'public/vite/manifest.json'
