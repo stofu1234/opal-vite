@@ -1,0 +1,12 @@
+source 'https://rubygems.org'
+
+gem 'opal', '~> 1.8'
+gem 'opal_stimulus', '~> 0.2.0'
+gem 'opal-vite', path: '../../gems/opal-vite'
+
+# E2E Testing
+group :test do
+  gem 'capybara', '~> 3.39'
+  gem 'cuprite', '~> 0.15'  # Chrome DevTools Protocol driver
+  gem 'rspec', '~> 3.12'
+end
