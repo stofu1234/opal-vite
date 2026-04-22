@@ -20,7 +20,8 @@ Gem::Specification.new do |spec|
   end
   spec.require_paths = ["lib"]
 
-  spec.add_dependency "opal-vite", "~> #{Opal::Vite::Rails::VERSION}"
+  spec.add_dependency "opal-vite", "~> 0.3"
+  spec.add_dependency "ostruct", ">= 0.2"
   spec.add_dependency "railties", ">= 6.0.0"
   spec.add_dependency "actionview", ">= 6.0.0"
   spec.add_dependency "vite_rails", "~> 3.0"
