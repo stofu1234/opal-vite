@@ -5,9 +5,9 @@
 class ToggleController < StimulusController
   include StimulusHelpers
 
-  self.targets = ["switch", "status", "content"]
+  self.targets = %w[switch status content]
   self.values = { on: :boolean, label_on: :string, label_off: :string }
-  self.classes = ["active"]
+  self.classes = ['active']
 
   def connect
     update_display
@@ -29,7 +29,7 @@ class ToggleController < StimulusController
     return unless sw
 
     on = stimulus_value(:on)
-    on ? add_class(sw, 'toggle-switch--on') : remove_class(sw, 'toggle-switch--on')
+    on ? apply_class(sw, :active) : remove_applied_class(sw, :active)
 
     label = on ? stimulus_value(:label_on) : stimulus_value(:label_off)
     default_label = on ? 'ON' : 'OFF'

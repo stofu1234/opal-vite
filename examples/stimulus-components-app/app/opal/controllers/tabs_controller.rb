@@ -5,16 +5,11 @@
 class TabsController < StimulusController
   include StimulusHelpers
 
-  self.targets = ["tab", "panel"]
+  self.targets = %w[tab panel]
   self.values = { index: :number }
 
-  def initialize
-    super
-    @index_value = 0
-  end
-
   def connect
-    show_tab(@index_value)
+    show_tab(index_value)
   end
 
   def select
