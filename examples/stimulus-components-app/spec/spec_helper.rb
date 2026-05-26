@@ -35,7 +35,7 @@ Capybara.register_driver :cuprite do |app|
 
   options = {
     window_size: [1280, 800],
-    js_errors: true,           # Fail tests on JS errors
+    js_errors: true, # Fail tests on JS errors
     headless: !ENV['HEADLESS'].nil? ? ENV['HEADLESS'] != 'false' : true,
     slowmo: ENV['SLOWMO']&.to_f,
     timeout: 10,
@@ -53,7 +53,7 @@ Capybara.javascript_driver = :cuprite
 
 # Configure app host (Vite dev server)
 Capybara.app_host = ENV.fetch('APP_HOST', 'http://localhost:3020')
-Capybara.run_server = false  # Don't start a server, use external Vite dev server
+Capybara.run_server = false # Don't start a server, use external Vite dev server
 
 # Default max wait time for async operations
 # Increase to handle Opal compilation time
@@ -140,15 +140,13 @@ RSpec.configure do |config|
       attempts += 1
       block.call
     rescue Capybara::ElementNotFound, Ferrum::TimeoutError, Timeout::Error => e
-      if attempts < max_attempts
-        warn "[Retry #{attempts}/#{max_attempts}] #{e.class}: #{e.message.lines.first.chomp}"
-        visit '/'
-        wait_for_stimulus_ready
-        wait_for_dom_stable
-        retry
-      else
-        raise
-      end
+      raise unless attempts < max_attempts
+
+      warn "[Retry #{attempts}/#{max_attempts}] #{e.class}: #{e.message.lines.first.chomp}"
+      visit '/'
+      wait_for_stimulus_ready
+      wait_for_dom_stable
+      retry
     end
   end
 end

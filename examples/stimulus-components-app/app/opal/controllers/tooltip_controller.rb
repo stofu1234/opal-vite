@@ -13,8 +13,7 @@ class TooltipController < StimulusController
     @show_timer = nil
   end
 
-  def connect
-  end
+  def connect; end
 
   def disconnect
     if @show_timer
@@ -63,9 +62,9 @@ class TooltipController < StimulusController
   end
 
   def remove_tooltip
-    if @tooltip_el
-      remove_element(@tooltip_el)
-      @tooltip_el = nil
-    end
+    return unless @tooltip_el
+
+    remove_element(@tooltip_el)
+    @tooltip_el = nil
   end
 end

@@ -453,9 +453,9 @@ RSpec.describe 'Stimulus Components + Opal + Vite', type: :feature do
       wait_for_dom_stable
 
       # Check tabindex
-      expect(tab(1)[:'tabindex']).to eq('0')
-      expect(tab(0)[:'tabindex']).to eq('-1')
-      expect(tab(2)[:'tabindex']).to eq('-1')
+      expect(tab(1)[:tabindex]).to eq('0')
+      expect(tab(0)[:tabindex]).to eq('-1')
+      expect(tab(2)[:tabindex]).to eq('-1')
     end
   end
 end

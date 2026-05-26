@@ -12,10 +12,10 @@ require 'controllers/toggle_controller'
 require 'controllers/tooltip_controller'
 require 'controllers/tabs_controller'
 
-puts "Stimulus Components + Opal + Vite Example"
+puts 'Stimulus Components + Opal + Vite Example'
 puts "Ruby version: #{RUBY_VERSION}"
 
 # Register all Stimulus controllers
 StimulusController.register_all!
 
-puts "All controllers registered!"
+puts 'All controllers registered!'

@@ -5,11 +5,10 @@
 class AccordionController < StimulusController
   include StimulusHelpers
 
-  self.targets = ["item", "content", "icon"]
+  self.targets = %w[item content icon]
   self.values = { allow_multiple: :boolean }
 
-  def connect
-  end
+  def connect; end
 
   def toggle
     index = action_param_int(:index)
@@ -22,9 +21,7 @@ class AccordionController < StimulusController
 
     is_open = has_class?(item, 'accordion-content--open')
 
-    unless `this.allowMultipleValue`
-      close_all_items
-    end
+    close_all_items unless `this.allowMultipleValue`
 
     if is_open
       remove_class(item, 'accordion-content--open')

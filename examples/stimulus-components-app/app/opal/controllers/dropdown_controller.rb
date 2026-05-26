@@ -5,7 +5,7 @@
 class DropdownController < StimulusController
   include StimulusHelpers
 
-  self.targets = ["menu", "button"]
+  self.targets = %w[menu button]
   self.values = { open: :boolean }
 
   def initialize
@@ -20,6 +20,7 @@ class DropdownController < StimulusController
 
   def disconnect
     return unless @outside_click_handler
+
     `document.removeEventListener('click', #{@outside_click_handler})`
   end
 
@@ -51,8 +52,8 @@ class DropdownController < StimulusController
     target = `#{event}.target`
     contains = `#{el}.contains(#{target})`
 
-    unless contains
-      self.open_value = false
-    end
+    return if contains
+
+    self.open_value = false
   end
 end
