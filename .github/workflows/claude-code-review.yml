@@ -1,14 +1,9 @@
 name: Claude Code Review
 
 on:
-  pull_request:
-    types: [opened, synchronize, ready_for_review, reopened]
-    # Optional: Only run on specific file changes
-    # paths:
-    #   - "src/**/*.ts"
-    #   - "src/**/*.tsx"
-    #   - "src/**/*.js"
-    #   - "src/**/*.jsx"
+  # Automatic review on pull requests is disabled. Run manually from the
+  # Actions tab (workflow_dispatch) when a Claude review is wanted.
+  workflow_dispatch:
 
 jobs:
   claude-review:
