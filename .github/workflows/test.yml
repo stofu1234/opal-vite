@@ -23,7 +23,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
         with:
-          version: 8
+          version: 9
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
@@ -54,7 +54,7 @@ jobs:
           gem install opal-vite-*.gem
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       - name: Run plugin tests
         run: pnpm test
@@ -76,7 +76,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
         with:
-          version: 8
+          version: 9
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
@@ -98,7 +98,7 @@ jobs:
           gem install opal-vite-*.gem
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       - name: Build vite-plugin-opal
         run: pnpm build
@@ -133,7 +133,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
         with:
-          version: 8
+          version: 9
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
@@ -150,7 +150,7 @@ jobs:
           gem install opal-vite-*.gem
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       - name: Build vite-plugin-opal
         run: pnpm build
@@ -190,7 +190,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
         with:
-          version: 8
+          version: 9
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
@@ -212,7 +212,7 @@ jobs:
           gem install opal-vite-*.gem
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       - name: Build vite-plugin-opal
         run: pnpm build
@@ -247,7 +247,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
         with:
-          version: 8
+          version: 9
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
@@ -269,7 +269,7 @@ jobs:
           gem install opal-vite-*.gem
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       - name: Build vite-plugin-opal
         run: pnpm build
@@ -304,7 +304,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
         with:
-          version: 8
+          version: 9
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
@@ -326,7 +326,7 @@ jobs:
           gem install opal-vite-*.gem
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       - name: Build vite-plugin-opal
         run: pnpm build
@@ -361,7 +361,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
         with:
-          version: 8
+          version: 9
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
@@ -383,7 +383,7 @@ jobs:
           gem install opal-vite-*.gem
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       - name: Build vite-plugin-opal
         run: pnpm build
@@ -418,7 +418,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
         with:
-          version: 8
+          version: 9
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
@@ -440,7 +440,7 @@ jobs:
           gem install opal-vite-*.gem
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       - name: Build vite-plugin-opal
         run: pnpm build
@@ -475,7 +475,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
         with:
-          version: 8
+          version: 9
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
@@ -497,7 +497,7 @@ jobs:
           gem install opal-vite-*.gem
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       - name: Build vite-plugin-opal
         run: pnpm build
@@ -532,7 +532,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
         with:
-          version: 8
+          version: 9
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
@@ -554,7 +554,7 @@ jobs:
           gem install opal-vite-*.gem
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       - name: Build vite-plugin-opal
         run: pnpm build
@@ -589,7 +589,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
         with:
-          version: 8
+          version: 9
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
@@ -611,7 +611,7 @@ jobs:
           gem install opal-vite-*.gem
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       - name: Build vite-plugin-opal
         run: pnpm build
@@ -722,7 +722,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
         with:
-          version: 8
+          version: 9
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
@@ -739,7 +739,7 @@ jobs:
           gem install opal-vite-*.gem
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       - name: Build vite-plugin-opal
         run: pnpm build
