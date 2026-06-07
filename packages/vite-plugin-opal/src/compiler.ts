@@ -1,4 +1,9 @@
-import { spawn } from 'child_process'
+// Use cross-spawn instead of child_process.spawn so that Windows can launch
+// the `bundle` batch wrapper (bundle.cmd/.bat) without `shell: true`. Using a
+// shell would leave the multi-line `-e` compiler script unquoted and mangle it
+// (see issue #46). cross-spawn resolves .cmd/.bat via PATHEXT and escapes args
+// while behaving identically to child_process.spawn on POSIX.
+import spawn from 'cross-spawn'
 import * as fs from 'fs/promises'
 import { accessSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs'
 import * as path from 'path'
@@ -618,11 +623,13 @@ export class OpalCompiler {
       let stdout = ''
       let stderr = ''
 
-      ruby.stdout.on('data', (data) => {
+      // cross-spawn types stdout/stderr as nullable; with the default
+      // stdio: 'pipe' they are always present, but guard to satisfy the types.
+      ruby.stdout?.on('data', (data) => {
         stdout += data.toString()
       })
 
-      ruby.stderr.on('data', (data) => {
+      ruby.stderr?.on('data', (data) => {
         stderr += data.toString()
       })
 
@@ -697,11 +704,13 @@ export class OpalCompiler {
       let stdout = ''
       let stderr = ''
 
-      ruby.stdout.on('data', (data) => {
+      // cross-spawn types stdout/stderr as nullable; with the default
+      // stdio: 'pipe' they are always present, but guard to satisfy the types.
+      ruby.stdout?.on('data', (data) => {
         stdout += data.toString()
       })
 
-      ruby.stderr.on('data', (data) => {
+      ruby.stderr?.on('data', (data) => {
         stderr += data.toString()
       })
 
