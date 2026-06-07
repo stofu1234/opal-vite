@@ -277,6 +277,19 @@ importers:
         specifier: workspace:*
         version: link:../../packages/vite-plugin-opal
 
+  examples/stimulus-components-app:
+    dependencies:
+      '@hotwired/stimulus':
+        specifier: ^3.2.2
+        version: 3.2.2
+    devDependencies:
+      vite:
+        specifier: ^5.0.0
+        version: 5.4.21(@types/node@20.19.26)(terser@5.44.1)
+      vite-plugin-opal:
+        specifier: workspace:*
+        version: link:../../packages/vite-plugin-opal
+
   examples/tabs-app:
     dependencies:
       '@hotwired/stimulus':

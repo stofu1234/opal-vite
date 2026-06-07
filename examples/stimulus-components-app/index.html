@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Stimulus Components + Opal + Vite</title>
+    <link rel="stylesheet" href="/app/styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>Stimulus Components</h1>
+        <p class="subtitle">Reusable UI components built with Stimulus + Opal Ruby</p>
+      </header>
+
+      <main>
+        <!-- Accordion -->
+        <section class="card" data-controller="accordion" data-accordion-allow_multiple-value="true">
+          <h2>Accordion</h2>
+          <p>Expandable/collapsible panels with Expand All and Collapse All support</p>
+          <div class="demo">
+            <div class="accordion-actions">
+              <button data-action="click->accordion#expand_all">Expand All</button>
+              <button class="btn-secondary" data-action="click->accordion#collapse_all">Collapse All</button>
+            </div>
+
+            <div class="accordion" data-accordion-target="item">
+              <button class="accordion-header" data-action="click->accordion#toggle" data-accordion-index-param="0">
+                <span>What is Opal?</span>
+                <span class="accordion-icon" data-accordion-target="icon">+</span>
+              </button>
+              <div class="accordion-content" data-accordion-target="content">
+                <div class="accordion-body">
+                  Opal is a Ruby to JavaScript source-to-source compiler. It comes with an implementation of the Ruby corelib and stdlib, allowing you to write frontend code in Ruby.
+                </div>
+              </div>
+            </div>
+
+            <div class="accordion" data-accordion-target="item">
+              <button class="accordion-header" data-action="click->accordion#toggle" data-accordion-index-param="1">
+                <span>What is Stimulus?</span>
+                <span class="accordion-icon" data-accordion-target="icon">+</span>
+              </button>
+              <div class="accordion-content" data-accordion-target="content">
+                <div class="accordion-body">
+                  Stimulus is a modest JavaScript framework for the HTML you already have. It connects JavaScript objects to HTML elements using data attributes, providing structure without complexity.
+                </div>
+              </div>
+            </div>
+
+            <div class="accordion" data-accordion-target="item">
+              <button class="accordion-header" data-action="click->accordion#toggle" data-accordion-index-param="2">
+                <span>Why combine them?</span>
+                <span class="accordion-icon" data-accordion-target="icon">+</span>
+              </button>
+              <div class="accordion-content" data-accordion-target="content">
+                <div class="accordion-body">
+                  Combining Stimulus with Opal lets you write clean, expressive Ruby code for your frontend controllers while leveraging Stimulus's HTML-first approach. Vite provides fast HMR during development.
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Dropdown -->
+        <section class="card" data-controller="dropdown">
+          <h2>Dropdown</h2>
+          <p>Click-to-toggle menu that closes when clicking outside</p>
+          <div class="demo">
+            <div class="dropdown">
+              <button data-dropdown-target="button" data-action="click->dropdown#toggle">
+                Select an option &#9662;
+              </button>
+              <div class="dropdown-menu" data-dropdown-target="menu">
+                <button class="dropdown-item" data-action="click->dropdown#close">Profile</button>
+                <button class="dropdown-item" data-action="click->dropdown#close">Settings</button>
+                <button class="dropdown-item" data-action="click->dropdown#close">Help</button>
+                <div class="dropdown-divider"></div>
+                <button class="dropdown-item" data-action="click->dropdown#close">Sign Out</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Toggle -->
+        <section class="card">
+          <h2>Toggle</h2>
+          <p>ON/OFF switches with three different variants</p>
+          <div class="demo">
+            <div class="toggle-group">
+              <!-- Basic Toggle -->
+              <div class="toggle-item" data-controller="toggle" data-toggle-active-class="toggle-switch--on" data-toggle-label_on-value="ON" data-toggle-label_off-value="OFF">
+                <label>Notifications</label>
+                <div class="toggle-row">
+                  <div class="toggle-switch" data-toggle-target="switch" data-action="click->toggle#toggle">
+                    <div class="toggle-knob"></div>
+                  </div>
+                  <span class="toggle-status" data-toggle-target="status">OFF</span>
+                </div>
+              </div>
+
+              <!-- Toggle with custom labels -->
+              <div class="toggle-item" data-controller="toggle" data-toggle-active-class="toggle-switch--on" data-toggle-label_on-value="Enabled" data-toggle-label_off-value="Disabled">
+                <label>Dark Mode</label>
+                <div class="toggle-row">
+                  <div class="toggle-switch" data-toggle-target="switch" data-action="click->toggle#toggle">
+                    <div class="toggle-knob"></div>
+                  </div>
+                  <span class="toggle-status" data-toggle-target="status">Disabled</span>
+                </div>
+              </div>
+
+              <!-- Toggle with content reveal -->
+              <div class="toggle-item" data-controller="toggle" data-toggle-active-class="toggle-switch--on" data-toggle-label_on-value="Visible" data-toggle-label_off-value="Hidden">
+                <label>Show Details</label>
+                <div class="toggle-row">
+                  <div class="toggle-switch" data-toggle-target="switch" data-action="click->toggle#toggle">
+                    <div class="toggle-knob"></div>
+                  </div>
+                  <span class="toggle-status" data-toggle-target="status">Hidden</span>
+                </div>
+                <div class="toggle-content" data-toggle-target="content" style="display: none;">
+                  <p>This content is revealed when the toggle is switched on. You can put any content here!</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Tooltip -->
+        <section class="card">
+          <h2>Tooltip</h2>
+          <p>Hover tooltips with 4 directional positions</p>
+          <div class="demo">
+            <div class="tooltip-grid">
+              <div class="tooltip-wrapper"
+                   data-controller="tooltip"
+                   data-tooltip-text-value="Tooltip on top"
+                   data-tooltip-position-value="top"
+                   data-action="mouseenter->tooltip#show mouseleave->tooltip#hide">
+                <button class="btn-tooltip">Top</button>
+              </div>
+
+              <div class="tooltip-wrapper"
+                   data-controller="tooltip"
+                   data-tooltip-text-value="Tooltip on bottom"
+                   data-tooltip-position-value="bottom"
+                   data-action="mouseenter->tooltip#show mouseleave->tooltip#hide">
+                <button class="btn-tooltip">Bottom</button>
+              </div>
+
+              <div class="tooltip-wrapper"
+                   data-controller="tooltip"
+                   data-tooltip-text-value="Tooltip on left"
+                   data-tooltip-position-value="left"
+                   data-action="mouseenter->tooltip#show mouseleave->tooltip#hide">
+                <button class="btn-tooltip">Left</button>
+              </div>
+
+              <div class="tooltip-wrapper"
+                   data-controller="tooltip"
+                   data-tooltip-text-value="Tooltip on right"
+                   data-tooltip-position-value="right"
+                   data-action="mouseenter->tooltip#show mouseleave->tooltip#hide">
+                <button class="btn-tooltip">Right</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Tabs -->
+        <section class="card" data-controller="tabs">
+          <h2>Tabs</h2>
+          <p>Accessible tab switching with ARIA attributes</p>
+          <div class="demo">
+            <div class="tabs">
+              <div class="tabs-list" role="tablist">
+                <button class="tabs-tab tabs-tab--active" role="tab" aria-selected="true"
+                        data-tabs-target="tab"
+                        data-action="click->tabs#select"
+                        data-tabs-index-param="0">
+                  Overview
+                </button>
+                <button class="tabs-tab" role="tab" aria-selected="false"
+                        data-tabs-target="tab"
+                        data-action="click->tabs#select"
+                        data-tabs-index-param="1">
+                  Features
+                </button>
+                <button class="tabs-tab" role="tab" aria-selected="false"
+                        data-tabs-target="tab"
+                        data-action="click->tabs#select"
+                        data-tabs-index-param="2">
+                  Usage
+                </button>
+              </div>
+              <div class="tabs-panels">
+                <div class="tabs-panel tabs-panel--active" role="tabpanel" aria-hidden="false"
+                     data-tabs-target="panel">
+                  <h3>Overview</h3>
+                  <p>This example demonstrates how to build reusable UI components using Stimulus controllers written in Ruby via Opal. Each component follows Stimulus conventions: targets, values, actions, and CSS classes.</p>
+                </div>
+                <div class="tabs-panel" role="tabpanel" aria-hidden="true"
+                     data-tabs-target="panel">
+                  <h3>Features</h3>
+                  <ul>
+                    <li>Write Stimulus controllers in Ruby</li>
+                    <li>Full access to Stimulus Values, Targets, and Classes APIs</li>
+                    <li>Action parameters for flexible event handling</li>
+                    <li>StimulusHelpers for DOM manipulation without raw JS</li>
+                    <li>Hot Module Replacement via Vite</li>
+                  </ul>
+                </div>
+                <div class="tabs-panel" role="tabpanel" aria-hidden="true"
+                     data-tabs-target="panel">
+                  <h3>Usage</h3>
+                  <p>Each controller inherits from <code>StimulusController</code> and includes <code>StimulusHelpers</code>. Define targets, values, and classes as class-level attributes, then implement action methods that Stimulus will call from your HTML.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer>
+        <p>
+          Built with
+          <a href="https://stimulus.hotwired.dev/" target="_blank" rel="noopener noreferrer">Stimulus</a>,
+          <a href="https://opalrb.com/" target="_blank" rel="noopener noreferrer">Opal</a>, and
+          <a href="https://vitejs.dev/" target="_blank" rel="noopener noreferrer">Vite</a>
+        </p>
+      </footer>
+    </div>
+
+    <script type="module" src="/app/javascript/application.js"></script>
+  </body>
+</html>
