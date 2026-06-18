@@ -66,6 +66,10 @@ module OpalVite
         # @param partial [Hash]
         # @return [Hash] the new state
         def set_state(partial)
+          unless partial.is_a?(Hash)
+            raise ArgumentError, "OpalComponent#set_state expects a Hash, got #{partial.class}"
+          end
+
           @state = @state.merge(partial)
           do_render if @el
           @state
