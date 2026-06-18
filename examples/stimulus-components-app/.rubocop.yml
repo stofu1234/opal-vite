@@ -1,0 +1,43 @@
+# RuboCop configuration for the stimulus-components-app example.
+#
+# Controllers here are written in Opal (Ruby compiled to JavaScript). They embed
+# JavaScript via backticks and follow Stimulus DSL conventions that stock RuboCop
+# cops misread, so a few cops are relaxed for `app/opal`. Metrics cops are off
+# because example controllers and E2E specs are intentionally long and declarative.
+
+AllCops:
+  TargetRubyVersion: 3.2
+  NewCops: disable
+  SuggestExtensions: false
+
+# Example controllers and descriptive RSpec blocks are intentionally long.
+Metrics/MethodLength:
+  Enabled: false
+Metrics/BlockLength:
+  Enabled: false
+Metrics/CyclomaticComplexity:
+  Enabled: false
+Metrics/PerceivedComplexity:
+  Enabled: false
+Metrics/AbcSize:
+  Enabled: false
+
+Style/Documentation:
+  Enabled: false
+
+# Opal-specific relaxations: these cops misinterpret embedded JavaScript
+# (backtick expressions) and Opal/Native value semantics.
+Lint/LiteralAsCondition:
+  Exclude:
+    - 'app/opal/**/*'
+Style/NumericPredicate:
+  Exclude:
+    - 'app/opal/**/*'
+
+# Opal source files lead with the `# backtick_javascript:` magic comment instead
+# of a frozen_string_literal comment; the Gemfile follows the other examples'
+# convention of omitting it.
+Style/FrozenStringLiteralComment:
+  Exclude:
+    - 'app/opal/**/*'
+    - 'Gemfile'
