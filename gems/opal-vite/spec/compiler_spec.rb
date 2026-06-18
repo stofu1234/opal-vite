@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'tempfile'
+require 'fileutils'
 
 RSpec.describe Opal::Vite::Compiler do
   let(:compiler) { described_class.new }
@@ -55,6 +56,57 @@ RSpec.describe Opal::Vite::Compiler do
 
           expect(result[:dependencies]).to include('helper')
         end
+      end
+    end
+
+    context 'with require_tree' do
+      # Regression guard: Opal::Builder expands `require_tree` at compile time,
+      # so opal-vite supports Sprockets-style directory bundling out of the box.
+      # See docs/MIGRATION.md (Scenario 4) and issue #54.
+      it 'bundles every .rb file under the directory, including nested ones' do
+        Dir.mktmpdir do |dir|
+          FileUtils.mkdir_p(File.join(dir, 'controllers', 'nested'))
+          File.write(File.join(dir, 'controllers', 'alpha.rb'), 'puts "ALPHA_LOADED"')
+          File.write(File.join(dir, 'controllers', 'nested', 'beta.rb'), 'puts "BETA_LOADED"')
+
+          main_source = "require_tree './controllers'\nputs 'MAIN_LOADED'"
+          result = compiler.compile(main_source, File.join(dir, 'main.rb'))
+
+          expect(result[:code]).to include('ALPHA_LOADED')
+          expect(result[:code]).to include('BETA_LOADED')
+          expect(result[:code]).to include('MAIN_LOADED')
+        end
+      end
+    end
+
+    context 'with the OpalComponent base class' do
+      # Issue #55: framework-agnostic lightweight component base class.
+      it 'compiles a component that subclasses OpalComponent' do
+        source = <<~'RUBY'
+          require 'opal_vite/concerns/v1/component'
+
+          class Counter < OpalComponent
+            def initial_state
+              { count: 0 }
+            end
+
+            def render
+              "<button>count: #{state[:count]}</button>"
+            end
+
+            def after_render
+              on('button', 'click') { set_state(count: state[:count] + 1) }
+            end
+          end
+        RUBY
+
+        result = compiler.compile(source, 'counter_component.rb')
+
+        expect(result[:code]).to be_a(String)
+        expect(result[:code]).to include('Counter')
+        # The base class (pulled in via require) defines set_state/mount.
+        expect(result[:code]).to include('set_state')
+        expect(result[:code]).to include('mount')
       end
     end
 
