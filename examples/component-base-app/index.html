@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OpalComponent - Framework-agnostic base class</title>
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: linear-gradient(135deg, #CC342D 0%, #2d3748 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+      }
+      .counter {
+        background: #fff;
+        padding: 2.5rem 3rem;
+        border-radius: 14px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+        text-align: center;
+      }
+      .counter h2 { color: #2d3748; margin-bottom: 1.25rem; }
+      .count { font-size: 3rem; font-weight: 700; color: #CC342D; margin-bottom: 1.5rem; }
+      .counter button {
+        font-size: 1.1rem;
+        padding: 0.6rem 1.2rem;
+        margin: 0 0.25rem;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        background: #2d3748;
+        color: #fff;
+        transition: transform 0.15s;
+      }
+      .counter button:hover { transform: translateY(-2px); }
+    </style>
+  </head>
+  <body>
+    <!-- The component renders into this element -->
+    <div id="app"></div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

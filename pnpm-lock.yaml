@@ -91,6 +91,16 @@ importers:
         specifier: ^0.2.12
         version: 0.2.13(vite@5.4.21(@types/node@20.19.26)(terser@5.44.1))
 
+  examples/component-base-app:
+    dependencies:
+      vite:
+        specifier: ^5.0.0
+        version: 5.4.21(@types/node@20.19.26)(terser@5.44.1)
+    devDependencies:
+      vite-plugin-opal:
+        specifier: workspace:*
+        version: link:../../packages/vite-plugin-opal
+
   examples/counter-app:
     dependencies:
       '@hotwired/stimulus':

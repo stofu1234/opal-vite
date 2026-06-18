@@ -225,6 +225,7 @@ git push --force-with-lease
 | debug-app | 3017 |
 | actioncable-app | 3018 |
 | stimulus-components-app | 3020 |
+| component-base-app | 3031 |
 
 ---
 

@@ -5,6 +5,7 @@ node_modules/
 
 # Testing
 coverage/
+.rspec_status
 
 # Production
 dist/
