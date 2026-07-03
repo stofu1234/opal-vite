@@ -33,9 +33,17 @@ module Opal
         end
 
         # Get asset path from Vite manifest
+        #
+        # NOTE: the manifest lives on the ViteRuby *instance* — `ViteRuby.manifest`
+        # is not a class-level delegator (it raises NoMethodError), so we go
+        # through `ViteRuby.instance`. Use ViteRuby::Manifest#path_for (public)
+        # rather than #lookup: #lookup is *protected* and returns the raw manifest
+        # entry Hash ({ "file" => "..." }), so `lookup(name).to_s` would emit the
+        # Hash's inspect string instead of a URL. #path_for returns the resolved
+        # asset URL string.
         def opal_asset_path(name)
           if defined?(ViteRuby)
-            ViteRuby.manifest.lookup(name).to_s
+            ViteRuby.instance.manifest.path_for(name)
           else
             # Fallback to standard asset path
             "/#{Opal::Vite::Rails.config.public_output_path}/#{name}"

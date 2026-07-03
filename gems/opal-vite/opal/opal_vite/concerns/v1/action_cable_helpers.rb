@@ -318,7 +318,7 @@ module OpalVite
           json_str = cable_data(data, key)
           return nil if json_str.nil?
           `JSON.parse(#{json_str})`
-        rescue
+        rescue Exception
           nil
         end
 

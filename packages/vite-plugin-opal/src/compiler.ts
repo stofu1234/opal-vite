@@ -5,7 +5,7 @@
 // while behaving identically to child_process.spawn on POSIX.
 import spawn from 'cross-spawn'
 import * as fs from 'fs/promises'
-import { accessSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs'
+import { accessSync, existsSync, mkdirSync, readFileSync, readdirSync, statSync, unlinkSync, writeFileSync } from 'fs'
 import * as path from 'path'
 import * as crypto from 'crypto'
 import type { OpalPluginOptions, CompileResult, CacheEntry, OpalCompilationError } from './types'
@@ -529,8 +529,7 @@ export class OpalCompiler {
         try {
           const cachePath = this.getDiskCachePath(filePath)
           if (existsSync(cachePath)) {
-            const fsSync = require('fs')
-            fsSync.unlinkSync(cachePath)
+            unlinkSync(cachePath)
           }
         } catch (e) {
           this.log(`Failed to clear disk cache for ${filePath}: ${e}`)
@@ -553,12 +552,11 @@ export class OpalCompiler {
     if (!this.options.diskCache) return
 
     try {
-      const fsSync = require('fs')
       if (existsSync(this.cacheDir)) {
-        const files = fsSync.readdirSync(this.cacheDir)
+        const files = readdirSync(this.cacheDir)
         for (const file of files) {
           if (file.endsWith('.json')) {
-            fsSync.unlinkSync(path.join(this.cacheDir, file))
+            unlinkSync(path.join(this.cacheDir, file))
           }
         }
         this.log(`Cleared ${files.length} disk cache files`)
@@ -577,12 +575,11 @@ export class OpalCompiler {
     }
 
     try {
-      const fsSync = require('fs')
-      const files = fsSync.readdirSync(this.cacheDir)
+      const files = readdirSync(this.cacheDir)
         .filter((f: string) => f.endsWith('.json'))
       let totalSize = 0
       for (const file of files) {
-        const stat = fsSync.statSync(path.join(this.cacheDir, file))
+        const stat = statSync(path.join(this.cacheDir, file))
         totalSize += stat.size
       }
       return { files: files.length, size: totalSize }

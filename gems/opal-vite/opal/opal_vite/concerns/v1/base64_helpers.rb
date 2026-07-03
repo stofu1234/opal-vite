@@ -29,7 +29,7 @@ module OpalVite
         # @return [String] Base64 encoded string
         def base64_encode(str)
           `btoa(#{str})`
-        rescue
+        rescue Exception
           nil
         end
 
@@ -38,7 +38,7 @@ module OpalVite
         # @return [String] Decoded string
         def base64_decode(str)
           `atob(#{str})`
-        rescue
+        rescue Exception
           nil
         end
 
@@ -81,7 +81,7 @@ module OpalVite
         def base64_encode_unicode(str)
           # Convert to UTF-8 bytes, then encode
           `btoa(unescape(encodeURIComponent(#{str})))`
-        rescue
+        rescue Exception
           nil
         end
 
@@ -90,7 +90,7 @@ module OpalVite
         # @return [String] Decoded Unicode string
         def base64_decode_unicode(str)
           `decodeURIComponent(escape(atob(#{str})))`
-        rescue
+        rescue Exception
           nil
         end
 
@@ -108,7 +108,7 @@ module OpalVite
             }
             return btoa(binary);
           `
-        rescue
+        rescue Exception
           nil
         end
 
@@ -124,7 +124,7 @@ module OpalVite
             }
             return bytes;
           `
-        rescue
+        rescue Exception
           nil
         end
 
@@ -202,7 +202,7 @@ module OpalVite
           return nil unless payload_json
 
           `JSON.parse(#{payload_json})`
-        rescue
+        rescue Exception
           nil
         end
 
@@ -264,7 +264,9 @@ module OpalVite
 
           len = str.length
           padding = str.end_with?('==') ? 2 : (str.end_with?('=') ? 1 : 0)
-          (len * 3 / 4) - padding
+          # Use integer division: in Opal `len * 3 / 4` is JS float division, so
+          # unpadded/URL-safe input (len % 4 == 2 or 3) would yield e.g. 16.5.
+          ((len * 3) / 4).floor - padding
         end
       end
     end

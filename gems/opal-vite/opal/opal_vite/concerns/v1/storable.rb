@@ -11,7 +11,7 @@ module OpalVite
 
         begin
           `JSON.parse(stored)`
-        rescue
+        rescue Exception
           nil
         end
       end

@@ -275,7 +275,10 @@ module OpalVite
 
         # Stringify to JSON
         def to_json(object)
-          `JSON.stringify(#{object})`
+          # Convert Ruby Hash/Array to a native JS value first; passing a raw
+          # Opal Hash to JSON.stringify serializes to "{}" (silent data loss).
+          native = object.respond_to?(:to_n) ? object.to_n : object
+          `JSON.stringify(#{native})`
         end
 
         # ===================

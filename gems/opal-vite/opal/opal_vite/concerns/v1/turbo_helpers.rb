@@ -356,7 +356,13 @@ module OpalVite
         #   source = turbo_stream_from("/notifications/stream")
         #   # Turbo will automatically process incoming streams
         def turbo_stream_from(url)
-          `window.Turbo.connectStreamSource(new EventSource(#{url}))`
+          # Keep a reference to the EventSource and return it: connectStreamSource
+          # returns undefined, so returning its result would make the documented
+          # `turbo_stream_disconnect(source)` call `undefined.close()` and leak
+          # the SSE connection.
+          source = `new EventSource(#{url})`
+          `window.Turbo.connectStreamSource(#{source})`
+          source
         end
 
         # Disconnect a Turbo Stream SSE source
