@@ -27,7 +27,7 @@ module OpalVite
         # @return [Native] JavaScript URL object
         def parse_url(url_string)
           `new URL(#{url_string})`
-        rescue
+        rescue Exception
           nil
         end
 
@@ -37,7 +37,7 @@ module OpalVite
         # @return [Native] JavaScript URL object
         def parse_url_with_base(url_string, base)
           `new URL(#{url_string}, #{base})`
-        rescue
+        rescue Exception
           nil
         end
 
@@ -225,7 +225,7 @@ module OpalVite
         # @return [String] Decoded string
         def decode_uri_component(str)
           `decodeURIComponent(#{str})`
-        rescue
+        rescue Exception
           str
         end
 
@@ -241,7 +241,7 @@ module OpalVite
         # @return [String] Decoded URI
         def decode_uri(str)
           `decodeURI(#{str})`
-        rescue
+        rescue Exception
           str
         end
 
