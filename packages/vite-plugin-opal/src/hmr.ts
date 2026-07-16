@@ -94,19 +94,41 @@ export class OpalHMRManager implements HMRManager {
       this.compiler.clearCache(absolutePath)
       this.resolver.clearCache(absolutePath)
 
-      // Get the module from the module graph
-      const module = this.server.moduleGraph.getModuleById(absolutePath)
-
-      if (!module) {
-        this.log(`Module not found in graph: ${filePath}`, 'warn')
-        return
+      // Opal inlines every `require`d file into the entry that requires it, so
+      // a changed dependency is usually NOT its own module in Vite's graph.
+      // Ask the compiler which cached entries inline this file and refresh them.
+      const dependentEntries = this.compiler.findDependents(absolutePath)
+      for (const entry of dependentEntries) {
+        this.compiler.clearCache(entry)
       }
 
-      // Collect all modules that need to be updated
-      const modulesToUpdate = new Set<ModuleNode>([module])
+      // Collect all modules that need to be updated: the changed file itself
+      // (if it is a module) plus every entry module that inlines it.
+      const modulesToUpdate = new Set<ModuleNode>()
 
-      // Find dependent modules (modules that import this one)
-      await this.collectDependentModules(module, modulesToUpdate)
+      const changedModule = this.server.moduleGraph.getModuleById(absolutePath)
+      if (changedModule) {
+        modulesToUpdate.add(changedModule)
+        await this.collectDependentModules(changedModule, modulesToUpdate)
+      }
+
+      for (const entry of dependentEntries) {
+        const entryModule = this.server.moduleGraph.getModuleById(entry)
+        if (entryModule) {
+          modulesToUpdate.add(entryModule)
+          await this.collectDependentModules(entryModule, modulesToUpdate)
+        }
+      }
+
+      if (modulesToUpdate.size === 0) {
+        // The changed file is an inlined dependency with no corresponding entry
+        // module in the graph yet (e.g. edited before its entry was requested).
+        // Fall back to a full reload so the browser re-fetches freshly compiled
+        // output rather than silently keeping stale code.
+        this.log(`No module in graph for ${filePath}; sending full reload`, 'warn')
+        this.server.ws.send({ type: 'full-reload' })
+        return
+      }
 
       // Invalidate all affected modules
       for (const mod of modulesToUpdate) {

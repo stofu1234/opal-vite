@@ -300,6 +300,14 @@ export interface CacheEntry extends CompileResult {
    * File modification time (used for cache invalidation)
    */
   mtime: number
+
+  /**
+   * Modification times of resolved dependencies at compile time, keyed by
+   * absolute file path. Opal inlines every `require`d file into the entry's
+   * compiled output, so the entry must be recompiled when any dependency
+   * changes — not only when the entry file itself changes.
+   */
+  depMtimes?: Record<string, number>
 }
 
 /**

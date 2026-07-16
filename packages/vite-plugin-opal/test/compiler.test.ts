@@ -397,6 +397,96 @@ describe('OpalCompiler Performance Features', () => {
     })
   })
 
+  describe('dependency-aware caching (A-1)', () => {
+    // Opal inlines every required file into its entry, so editing a required
+    // file must bust the entry's cache even though the entry file is unchanged.
+    // Use fixed, past mtimes via utimesSync for deterministic invalidation
+    // (independent of filesystem timestamp granularity or wall-clock timing).
+    const DEP_MTIME_V1 = new Date('2020-01-01T00:00:00Z')
+    const DEP_MTIME_V2 = new Date('2020-06-01T00:00:00Z')
+
+    function writeApp(dir: string, marker: string) {
+      const appDir = path.join(dir, 'app')
+      fs.mkdirSync(path.join(appDir, 'controllers'), { recursive: true })
+      const entry = path.join(appDir, 'application.rb')
+      const dep = path.join(appDir, 'controllers', 'foo.rb')
+      fs.writeFileSync(entry, "require 'controllers/foo'\n")
+      fs.writeFileSync(dep, `class Foo\n  MARKER = '${marker}'\nend\n`)
+      fs.utimesSync(dep, DEP_MTIME_V1, DEP_MTIME_V1)
+      return { appDir, entry, dep }
+    }
+
+    function editDep(dep: string, marker: string) {
+      fs.writeFileSync(dep, `class Foo\n  MARKER = '${marker}'\nend\n`)
+      fs.utimesSync(dep, DEP_MTIME_V2, DEP_MTIME_V2)
+    }
+
+    it('invalidates the memory cache when a required dependency changes', async () => {
+      const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'opal-dep-mem-'))
+      const { appDir, entry, dep } = writeApp(dir, 'MARKER_V1')
+      const compiler = new OpalCompiler({
+        diskCache: false,
+        loadPaths: [appDir],
+        gemPath: LOCAL_GEM_PATH
+      })
+
+      const r1 = await compiler.compile(entry)
+      expect(r1.code).toContain('MARKER_V1')
+
+      // Edit the dependency only (entry file is untouched).
+      editDep(dep, 'MARKER_V2')
+
+      const r2 = await compiler.compile(entry)
+      expect(r2.code).toContain('MARKER_V2')
+      expect(r2.code).not.toContain('MARKER_V1')
+
+      fs.rmSync(dir, { recursive: true })
+    })
+
+    it('invalidates the disk cache (across a restart) when a dependency changes', async () => {
+      const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'opal-dep-disk-'))
+      const dcache = path.join(dir, 'cache')
+      const { appDir, entry, dep } = writeApp(dir, 'MARKER_V1')
+
+      const first = new OpalCompiler({
+        diskCache: true, cacheDir: dcache, loadPaths: [appDir], gemPath: LOCAL_GEM_PATH
+      })
+      const r1 = await first.compile(entry)
+      expect(r1.code).toContain('MARKER_V1')
+
+      // Change the dependency, then simulate a dev-server restart with a fresh
+      // compiler that shares the same on-disk cache directory.
+      editDep(dep, 'MARKER_V2')
+
+      const restarted = new OpalCompiler({
+        diskCache: true, cacheDir: dcache, loadPaths: [appDir], gemPath: LOCAL_GEM_PATH
+      })
+      const r2 = await restarted.compile(entry)
+      expect(r2.code).toContain('MARKER_V2')
+      expect(r2.code).not.toContain('MARKER_V1')
+
+      fs.rmSync(dir, { recursive: true })
+    })
+
+    it('findDependents() returns entries that inline the changed file', async () => {
+      const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'opal-dep-find-'))
+      const { appDir, entry, dep } = writeApp(dir, 'MARKER_V1')
+      const compiler = new OpalCompiler({
+        diskCache: false, loadPaths: [appDir], gemPath: LOCAL_GEM_PATH
+      })
+
+      // Before compiling, nothing is cached, so there are no known dependents.
+      expect(compiler.findDependents(dep)).toEqual([])
+
+      await compiler.compile(entry)
+
+      const dependents = compiler.findDependents(dep)
+      expect(dependents).toContain(path.resolve(entry))
+
+      fs.rmSync(dir, { recursive: true })
+    })
+  })
+
   describe('stubs', () => {
     it('returns empty implementation for stubbed modules', async () => {
       const compiler = new OpalCompiler({
