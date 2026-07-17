@@ -1,5 +1,6 @@
 import * as path from 'path'
 import * as fs from 'fs/promises'
+import { normalizePath } from 'vite'
 import type { OpalPluginOptions } from './types'
 
 export class OpalResolver {
@@ -41,6 +42,14 @@ export class OpalResolver {
       resolved = await this.resolveAbsolute(id) ||
                  await this.resolveRelative(id, importer) ||
                  await this.resolveFromLoadPaths(id)
+    }
+
+    // Normalize to POSIX separators so cached values, the ids returned to Vite,
+    // and the paths HMR clears with (also normalized) all share one shape. On
+    // Windows a raw path.resolve() value uses backslashes and would never match
+    // HMR's normalizePath()'d clearCache key, leaving stale resolver entries.
+    if (resolved) {
+      resolved = normalizePath(resolved)
     }
 
     // Cache the result
