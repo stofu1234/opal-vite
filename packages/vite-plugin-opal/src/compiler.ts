@@ -4,6 +4,7 @@
 // (see issue #46). cross-spawn resolves .cmd/.bat via PATHEXT and escapes args
 // while behaving identically to child_process.spawn on POSIX.
 import spawn from 'cross-spawn'
+import { normalizePath } from 'vite'
 import * as fs from 'fs/promises'
 import { accessSync, existsSync, mkdirSync, readFileSync, readdirSync, statSync, unlinkSync, writeFileSync } from 'fs'
 import * as path from 'path'
@@ -128,9 +129,13 @@ interface DiskCacheEntry {
   contentHash: string
   mtime: number
   result: CompileResult
+  /** Resolved dependency mtimes at compile time, keyed by absolute path. */
+  depMtimes?: Record<string, number>
 }
 
-const CACHE_VERSION = '1.0.0'
+// Bumped to 1.1.0: entries now carry dependency mtimes for dependency-aware
+// invalidation. Older 1.0.0 entries lack depMtimes and are treated as stale.
+const CACHE_VERSION = '1.1.0'
 
 // Default Opal version for CDN
 const DEFAULT_OPAL_VERSION = '1.8.2'
@@ -229,11 +234,107 @@ export class OpalCompiler {
     return crypto.createHash('md5').update(content).digest('hex')
   }
 
+  /**
+   * Resolve a dependency reported by the Ruby compiler to an absolute file
+   * path on disk. Dependencies come back in mixed forms: the entry file as an
+   * absolute path, and `require`d files as load-path-relative logical names
+   * (e.g. "controllers/foo.rb"). Logical names are resolved against the entry
+   * file's directory, its parent (mirroring the gem's load-path setup), and
+   * the configured load paths. Returns null for anything that can't be mapped
+   * to an existing file (e.g. Opal corelib/gem assets, which never change
+   * during a dev session).
+   */
+  private resolveDependencyPath(dep: string, entryFile: string): string | null {
+    if (path.isAbsolute(dep)) {
+      return existsSync(dep) ? normalizePath(path.resolve(dep)) : null
+    }
+
+    const entryDir = path.dirname(entryFile)
+    const candidates = [
+      path.join(entryDir, dep),
+      path.join(path.dirname(entryDir), dep),
+      ...this.options.loadPaths.map((lp) => path.resolve(process.cwd(), lp, dep))
+    ]
+
+    for (const candidate of candidates) {
+      // Normalize to POSIX separators so dependency keys match the normalized
+      // ids HMR looks up with (findDependents) on Windows.
+      if (existsSync(candidate)) return normalizePath(path.resolve(candidate))
+    }
+    return null
+  }
+
+  /**
+   * Compute the current mtimes of a compile result's resolvable dependencies,
+   * keyed by absolute path. Unresolvable dependencies are skipped.
+   */
+  private computeDepMtimes(
+    dependencies: string[] | undefined,
+    entryFile: string
+  ): Record<string, number> {
+    const out: Record<string, number> = {}
+    if (!dependencies) return out
+
+    for (const dep of dependencies) {
+      const abs = this.resolveDependencyPath(dep, entryFile)
+      if (!abs) continue
+      try {
+        out[abs] = statSync(abs).mtimeMs
+      } catch {
+        // File vanished between resolve and stat; ignore.
+      }
+    }
+    return out
+  }
+
+  /**
+   * Check whether every recorded dependency is still up to date. A dependency
+   * whose mtime no longer matches the recorded value (newer OR older — e.g. a
+   * `git checkout` or `cp -p` that moves mtime backwards), or that has become
+   * unreadable, makes the cache entry stale.
+   */
+  private areDependenciesFresh(depMtimes: Record<string, number> | undefined): boolean {
+    if (!depMtimes) return true
+
+    for (const [abs, recorded] of Object.entries(depMtimes)) {
+      let current: number
+      try {
+        current = statSync(abs).mtimeMs
+      } catch {
+        return false
+      }
+      if (current !== recorded) return false
+    }
+    return true
+  }
+
+  /**
+   * Find cached entries whose compiled output inlines the given (absolute)
+   * file. Used by HMR to refresh the entries that depend on a changed file,
+   * since Opal inlines requires rather than emitting separate modules.
+   */
+  findDependents(changedFile: string): string[] {
+    // Match the normalized (POSIX) shape used for depMtimes keys so lookups
+    // work regardless of the separator style the caller passes.
+    const target = normalizePath(path.resolve(changedFile))
+    const dependents: string[] = []
+    for (const [entryPath, entry] of this.cache) {
+      if (entryPath === target) continue
+      if (entry.depMtimes && Object.prototype.hasOwnProperty.call(entry.depMtimes, target)) {
+        dependents.push(entryPath)
+      }
+    }
+    return dependents
+  }
+
   private getDiskCachePath(filePath: string): string {
     return path.join(this.cacheDir, `${this.getCacheKey(filePath)}.json`)
   }
 
-  private async loadFromDiskCache(filePath: string, contentHash: string): Promise<CompileResult | null> {
+  private async loadFromDiskCache(
+    filePath: string,
+    contentHash: string
+  ): Promise<{ result: CompileResult; depMtimes?: Record<string, number> } | null> {
     if (!this.options.diskCache) return null
 
     const cachePath = this.getDiskCachePath(filePath)
@@ -254,8 +355,14 @@ export class OpalCompiler {
         return null
       }
 
+      // Invalidate if any inlined dependency changed since this entry was built.
+      if (!this.areDependenciesFresh(entry.depMtimes)) {
+        this.log(`Disk cache dependency changed for ${filePath}`)
+        return null
+      }
+
       this.log(`Disk cache hit: ${filePath}`)
-      return entry.result
+      return { result: entry.result, depMtimes: entry.depMtimes }
     } catch (e) {
       // Cache file is invalid or corrupted
       this.log(`Disk cache read error for ${filePath}: ${e}`)
@@ -263,7 +370,13 @@ export class OpalCompiler {
     }
   }
 
-  private saveToDiskCache(filePath: string, contentHash: string, mtime: number, result: CompileResult): void {
+  private saveToDiskCache(
+    filePath: string,
+    contentHash: string,
+    mtime: number,
+    result: CompileResult,
+    depMtimes: Record<string, number>
+  ): void {
     if (!this.options.diskCache) return
 
     const cachePath = this.getDiskCachePath(filePath)
@@ -272,7 +385,8 @@ export class OpalCompiler {
         version: CACHE_VERSION,
         contentHash,
         mtime,
-        result
+        result,
+        depMtimes
       }
       writeFileSync(cachePath, JSON.stringify(entry), 'utf-8')
       this.log(`Disk cache saved: ${filePath}`)
@@ -337,10 +451,11 @@ export class OpalCompiler {
 
     const contentHash = this.getContentHash(fileContent)
 
-    // Check memory cache first
+    // Check memory cache first. The entry is only fresh if neither the entry
+    // file itself nor any of its inlined dependencies has changed.
     const cached = this.cache.get(filePath)
     if (cached) {
-      if (stat.mtimeMs <= cached.mtime) {
+      if (stat.mtimeMs <= cached.mtime && this.areDependenciesFresh(cached.depMtimes)) {
         this.log(`Memory cache hit: ${filePath}`)
         this.recordMetrics(filePath, startTime, true, 'memory')
         return {
@@ -353,30 +468,49 @@ export class OpalCompiler {
       this.cache.delete(filePath)
     }
 
-    // Check disk cache
+    // Check disk cache (also validated against dependency mtimes)
     const diskCached = await this.loadFromDiskCache(filePath, contentHash)
     if (diskCached) {
       // Update memory cache
       this.cache.set(filePath, {
-        ...diskCached,
-        mtime: stat.mtimeMs
+        ...diskCached.result,
+        mtime: stat.mtimeMs,
+        depMtimes: diskCached.depMtimes
       })
       this.recordMetrics(filePath, startTime, true, 'disk')
-      return diskCached
+      return diskCached.result
     }
 
-    // Compile with concurrency control
+    // Compile with concurrency control. Capture a wall-clock reference *before*
+    // spawning Ruby so we can detect dependencies edited mid-compilation.
     this.log(`Compiling: ${filePath}`)
+    const compileStart = Date.now()
     const result = await this.compileWithConcurrencyControl(filePath)
+
+    // Record dependency mtimes so a later change to any inlined require busts
+    // this entry's cache.
+    const depMtimes = this.computeDepMtimes(result.dependencies, filePath)
+
+    // If a dependency was modified after compilation started, the compiled
+    // output may not reflect its latest content (TOCTOU). Recording that newer
+    // mtime would make the stale output look fresh, so skip caching entirely
+    // and let the next compile produce (and cache) a correct result.
+    const racedDuringCompile = Object.values(depMtimes).some((m) => m > compileStart)
+    if (racedDuringCompile) {
+      this.log(`Dependency changed during compilation of ${filePath}; not caching`)
+      this.recordMetrics(filePath, startTime, false, 'compile')
+      return result
+    }
 
     // Cache the result in memory
     this.cache.set(filePath, {
       ...result,
-      mtime: stat.mtimeMs
+      mtime: stat.mtimeMs,
+      depMtimes
     })
 
     // Cache the result on disk
-    this.saveToDiskCache(filePath, contentHash, stat.mtimeMs, result)
+    this.saveToDiskCache(filePath, contentHash, stat.mtimeMs, result, depMtimes)
 
     this.recordMetrics(filePath, startTime, false, 'compile')
     return result
