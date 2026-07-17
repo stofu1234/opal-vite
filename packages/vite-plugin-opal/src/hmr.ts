@@ -1,4 +1,10 @@
 import type { ViteDevServer, ModuleNode, Update } from 'vite'
+// normalizePath converts OS-native separators to POSIX ('/'). Vite normalizes
+// all module-graph ids and plugin `load()` ids this way, so HMR must normalize
+// the paths it derives from the watcher too — otherwise on Windows the
+// backslash paths from path.resolve() never match Vite's ids or the compiler's
+// cache keys, and HMR silently no-ops.
+import { normalizePath } from 'vite'
 import type { OpalCompiler } from './compiler'
 import type { OpalResolver } from './resolver'
 import type { OpalPluginOptions } from './types'
@@ -56,7 +62,7 @@ export class OpalHMRManager implements HMRManager {
 
     this.watcher.on('unlink', (filePath: string) => {
       this.log(`File removed: ${filePath}`)
-      const absolutePath = path.resolve(this.server.config.root, filePath)
+      const absolutePath = normalizePath(path.resolve(this.server.config.root, filePath))
       this.compiler.clearCache(absolutePath)
       this.resolver.clearCache(absolutePath)
       this.dependencyGraph.delete(absolutePath)
@@ -85,7 +91,7 @@ export class OpalHMRManager implements HMRManager {
    * Handle file change and trigger HMR update
    */
   async handleFileChange(filePath: string): Promise<void> {
-    const absolutePath = path.resolve(this.server.config.root, filePath)
+    const absolutePath = normalizePath(path.resolve(this.server.config.root, filePath))
 
     this.log(`File changed: ${filePath}`)
 
