@@ -1,5 +1,7 @@
 # opal-vite
 
+[![CodeRabbit](https://img.shields.io/badge/CodeRabbit-AI%20Review-blue)](https://coderabbit.ai/)
+
 Integrate [Opal](https://opalrb.com/) with [Vite](https://vitejs.dev/) - Write Ruby code and run it in the browser with Vite's lightning-fast development experience.
 
 ## Features
