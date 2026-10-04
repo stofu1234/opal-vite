@@ -24,7 +24,8 @@ module Opal
       # Returns the path to the opal/ directory in this gem
       # Contains built-in concerns like StimulusHelpers
       def opal_lib_path
-        File.expand_path('../../opal', __dir__)
+        # This file is lib/opal-vite.rb, so opal/ is one level up
+        File.expand_path('../opal', __dir__)
       end
 
       # CLI entry point for compilation

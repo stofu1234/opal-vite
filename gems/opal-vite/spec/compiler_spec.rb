@@ -168,4 +168,20 @@ RSpec.describe Opal::Vite::Compiler do
       expect(described_class.runtime_code).to include('Opal.loaded(["opal"])')
     end
   end
+
+  describe 'include_concerns option' do
+    let(:source) { "require 'opal_vite/concerns/v1/base64_helpers'" }
+
+    it 'makes the built-in concerns requirable by default' do
+      expect { described_class.new.compile(source, 'entry.rb') }.not_to raise_error
+    end
+
+    it 'leaves the built-in concerns out of the load path when disabled' do
+      # MissingRequire is a LoadError, so #compile's `rescue StandardError`
+      # does not wrap it in CompilationError.
+      expect { described_class.new(include_concerns: false).compile(source, 'entry.rb') }
+        .to raise_error(Opal::Builder::MissingRequire, %r{opal_vite/concerns/v1/base64_helpers})
+    end
+  end
 end
+
