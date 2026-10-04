@@ -217,7 +217,10 @@ module OpalVite
           #   button({ onClick: set_count.with { |c| c + 1 } }, '+')
           def with(&block)
             setter_fn = @setter_fn
-            `function() {
+            # Opal emits a multi-line x-string as a statement (no implicit
+            # return), and a bare anonymous function statement is a
+            # JavaScript syntax error, so return explicitly.
+            `return function() {
               #{setter_fn}(function(current) {
                 return #{block.call(`current`)};
               });

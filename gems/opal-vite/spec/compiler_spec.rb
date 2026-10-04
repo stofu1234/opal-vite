@@ -168,4 +168,26 @@ RSpec.describe Opal::Vite::Compiler do
       expect(described_class.runtime_code).to include('Opal.loaded(["opal"])')
     end
   end
+
+  describe 'built-in concerns' do
+    node_available = system('node --version', out: File::NULL, err: File::NULL)
+
+    opal_dir = File.expand_path('../opal', __dir__)
+
+    Dir[File.join(opal_dir, 'opal_vite', 'concerns', '**', '*.rb')].sort.each do |path|
+      name = path.delete_prefix("#{opal_dir}/").delete_suffix('.rb')
+
+      it "compiles #{name} to syntactically valid JavaScript" do
+        skip 'node is not installed' unless node_available
+
+        result = described_class.new.compile("require '#{name}'", 'entry.rb')
+        Tempfile.create(['concern', '.js']) do |file|
+          file.write(result[:code])
+          file.flush
+          output = `node --check #{file.path} 2>&1`
+          expect($?.success?).to be(true), output
+        end
+      end
+    end
+  end
 end
