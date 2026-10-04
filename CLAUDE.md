@@ -62,7 +62,19 @@ end
 config.include StableHelpers, type: :feature
 ```
 
-**重要**: `wait_for_stimulus_ready` でコントローラー接続を確認してからテスト実行
+**重要**: `before` フックで `wait_for_stimulus_ready` → `wait_for_stimulus_connected` → `wait_for_dom_stable` の順に待ってからテストを実行する
+
+```ruby
+config.before(:each, type: :feature) do
+  visit '/'
+  wait_for_stimulus_ready       # アプリ固有の初期化確認
+  wait_for_stimulus_connected   # 全 [data-controller] の接続を確認（StableHelpers）
+  wait_for_dom_stable
+end
+```
+
+- 要素やターゲットが存在するかだけを確認しても準備完了にはならない（静的 HTML に最初からあり、Opal がコントローラーを登録する前でも見つかる）。flaky の原因になる
+- `connect()` などで後から変わる属性は `expect(el[:class])` のように 1 回だけ読まず、`have_css('.foo.active')` のような待機付きマッチャで検証する
 
 ---
 
@@ -70,10 +82,10 @@ config.include StableHelpers, type: :feature
 
 **deploy.yml の EXAMPLES リスト更新必須**:
 ```yaml
-EXAMPLES="practical-app chart-app stimulus-app api-example form-validation-app i18n-app pwa-app turbo-app vue-app react-app snabberb-app counter-app crud-app tabs-app utilities-app"
+EXAMPLES="practical-app chart-app stimulus-app api-example form-validation-app i18n-app pwa-app turbo-app vue-app react-app snabberb-app counter-app crud-app tabs-app utilities-app debug-app stimulus-components-app component-base-app"
 ```
 
-新しいexampleアプリを追加したら、このリストにも追加すること。
+新しいexampleアプリを追加したら、このリストにも追加すること（リストは「Build examples for playground」と「Copy examples to playground directory」の 2 箇所にある）。
 
 ---
 
@@ -202,30 +214,125 @@ git push --force-with-lease
 
 ---
 
+### 12. Opal ランタイムの読み込み
+
+コンパイルされた `.rb` モジュールは corelib を含まず、先頭で `import '/@opal-runtime'` を自動で行う（vite-plugin-opal >= 0.3.16 + opal-vite gem >= 0.3.15）。
+
+- JS エントリで `import '/@opal-runtime'` を書く必要はない（書いても二重読み込みにはならない）
+- `<script src="/@opal-runtime">` のような別 URL でランタイムを読み込まない（dev で二重に評価される）
+- Rails: `opal_javascript_tag` は `vite_javascript_tag` と同じ。`opal_runtime_tag` は非推奨で何も出力しない
+- コンソールに `Opal already loaded` が出たら、gem と plugin のバージョンの組み合わせを確認する
+
+---
+
+### 13. 複数行のバッククォート（x-string）は明示的に return する
+
+Opal は複数行の x-string を「文」として出力し、暗黙の return を付けない。メソッドの戻り値にする場合は x-string 内で `return` を書く。
+
+```ruby
+# ❌ 誤り: function() {...} という名前なし関数の「文」になり、JS の構文エラー
+def with(&block)
+  `function() {
+    ...
+  }`
+end
+
+# ❌ これも誤り: Opal が cb = ...; cb を畳み込むので同じ結果になる
+cb = `function() {
+  ...
+}`
+cb
+
+# ✅ 正解
+def with(&block)
+  `return function() {
+    ...
+  }`
+end
+```
+
+組み込み concern は `gems/opal-vite/spec/compiler_spec.rb` でコンパイルして `node --check` にかけている（node が必要）。concern を追加・変更したら gem の spec を回すこと。
+
+---
+
+### 14. opal_stimulus の複数語の名前
+
+opal_stimulus 0.2.x は `has_*_target` などの JS 名を `String#capitalize` で作るため、複数語の名前（`soundButton`、`latest_paid` など）で壊れる。互換パッチを使う。
+
+```ruby
+require 'opal_stimulus/stimulus_controller'
+require 'opal_vite/compat/opal_stimulus'   # コントローラー定義より前
+```
+
+詳細は `docs/api/v1/en/opal_stimulus_compat.md`。`JS::Proxy`（opal_stimulus の `*_target` の戻り値）で存在しないプロパティを読むと `NoMethodError` になるので、任意のプロパティは `js_get` / `dataset_value`（StimulusHelpers）で読む。
+
+---
+
+### 15. バージョンとリリース
+
+npm の plugin は gem の Ruby コードを呼び出すため、3 パッケージの互換を保つ。互換表は `packages/vite-plugin-opal/README.md` と `gems/opal-vite-rails/README.md` にある。
+
+- plugin が gem に新しいキーワード引数を渡す場合は、plugin 起動時の gem 調査（`getRubyEnvironment`）で対応可否を判定し、古い gem でも壊れないようにする
+- `opal-vite-rails.gemspec` の `opal-vite` 依存の下限を、必要な機能が入った版に合わせる
+- 公開は手動。依存関係の順に **opal-vite gem → opal-vite-rails gem → npm** の順で行う
+  - RubyGems の API キーには **Push rubygem** のスコープが必要（Show dashboard のみのキーでは "This API key cannot perform the specified action" になる）
+- タグは plugin のバージョンに合わせて `v<version>` を push する（`release.yml` が GitHub Release を作成する。npm / gem の公開はしない）
+
+---
+
+### 16. テストの実行
+
+| 対象 | コマンド |
+|------|---------|
+| vite-plugin-opal | `cd packages/vite-plugin-opal && pnpm exec vitest run`（`pnpm test -- --run` は watch モードのままになる） |
+| opal-vite gem | `cd gems/opal-vite && bundle exec rspec`（CI の Test Vite Plugin ジョブでも実行） |
+| example の E2E | 該当 example で `pnpm dev` を起動してから `bundle exec rspec`（spec_helper の `app_host` のポートで待ち受けること） |
+
+- `examples/chat-app/dist` はコミットされているので、chat-app で `pnpm build` した後は `git checkout -- examples/chat-app/dist` で戻す
+- ディスクキャッシュ（`node_modules/.cache/opal-vite`）はオプションや gem バージョンが変わると自動で無効になるが、`path:` 指定の gem のソースを編集した場合は手動で削除する
+
+---
+
+### 17. Rails 連携（opal-vite-rails / examples/rails-app）
+
+- Opal のソースは vite_ruby の `sourceCodeDir`（既定 `app/frontend`）配下の `opal/` に置き、`entrypoints/*.js` から import する。`entrypoints` から import されない `.rb` はバンドルに入らない
+- engine が `config.opal_vite.source_path`（既定 `app/opal`）と `<sourceCodeDir>/opal` を Zeitwerk の対象外にする。これが無いと本番の eager load で MRI が Opal コードを読み込み LoadError になる
+- ジェネレータは `rails g opal_vite:install`
+- `examples/rails-app` は `public/vite`（本番ビルド）をコミットしており、Docker イメージ（Railway も Dockerfile でビルド）はそれを配信するだけで Node を使わない。`app/frontend` を変更したら `RAILS_ENV=production bin/vite build` で再ビルドしてコミットする
+
+---
+
 ## ポート番号一覧
 
-| App | Port |
-|-----|------|
-| standalone | 3000 |
-| stimulus-app | 3001 |
-| practical-app | 3002 |
-| api-example | 3004 |
-| chart-app | 3005 |
-| i18n-app | 3006 |
-| pwa-app | 3007 |
-| utilities-app | 3008 |
-| form-validation-app | 3009 |
-| turbo-app | 3010 |
-| vue-app | 3011 |
-| react-app | 3012 |
-| snabberb-app | 3013 |
-| counter-app | 3014 |
-| crud-app | 3015 |
-| tabs-app | 3016 |
-| debug-app | 3017 |
-| actioncable-app | 3018 |
-| stimulus-components-app | 3020 |
-| component-base-app | 3031 |
+`vite.config.ts` の `server.port` の実際の値。E2E の `spec/spec_helper.rb` の `app_host` もこのポートを前提にしているため、変更する場合は両方を直す。**重複しているアプリは同時に起動できない**。
+
+| App | Port | 備考 |
+|-----|------|------|
+| counter-app | 3000 | 重複 |
+| inesita-app | 3000 | 重複 |
+| standalone | 3000 | 重複 |
+| stimulus-app | 3000 | 重複 |
+| practical-app | 3001 | 重複 |
+| turbo-app | 3001 | 重複 |
+| api-example | 3004 | |
+| crud-app | 3005 | |
+| chat-app | 3006 | |
+| tabs-app | 3007 | |
+| chart-app | 3008 | 重複 |
+| utilities-app | 3008 | 重複 |
+| vue-app | 3010 | |
+| form-validation-app | 3011 | |
+| i18n-app | 3012 | |
+| pwa-app | 3013 | |
+| react-app | 3014 | |
+| actioncable-app | 3017 | 重複 |
+| debug-app | 3017 | 重複 |
+| stimulus-components-app | 3020 | |
+| snabberb-app | 3030 | |
+| component-base-app | 3031 | |
+| rails-app | 3036 | vite_ruby の dev サーバー（`config/vite.json`）。Rails は 3000 |
+
+新しい example は既存と重ならないポートを選ぶこと。
 
 ---
 
@@ -248,4 +355,4 @@ git push --force-with-lease
 
 ---
 
-*最終更新: 2025-12-30 (v0.3.4リリース後)*
+*最終更新: 2026-10-05 (v0.3.16 リリース、PR #62〜#67 後)*
