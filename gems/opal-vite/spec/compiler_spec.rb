@@ -45,16 +45,18 @@ RSpec.describe Opal::Vite::Compiler do
           helper_path = File.join(dir, 'helper.rb')
           File.write(helper_path, 'class Helper; end')
 
-          # Create main file that requires helper
+          # Create main file that requires helper (the file's directory is
+          # added to the load path by the compiler)
           main_source = "require 'helper'\nputs Helper"
+          main_path = File.join(dir, 'main.rb')
 
-          # Configure load paths
-          builder = Opal::Builder.new
-          builder.append_paths(dir)
+          result = compiler.compile(main_source, main_path)
 
-          result = compiler.compile(main_source, File.join(dir, 'main.rb'))
-
-          expect(result[:dependencies]).to include('helper')
+          # Dependencies list every processed file: required files by their
+          # load-path-relative name and the entry by the path it was given.
+          # The Vite plugin resolves both forms (resolveDependencyPath).
+          expect(result[:dependencies]).to include(main_path)
+          expect(result[:dependencies]).to include(a_string_ending_with('helper.rb'))
         end
       end
     end
@@ -126,7 +128,8 @@ RSpec.describe Opal::Vite::Compiler do
         result = compiler.compile(source, 'empty.rb')
 
         expect(result[:code]).to be_a(String)
-        expect(result[:dependencies]).to be_empty
+        # Only the entry itself
+        expect(result[:dependencies]).to eq(['empty.rb'])
       end
     end
   end
