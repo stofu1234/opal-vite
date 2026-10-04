@@ -85,6 +85,7 @@ RSpec.configure do |config|
   config.before(:each, type: :feature) do
     visit '/'
     wait_for_stimulus_ready
+    wait_for_stimulus_connected
     # Extra wait for DOM to stabilize (CI requires more time)
     sleep ENV['CI'] ? 1.0 : 0.5
     # Wait for all buttons to be clickable
@@ -137,6 +138,7 @@ RSpec.configure do |config|
         warn "[Retry #{attempts}/#{max_attempts}] #{e.class}: #{e.message.lines.first.chomp}"
         visit '/'
         wait_for_stimulus_ready
+        wait_for_stimulus_connected
         retry
       else
         raise

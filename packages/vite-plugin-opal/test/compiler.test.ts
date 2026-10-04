@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach, vi } from 'vitest'
 import { OpalCompiler } from '../src/compiler'
 import * as path from 'path'
 import * as fs from 'fs'
@@ -495,6 +495,32 @@ describe('OpalCompiler Performance Features', () => {
 
       const dependents = compiler.findDependents(dep)
       expect(dependents).toContain(path.resolve(entry))
+
+      fs.rmSync(dir, { recursive: true })
+    })
+
+    it('caches files written in the same millisecond as the compile start', async () => {
+      // Regression (flaky in CI): mtimeMs has a sub-millisecond fraction while
+      // Date.now() is truncated, so a file written just before compiling could
+      // look "modified during compilation" and the entry was never cached.
+      const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'opal-dep-same-ms-'))
+      const { appDir, entry, dep } = writeApp(dir, 'MARKER_V1')
+      const writtenAt = 1_700_000_000_000 // whole millisecond
+      fs.utimesSync(entry, (writtenAt + 0.5) / 1000, (writtenAt + 0.5) / 1000)
+      expect(fs.statSync(entry).mtimeMs).toBeGreaterThan(writtenAt)
+
+      const compiler = new OpalCompiler({
+        diskCache: false, loadPaths: [appDir], gemPath: LOCAL_GEM_PATH
+      })
+      await compiler.getRubyEnvironment()
+      const nowSpy = vi.spyOn(Date, 'now').mockReturnValue(writtenAt)
+      try {
+        await compiler.compile(entry)
+      } finally {
+        nowSpy.mockRestore()
+      }
+
+      expect(compiler.findDependents(dep)).toContain(path.resolve(entry))
 
       fs.rmSync(dir, { recursive: true })
     })

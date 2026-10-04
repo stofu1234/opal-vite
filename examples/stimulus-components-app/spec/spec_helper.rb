@@ -87,6 +87,7 @@ RSpec.configure do |config|
     visit '/'
     # Wait for Opal/Stimulus controllers to initialize
     wait_for_stimulus_ready
+    wait_for_stimulus_connected
     # Wait for DOM to stabilize after Opal initialization
     wait_for_dom_stable
   end
@@ -145,6 +146,7 @@ RSpec.configure do |config|
       warn "[Retry #{attempts}/#{max_attempts}] #{e.class}: #{e.message.lines.first.chomp}"
       visit '/'
       wait_for_stimulus_ready
+      wait_for_stimulus_connected
       wait_for_dom_stable
       retry
     end

@@ -634,7 +634,12 @@ export class OpalCompiler {
     // output may not reflect its latest content (TOCTOU). Recording that newer
     // mtime would make the stale output look fresh, so skip caching entirely
     // and let the next compile produce (and cache) a correct result.
-    const racedDuringCompile = Object.values(depMtimes).some((m) => m > compileStart)
+    //
+    // Compare at millisecond resolution: mtimeMs carries a sub-millisecond
+    // fraction while Date.now() is truncated, so a file written in the same
+    // millisecond *before* compileStart would otherwise look newer (and the
+    // entry would never be cached).
+    const racedDuringCompile = Object.values(depMtimes).some((m) => Math.floor(m) > compileStart)
     if (racedDuringCompile) {
       this.log(`Dependency changed during compilation of ${filePath}; not caching`)
       this.recordMetrics(filePath, startTime, false, 'compile')

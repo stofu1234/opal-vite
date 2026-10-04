@@ -135,9 +135,9 @@ RSpec.describe 'Stimulus + Opal + Vite', type: :feature do
     end
 
     it 'has clipboard-supported class when clipboard API is available' do
-      clipboard_section = find('[data-controller="clipboard"]')
-      # Modern browsers support clipboard API
-      expect(clipboard_section[:class]).to include('clipboard-supported')
+      # Modern browsers support clipboard API. The class is added in connect(),
+      # so use a waiting matcher rather than reading [:class] once.
+      expect(page).to have_css('[data-controller="clipboard"].clipboard-supported')
     end
 
     it 'changes button text after copying' do

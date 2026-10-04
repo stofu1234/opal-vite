@@ -85,6 +85,7 @@ RSpec.configure do |config|
   config.before(:each, type: :feature) do
     visit '/'
     wait_for_stimulus_ready
+    wait_for_stimulus_connected
     # Extra wait for DOM to stabilize
     sleep 0.5
   end
@@ -129,6 +130,7 @@ RSpec.configure do |config|
         warn "[Retry #{attempts}/#{max_attempts}] #{e.class}: #{e.message.lines.first.chomp}"
         visit '/'
         wait_for_stimulus_ready
+        wait_for_stimulus_connected
         retry
       else
         raise

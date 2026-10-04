@@ -224,6 +224,22 @@ module Opal
           js_poll_until(js_condition, timeout: timeout, error_message: "Condition not met: #{js_condition}")
         end
 
+        # Wait until every Stimulus controller declared on the page is connected
+        # (expects the Application on window.Stimulus). Checking for elements or
+        # targets is not enough: they are in the static HTML before Opal has
+        # registered the controllers, so tests could act before connect() ran.
+        # @param timeout [Integer] Maximum wait time in seconds
+        def wait_for_stimulus_connected(timeout: DEFAULT_TIMEOUT)
+          js_poll_until(<<~JS.strip, timeout: timeout, error_message: "Stimulus controllers not connected within #{timeout}s")
+            (typeof Stimulus !== 'undefined') &&
+              Array.from(document.querySelectorAll('[data-controller]')).every(function(el) {
+                return el.getAttribute('data-controller').split(/\\s+/).filter(Boolean).every(function(id) {
+                  return !!Stimulus.getControllerForElementAndIdentifier(el, id);
+                });
+              })
+          JS
+        end
+
         # Wait for DOM to be stable (no pending mutations)
         # Uses MutationObserver setup in JS with Ruby-based polling
         # @param timeout [Integer] Maximum wait time in seconds
