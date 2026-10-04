@@ -126,6 +126,10 @@ module Opal
           end
         end
 
+        # opal-vite's own opal/ directory holds the built-in concerns; it is
+        # on $LOAD_PATH like any gem, so drop it here when they are disabled.
+        gem_opal_paths.delete(File.expand_path(Opal::Vite.opal_lib_path)) unless @include_concerns
+
         # Add opal directories FIRST so they take priority over lib directories
         # This ensures that 'require "inesita"' finds opal/inesita.rb before lib/inesita.rb
         gem_opal_paths.uniq.each do |path|
