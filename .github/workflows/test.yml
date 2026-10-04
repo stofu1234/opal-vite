@@ -60,6 +60,10 @@ jobs:
         run: pnpm test
         working-directory: packages/vite-plugin-opal
 
+      - name: Run gem specs
+        run: bundle exec rspec
+        working-directory: gems/opal-vite
+
   test-practical-app:
     name: Test Practical App (E2E)
     runs-on: ubuntu-latest
