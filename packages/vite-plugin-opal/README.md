@@ -29,6 +29,17 @@ gem install opal-vite
 gem 'opal-vite'
 ```
 
+### Version compatibility
+
+The plugin runs the gem's Ruby code, so keep them in step. The plugin checks
+the installed gem at startup.
+
+| vite-plugin-opal | opal-vite gem | Behavior |
+|------------------|---------------|----------|
+| >= 0.3.16 | >= 0.3.15 | Opal corelib is loaded once, from the shared `/@opal-runtime` module |
+| >= 0.3.16 | 0.3.12 – 0.3.14 | Works; each compiled `.rb` bundle carries its own corelib (warning at startup) |
+| >= 0.3.16 | < 0.3.12 | Works, but the `stubs` option fails with a clear error |
+
 ## Usage
 
 ### vite.config.ts
@@ -137,7 +148,33 @@ Enable object freezing for immutability.
 
 Enable debug logging.
 
+### `stubs`
+
+- Type: `string[]`
+- Default: `[]`
+
+Require names to replace with empty modules (e.g. `['active_support']` also
+covers `active_support/core_ext`). Names are matched against Opal require
+paths, never against directories in a file's absolute path.
+
+### `diskCache` / `cacheDir`
+
+- Type: `boolean` / `string`
+- Default: `true` / `node_modules/.cache/opal-vite`
+
+Persist compiled output across restarts. Entries are invalidated when the
+source, an inlined dependency, a compile option, the gem or Opal version, or
+`Gemfile.lock` changes. Edits inside a `path:` gem are not tracked; clear the
+cache directory after changing such a gem.
+
 ## How It Works
+
+### Opal runtime
+
+Each compiled `.rb` module starts with `import '/@opal-runtime'`, and the
+corelib is left out of the module itself. The runtime is therefore evaluated
+exactly once, before any Ruby code, no matter how many `.rb` files you import.
+You don't need to import `/@opal-runtime` yourself (doing so is harmless).
 
 ### Development Mode
 

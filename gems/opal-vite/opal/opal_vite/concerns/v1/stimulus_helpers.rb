@@ -857,11 +857,12 @@ module OpalVite
       end
 
       # Call a method on a JavaScript object
-      # @param obj [Native] JavaScript object
+      # @param obj [Object] JavaScript object (raw, Native or JS::Proxy)
       # @param method [Symbol, String] Method name
       # @param args [Array] Arguments to pass
       # @return [Native] Method return value
       def js_call_on(obj, method, *args)
+        obj = to_native_element(obj)
         if args.empty?
           `#{obj}[#{method.to_s}]()`
         else
@@ -871,19 +872,38 @@ module OpalVite
       end
 
       # Get a property from a JavaScript object
-      # @param obj [Native] JavaScript object
+      #
+      # Unlike calling the property as a method on a JS::Proxy (e.g. the
+      # elements opal_stimulus' `*_target` methods return), a missing property
+      # does not raise NoMethodError; you get JavaScript's undefined.
+      #
+      # @param obj [Object] JavaScript object (raw, Native or JS::Proxy)
       # @param prop [Symbol, String] Property name
-      # @return [Native] Property value
+      # @return [Object] Raw property value (may be undefined)
       def js_get(obj, prop)
+        obj = to_native_element(obj)
         `#{obj}[#{prop.to_s}]`
       end
 
       # Set a property on a JavaScript object
-      # @param obj [Native] JavaScript object
+      # @param obj [Object] JavaScript object (raw, Native or JS::Proxy)
       # @param prop [Symbol, String] Property name
       # @param value [Object] Value to set
       def js_set(obj, prop, value)
+        obj = to_native_element(obj)
         `#{obj}[#{prop.to_s}] = #{value}`
+      end
+
+      # Read a data-* attribute through element.dataset
+      # @param element [Object] DOM element (raw, Native or JS::Proxy)
+      # @param key [Symbol, String] Attribute name without "data-", in
+      #   snake_case or camelCase (:confirm_message and :confirmMessage both
+      #   read data-confirm-message)
+      # @return [String, nil] The attribute value, or nil when it is absent
+      def dataset_value(element, key)
+        el = to_native_element(element)
+        name = camelize(key, false)
+        `(#{el}.dataset[#{name}] == null) ? nil : #{el}.dataset[#{name}]`
       end
 
       # ===== JSON Methods =====

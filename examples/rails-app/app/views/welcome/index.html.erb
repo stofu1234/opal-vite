@@ -3,6 +3,8 @@
 <head>
   <title>Opal + Vite + Rails Example</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
+  <%= vite_client_tag %>
+  <%= vite_javascript_tag 'application' %>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
@@ -65,7 +67,7 @@
     <div class="info" style="margin-top: 30px;">
       <h3>How it works:</h3>
       <ul>
-        <li>Ruby code in <code>app/opal/application.rb</code></li>
+        <li>Ruby code in <code>app/frontend/opal/application.rb</code></li>
         <li>Compiled to JavaScript by Opal</li>
         <li>Bundled by Vite for fast development</li>
         <li>Integrated seamlessly with Rails</li>
@@ -73,6 +75,5 @@
     </div>
   </div>
 
-  <script type="module" src="/assets/application-Dku1UUUb.js"></script>
 </body>
 </html>

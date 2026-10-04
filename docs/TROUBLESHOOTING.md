@@ -381,30 +381,28 @@ export default defineConfig({
 Opal already loaded. Loading twice can cause troubles
 ```
 
-**Cause:** Opal runtime loaded multiple times.
+**Cause:** The Opal corelib was evaluated more than once.
 
-**Solution:** Usually harmless warning, but can indicate:
+**Solution:**
 
-1. **Multiple entry points loading Opal:**
-```javascript
-// ❌ BAD: Don't import Opal multiple times
-import '@opal-runtime';  // In file A
-import '@opal-runtime';  // In file B
+1. **Update the gem and plugin together.** With vite-plugin-opal >= 0.3.16 and
+   the opal-vite gem >= 0.3.15, compiled `.rb` modules leave the corelib out and
+   import the shared `/@opal-runtime` module, so it is evaluated once. With an
+   older gem, any `.rb` bundle that (directly or through a gem such as
+   opal_stimulus) does `require 'opal'` carries its own copy of the corelib,
+   which collides with `import '/@opal-runtime'`. The plugin prints a warning
+   at startup when the installed gem is too old.
 
-// ✅ GOOD: Import once in main entry
-// application.js
-import '../opal/application.rb';  // Opal loads automatically
-```
-
-2. **Duplicate script tags:**
+2. **Remove standalone runtime tags:**
 ```html
-<!-- ❌ BAD -->
-<script src="/opal-runtime.js"></script>
-<script src="/application.js"></script>  <!-- Also loads Opal -->
+<!-- ❌ BAD: a second URL for the runtime -->
+<script type="module" src="/@opal-runtime"></script>
 
-<!-- ✅ GOOD -->
+<!-- ✅ GOOD: the compiled Ruby imports the runtime itself -->
 <script type="module" src="/application.js"></script>
 ```
+
+In Rails, `opal_runtime_tag` is deprecated and outputs nothing.
 
 ### WebSocket Connection Fails
 

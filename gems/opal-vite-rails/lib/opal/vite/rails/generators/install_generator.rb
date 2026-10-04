@@ -1,4 +1,6 @@
 require "rails/generators/base"
+require "json"
+require "pathname"
 
 module Opal
   module Vite
@@ -6,6 +8,8 @@ module Opal
       module Generators
         class InstallGenerator < ::Rails::Generators::Base
           source_root File.expand_path("../../../../../templates", __dir__)
+
+          namespace "opal_vite:install"
 
           desc "Install Opal-Vite in your Rails application"
 
@@ -17,24 +21,27 @@ module Opal
             end
           end
 
-          def create_opal_directory
-            empty_directory "app/opal"
-            create_file "app/opal/.keep"
+          # Opal sources live under vite_ruby's sourceCodeDir so that the Vite
+          # dev server and autoBuild watch them like any other frontend file.
+          def create_application_rb
+            template "application.rb.tt", File.join(opal_dir, "application.rb")
           end
 
-          def create_application_rb
-            template "application.rb.tt", "app/opal/application.rb"
+          # An entrypoint is what puts the Ruby code into a Vite bundle; without
+          # it application.rb is never compiled.
+          def create_entrypoint
+            template "opal_entrypoint.js.tt", File.join(entrypoints_dir, "opal.js")
           end
 
           def create_vite_config
-            if File.exist?("vite.config.ts")
+            if File.exist?(File.join(destination_root, "vite.config.ts"))
               inject_into_file "vite.config.ts", after: "import { defineConfig } from 'vite'\n" do
                 "import opal from 'vite-plugin-opal'\n"
               end
 
               inject_into_file "vite.config.ts", after: "plugins: [\n" do
                 "    opal({\n" \
-                "      loadPaths: ['./app/opal'],\n" \
+                "      loadPaths: ['./#{opal_dir}'],\n" \
                 "      sourceMap: true\n" \
                 "    }),\n"
               end
@@ -58,7 +65,7 @@ module Opal
                 <p>Check your browser console to see Opal output!</p>
               </div>
 
-              <%= opal_javascript_tag "application" %>
+              <%= opal_javascript_tag "opal" %>
             ERB
           end
 
@@ -89,6 +96,43 @@ module Opal
             say "\n  4. Visit:", :cyan
             say "     http://localhost:3000/opal_demo"
             say "\n" + "="*60, :green
+          end
+
+          private
+
+          def source_code_dir
+            vite_config_value(:source_code_dir, "sourceCodeDir", "app/frontend")
+          end
+
+          def entrypoints_dir
+            File.join(source_code_dir, vite_config_value(:entrypoints_dir, "entrypointsDir", "entrypoints"))
+          end
+
+          def opal_dir
+            File.join(source_code_dir, "opal")
+          end
+
+          # Path of application.rb as imported from the entrypoint
+          def opal_import_path
+            path = Pathname.new(File.join(opal_dir, "application.rb"))
+              .relative_path_from(Pathname.new(entrypoints_dir)).to_s
+            path.start_with?(".") ? path : "./#{path}"
+          end
+
+          # Read a vite_ruby setting, falling back to config/vite.json (vite_rails
+          # may have been installed by this generator in a separate process) and
+          # then to vite_ruby's default.
+          def vite_config_value(method, json_key, default)
+            return ViteRuby.config.public_send(method).to_s if defined?(ViteRuby)
+
+            vite_json.dig("all", json_key) || default
+          end
+
+          def vite_json
+            @vite_json ||= begin
+              path = File.join(destination_root, "config", "vite.json")
+              File.exist?(path) ? JSON.parse(File.read(path)) : {}
+            end
           end
         end
       end

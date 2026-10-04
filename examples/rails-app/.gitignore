@@ -1,10 +1,13 @@
-# Override root .gitignore - include dist for Railway deployment
-!dist/
-
-# Vite Ruby
-/public/vite*
+# Vite Ruby. public/vite (the production build) is committed: the Docker
+# image serves it as-is.
+/public/vite-dev
+/public/vite-test
+!/public/vite/.vite/
 node_modules
 # Vite uses dotenv and suggests to ignore local-only env files. See
 # https://vitejs.dev/guide/env-and-mode.html#env-files
 *.local
 
+
+/tmp
+/log

@@ -2,20 +2,17 @@ module Opal
   module Vite
     module Rails
       module Helper
-        # Generate script tag for Opal JavaScript
+        # Generate script tag for an entrypoint that loads Opal code
         #
         # Usage in views:
         #   <%= opal_javascript_tag "application" %>
         #
+        # Delegates to vite_javascript_tag in every environment: Vite emits ES
+        # modules, so the tag must carry type="module" (plus crossorigin and
+        # modulepreload links), and vite_ruby already switches between the dev
+        # server and the build manifest.
         def opal_javascript_tag(name, **options)
-          if vite_running?
-            # Development: load from Vite dev server
-            vite_javascript_tag("#{name}.js", **options)
-          else
-            # Production: load from manifest
-            asset_path = opal_asset_path("#{name}.js")
-            javascript_include_tag(asset_path, **options)
-          end
+          vite_javascript_tag("#{name}.js", **options)
         end
 
         # Generate multiple script tags for Opal JavaScript files
@@ -50,16 +47,17 @@ module Opal
           end
         end
 
-        # Include Opal runtime
-        # This is automatically included when using opal_javascript_tag,
-        # but can be called explicitly if needed
-        def opal_runtime_tag(**options)
-          if vite_running?
-            vite_javascript_tag("@opal-runtime", **options)
-          else
-            asset_path = opal_asset_path("opal-runtime.js")
-            javascript_include_tag(asset_path, **options)
-          end
+        # Deprecated: outputs nothing.
+        #
+        # Compiled .rb modules import the Opal runtime (`/@opal-runtime`)
+        # themselves, and in production it is bundled into the entrypoint's
+        # chunks, so there is no separate runtime file to load. A standalone
+        # tag would load a second copy of the runtime in development.
+        def opal_runtime_tag(**_options)
+          ActiveSupport::Deprecation.new("0.4", "opal-vite-rails").warn(
+            "opal_runtime_tag is no longer needed and outputs nothing; remove it from your views."
+          )
+          "".html_safe
         end
       end
     end

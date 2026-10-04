@@ -12,6 +12,10 @@ module Opal
         @config = options[:config] || Opal::Vite.config
         @include_concerns = options.fetch(:include_concerns, true)
         @stubs = options.fetch(:stubs, [])
+        # When true, Opal's corelib is treated as already loaded and left out
+        # of the output. The Vite plugin then imports the shared runtime
+        # (`/@opal-runtime`) instead, so corelib is only loaded once.
+        @external_runtime = options.fetch(:external_runtime, false)
       end
 
       # Compile Ruby source code to JavaScript
@@ -20,6 +24,7 @@ module Opal
         begin
           # Use Opal::Builder and add the file's directory to load paths
           builder = Opal::Builder.new(stubs: @stubs)
+          builder.prerequired = self.class.runtime_requires if @external_runtime
 
           # Add the directory containing the file to load paths
           # This allows require statements to work relative to the file
@@ -68,10 +73,24 @@ module Opal
       end
 
       # Get the Opal runtime code
+      #
+      # The runtime's entry file (opal.rb) is not registered as a requirable
+      # module, so mark it as loaded explicitly. Otherwise `require 'opal'` in
+      # a bundle compiled with external_runtime raises LoadError at runtime.
       def self.runtime_code
         builder = Opal::Builder.new
         builder.build('opal')
-        builder.to_s
+        "#{builder.to_s}\nOpal.loaded([\"opal\"]);\n"
+      end
+
+      # Logical require paths that are part of runtime_code (opal itself and
+      # the corelib files it pulls in).
+      def self.runtime_requires
+        @runtime_requires ||= begin
+          builder = Opal::Builder.new
+          builder.build('opal')
+          ['opal', *builder.already_processed.to_a].freeze
+        end
       end
 
       private

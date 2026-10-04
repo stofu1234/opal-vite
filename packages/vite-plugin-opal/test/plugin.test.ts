@@ -1,6 +1,14 @@
 import { describe, it, expect } from 'vitest'
 import opalPlugin from '../src/index'
 import type { OpalPluginOptions } from '../src/types'
+import type { Plugin } from 'vite'
+
+// transformIndexHtml is an object hook ({ order, handler }); call its handler.
+function transformHtml(plugin: Plugin, html: string): string {
+  const hook = plugin.transformIndexHtml as any
+  const handler = typeof hook === 'function' ? hook : hook.handler
+  return handler(html, {} as any)
+}
 
 describe('opalPlugin', () => {
   describe('plugin initialization', () => {
@@ -108,7 +116,7 @@ describe('opalPlugin', () => {
     it('transformIndexHtml injects runtime script', () => {
       const plugin = opalPlugin()
 
-      if (typeof plugin.transformIndexHtml === 'function') {
+      {
         const html = `
 <!DOCTYPE html>
 <html>
@@ -120,19 +128,29 @@ describe('opalPlugin', () => {
 </body>
 </html>
 `
-        const result = plugin.transformIndexHtml(html, {} as any)
+        const result = transformHtml(plugin, html)
 
         expect(result).toContain('/@opal-runtime')
         expect(result).toContain('<script type="module"')
       }
     })
 
+    it('transformIndexHtml runs before Vite processes inline scripts', () => {
+      // The runtime is injected as an inline module so Vite rewrites its
+      // import to the same URL compiled .rb modules use (one evaluation).
+      const plugin = opalPlugin()
+      const hook = plugin.transformIndexHtml as any
+
+      expect(hook.order).toBe('pre')
+      expect(transformHtml(plugin, '<head></head>')).toContain('<script type="module">import "/@opal-runtime"</script>')
+    })
+
     it('transformIndexHtml handles HTML without head tag', () => {
       const plugin = opalPlugin()
 
-      if (typeof plugin.transformIndexHtml === 'function') {
+      {
         const html = '<div>Hello</div>'
-        const result = plugin.transformIndexHtml(html, {} as any)
+        const result = transformHtml(plugin, html)
 
         expect(result).toContain('/@opal-runtime')
       }
@@ -196,7 +214,7 @@ describe('opalPlugin', () => {
     it('transformIndexHtml injects CDN script tag when cdn is enabled', () => {
       const plugin = opalPlugin({ cdn: 'opalrb' })
 
-      if (typeof plugin.transformIndexHtml === 'function') {
+      {
         const html = `
 <!DOCTYPE html>
 <html>
@@ -208,7 +226,7 @@ describe('opalPlugin', () => {
 </body>
 </html>
 `
-        const result = plugin.transformIndexHtml(html, {} as any)
+        const result = transformHtml(plugin, html)
 
         expect(result).toContain('https://cdn.opalrb.com/opal/')
         expect(result).toContain('<script src="')
@@ -220,9 +238,9 @@ describe('opalPlugin', () => {
     it('transformIndexHtml uses correct CDN URL for jsdelivr', () => {
       const plugin = opalPlugin({ cdn: 'jsdelivr' })
 
-      if (typeof plugin.transformIndexHtml === 'function') {
+      {
         const html = '<head></head>'
-        const result = plugin.transformIndexHtml(html, {} as any)
+        const result = transformHtml(plugin, html)
 
         expect(result).toContain('https://cdn.jsdelivr.net/gh/opal/opal-cdn@')
       }
@@ -231,9 +249,9 @@ describe('opalPlugin', () => {
     it('transformIndexHtml uses correct CDN URL for unpkg (opalrb fallback)', () => {
       const plugin = opalPlugin({ cdn: 'unpkg' })
 
-      if (typeof plugin.transformIndexHtml === 'function') {
+      {
         const html = '<head></head>'
-        const result = plugin.transformIndexHtml(html, {} as any)
+        const result = transformHtml(plugin, html)
 
         expect(result).toContain('https://cdn.opalrb.com/opal/')
       }
@@ -243,9 +261,9 @@ describe('opalPlugin', () => {
       const customUrl = 'https://my-cdn.example.com/opal/1.8.2/opal.min.js'
       const plugin = opalPlugin({ cdn: customUrl })
 
-      if (typeof plugin.transformIndexHtml === 'function') {
+      {
         const html = '<head></head>'
-        const result = plugin.transformIndexHtml(html, {} as any)
+        const result = transformHtml(plugin, html)
 
         expect(result).toContain(customUrl)
       }
@@ -254,9 +272,9 @@ describe('opalPlugin', () => {
     it('transformIndexHtml respects opalVersion in CDN URL', () => {
       const plugin = opalPlugin({ cdn: 'jsdelivr', opalVersion: '1.7.0' })
 
-      if (typeof plugin.transformIndexHtml === 'function') {
+      {
         const html = '<head></head>'
-        const result = plugin.transformIndexHtml(html, {} as any)
+        const result = transformHtml(plugin, html)
 
         expect(result).toContain('@1.7.0')
       }
@@ -265,9 +283,9 @@ describe('opalPlugin', () => {
     it('transformIndexHtml injects virtual runtime when cdn is disabled', () => {
       const plugin = opalPlugin({ cdn: false })
 
-      if (typeof plugin.transformIndexHtml === 'function') {
+      {
         const html = '<head></head>'
-        const result = plugin.transformIndexHtml(html, {} as any)
+        const result = transformHtml(plugin, html)
 
         expect(result).toContain('/@opal-runtime')
         expect(result).toContain('type="module"')
@@ -277,9 +295,9 @@ describe('opalPlugin', () => {
     it('transformIndexHtml injects virtual runtime when cdn is not specified', () => {
       const plugin = opalPlugin()
 
-      if (typeof plugin.transformIndexHtml === 'function') {
+      {
         const html = '<head></head>'
-        const result = plugin.transformIndexHtml(html, {} as any)
+        const result = transformHtml(plugin, html)
 
         expect(result).toContain('/@opal-runtime')
         expect(result).toContain('type="module"')

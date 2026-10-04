@@ -273,6 +273,49 @@ el = query_element('.child')
 
 ---
 
+## Element Types
+
+Elements reach your controller in two shapes:
+
+| Source | Type |
+|--------|------|
+| `get_target(:name)`, `get_targets(:name)`, `query_element(...)` | Raw JavaScript object |
+| opal_stimulus `name_target`, `element`, action event arguments | `JS::Proxy` (opal_proxy) |
+
+Every helper that takes an element or object (`add_class`, `get_attr`, `js_get`,
+`dataset_value`, ...) accepts both. Calling a missing property as a method on a
+`JS::Proxy` raises `NoMethodError` (e.g. `element.dataset.confirm` when there is
+no `data-confirm`); use `js_get` / `dataset_value` for optional properties.
+
+## JavaScript Property Access
+
+### js_get(obj, prop) / js_set(obj, prop, value)
+Read or write a property on any JavaScript object. A missing property returns
+`undefined` instead of raising.
+
+```ruby
+type = js_get(sound_button_target, :type)
+js_set(get_target(:output), :textContent, 'Done')
+```
+
+### dataset_value(element, key)
+Read a `data-*` attribute. Returns `nil` when the attribute is absent.
+`key` is snake_case or camelCase (`:confirm_message` reads `data-confirm-message`).
+
+```ruby
+message = dataset_value(element, :confirm_message)
+return if message && !`confirm(#{message})`
+```
+
+### js_call_on(obj, method, *args)
+Call a method on any JavaScript object.
+
+```ruby
+js_call_on(get_target(:form), :reset)
+```
+
+---
+
 ## Element Methods
 
 ### add_class(element, class_name) / remove_class / toggle_class / has_class?

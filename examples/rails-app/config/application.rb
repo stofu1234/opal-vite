@@ -19,7 +19,7 @@ module RailsAppExample
 
     # Opal-Vite configuration (only in development when gem is available)
     if defined?(Opal::Vite::Rails)
-      config.opal_vite.source_path = "app/opal"
+      config.opal_vite.source_path = "app/frontend/opal"
     end
 
     # Please, add to the `ignore` list any other `lib` subdirectories that do

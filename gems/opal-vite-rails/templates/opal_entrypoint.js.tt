@@ -1,0 +1,6 @@
+// Vite entrypoint for the Opal application.
+// Load it in a view with: <%%= opal_javascript_tag "opal" %>
+//
+// The compiled Ruby imports the Opal runtime itself, so nothing else is
+// needed here.
+import '<%= opal_import_path %>'

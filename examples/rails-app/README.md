@@ -50,16 +50,19 @@ Check your browser console to see Ruby code output!
 
 ```
 app/
-├── opal/
-│   ├── application.rb          # Opal entry point
-│   └── application_loader.js   # JavaScript loader for Opal
+├── frontend/                     # vite_ruby sourceCodeDir (config/vite.json)
+│   ├── entrypoints/
+│   │   └── application.js        # Vite entrypoint: imports ../opal/application.rb
+│   └── opal/
+│       └── application.rb        # Opal entry point
 ├── controllers/
 │   └── welcome_controller.rb
 └── views/
     └── welcome/
-        └── index.html.erb       # Uses <%= opal_javascript_tag "application" %>
+        └── index.html.erb        # <%= vite_javascript_tag 'application' %>
 
-vite.config.ts                   # Vite configuration with opal plugin
+public/vite/                      # Production build (committed, served by the Docker image)
+vite.config.ts                    # vite-plugin-ruby + vite-plugin-opal
 ```
 
 ## How It Works
@@ -70,60 +73,45 @@ vite.config.ts                   # Vite configuration with opal plugin
    - Source maps allow debugging Ruby code in browser DevTools
 
 2. **Production Mode:**
-   - `rake opal_vite:compile` builds optimized JavaScript bundles
-   - Manifest-based asset resolution
-   - Integrated with Rails asset pipeline
+   - `RAILS_ENV=production bin/vite build` writes bundles and the manifest to `public/vite/`
+   - `vite_javascript_tag` resolves the hashed file names from the manifest
+   - The compiled Ruby imports the Opal runtime itself; no separate runtime tag is needed
 
-## Available Rake Tasks
+## Deployment
+
+The Docker image (also used by Railway, see `railway.json`) does not run
+Node or the Opal compiler. It installs `Gemfile.production` and serves the
+committed `public/vite/` build. After changing anything in `app/frontend/`,
+rebuild and commit it:
 
 ```bash
-# Compile Opal assets for production
-rake opal_vite:compile
-
-# Clean compiled assets
-rake opal_vite:clean
-
-# Show configuration info
-rake opal_vite:info
+RAILS_ENV=production bin/vite build
+git add public/vite
 ```
-
-## Using Opal in Your Views
-
-Add the Opal JavaScript to any view:
-
-```erb
-<%= opal_javascript_tag "application" %>
-```
-
-This automatically handles development vs production modes:
-- **Development:** Loads from Vite dev server with HMR
-- **Production:** Loads precompiled assets from manifest
 
 ## Writing Opal Code
 
-Create `.rb` files in `app/opal/`:
+Create `.rb` files in `app/frontend/opal/` and import them from an entrypoint:
 
 ```ruby
-# app/opal/hello.rb
+# app/frontend/opal/hello.rb
 require 'native'
 
 puts "Hello from Ruby!"
-
-`
-  document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM ready!');
-  });
-`
 ```
 
-Import the loader in your view:
+```js
+// app/frontend/entrypoints/hello.js
+import '../opal/hello.rb'
+```
+
 ```erb
-<%= opal_javascript_tag "hello" %>
+<%= vite_javascript_tag 'hello' %>
 ```
 
 ## Next Steps
 
-- Add more Opal files in `app/opal/`
+- Add more Opal files in `app/frontend/opal/`
 - Create reusable Ruby modules
 - Use Opal's `require` to organize your code
 - Integrate with JavaScript libraries using Native module

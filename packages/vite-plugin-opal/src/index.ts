@@ -1,11 +1,10 @@
 import type { Plugin, ViteDevServer } from 'vite'
-import { OpalCompiler } from './compiler'
+import { OpalCompiler, VIRTUAL_RUNTIME_ID } from './compiler'
 import { OpalResolver } from './resolver'
 import { OpalHMRManager } from './hmr'
 import type { OpalPluginOptions } from './types'
 import * as path from 'path'
 
-const VIRTUAL_RUNTIME_ID = '/@opal-runtime'
 const VIRTUAL_RUNTIME_PREFIX = '\0' + VIRTUAL_RUNTIME_ID
 
 /**
@@ -96,7 +95,7 @@ export default function opalPlugin(options: OpalPluginOptions = {}): Plugin {
             console.log(`[vite-plugin-opal] Using CDN for Opal runtime: ${cdnUrl}`)
           }
           return {
-            code: `// Opal runtime loaded from CDN: ${cdnUrl}\n// The runtime is loaded via script tag in index.html\nif (typeof Opal === 'undefined') {\n  console.error('[vite-plugin-opal] Opal runtime not found. Make sure the CDN script is loaded before your application code.');\n}\n`,
+            code: `// Opal runtime loaded from CDN: ${cdnUrl}\n// The runtime is loaded via script tag in index.html\nif (typeof Opal === 'undefined') {\n  console.error('[vite-plugin-opal] Opal runtime not found. Make sure the CDN script is loaded before your application code.');\n} else {\n  Opal.loaded(["opal"]);\n}\n`,
             map: null
           }
         }
@@ -120,7 +119,9 @@ export default function opalPlugin(options: OpalPluginOptions = {}): Plugin {
           console.log(`[vite-plugin-opal] load: Compiling ${id}`)
         }
         try {
-          const result = await compiler.compile(id)
+          // Compiled code leaves the corelib out and imports the shared
+          // runtime module instead (when the installed gem supports it).
+          const result = await compiler.withRuntimeImport(await compiler.compile(id))
           if (options.debug) {
             console.log(`[vite-plugin-opal] load: Compiled ${id} -> ${result.code.length} bytes`)
             console.log(`[vite-plugin-opal] load: Source map: ${result.map ? 'yes' : 'no'}`)
@@ -142,33 +143,41 @@ export default function opalPlugin(options: OpalPluginOptions = {}): Plugin {
       return null
     },
 
-    // Auto-inject Opal runtime into HTML
-    transformIndexHtml(html: string) {
-      let runtimeScript: string
+    // Auto-inject Opal runtime into HTML. Runs before Vite's own HTML
+    // processing ('pre') so the injected inline module is rewritten like any
+    // other inline script in index.html.
+    transformIndexHtml: {
+      order: 'pre',
+      handler(html: string) {
+        let runtimeScript: string
 
-      if (useCdn && cdnUrl) {
-        // CDN mode: inject script tag that loads Opal from CDN
-        // This works for both development and production builds
-        runtimeScript = `<script src="${cdnUrl}"></script>`
-        if (options.debug) {
-          console.log(`[vite-plugin-opal] Injecting CDN script: ${cdnUrl}`)
+        if (useCdn && cdnUrl) {
+          // CDN mode: inject script tag that loads Opal from CDN
+          // This works for both development and production builds
+          runtimeScript = `<script src="${cdnUrl}"></script>`
+          if (options.debug) {
+            console.log(`[vite-plugin-opal] Injecting CDN script: ${cdnUrl}`)
+          }
+        } else {
+          // Local mode: skip injection during build - runtime is bundled into JS
+          if (isBuild) {
+            return html
+          }
+          // Inject runtime module reference (development only). Use an inline
+          // import rather than <script src>: Vite rewrites the import to the
+          // same URL that compiled .rb modules import, so the runtime is
+          // evaluated once instead of once per URL.
+          runtimeScript = `<script type="module">import ${JSON.stringify(VIRTUAL_RUNTIME_ID)}</script>`
         }
-      } else {
-        // Local mode: skip injection during build - runtime is bundled into JS
-        if (isBuild) {
-          return html
-        }
-        // Inject runtime module reference (development only)
-        runtimeScript = `<script type="module" src="${VIRTUAL_RUNTIME_ID}"></script>`
-      }
 
-      if (html.includes('</head>')) {
-        return html.replace('</head>', `  ${runtimeScript}\n</head>`)
-      } else if (html.includes('<head>')) {
-        return html.replace('<head>', `<head>\n  ${runtimeScript}`)
-      } else {
-        // No head tag, inject at the beginning
-        return `${runtimeScript}\n${html}`
+        if (html.includes('</head>')) {
+          return html.replace('</head>', `  ${runtimeScript}\n</head>`)
+        } else if (html.includes('<head>')) {
+          return html.replace('<head>', `<head>\n  ${runtimeScript}`)
+        } else {
+          // No head tag, inject at the beginning
+          return `${runtimeScript}\n${html}`
+        }
       }
     },
 

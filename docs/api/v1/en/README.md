@@ -31,6 +31,18 @@ end
 | [ActionCableHelpers](action_cable_helpers.md) | ActionCable WebSocket integration |
 | [TurboHelpers](turbo_helpers.md) | Hotwire Turbo integration |
 
+## opal_stimulus Compatibility Patch
+
+`opal_stimulus` 0.2.x builds some JavaScript property names incorrectly for
+multi-word names. Require the patch right after opal_stimulus to fix them:
+
+```ruby
+require 'opal_stimulus/stimulus_controller'
+require 'opal_vite/compat/opal_stimulus'
+```
+
+See [opal_stimulus_compat.md](opal_stimulus_compat.md) for details.
+
 ## Backward Compatibility
 
 For backward compatibility, you can still use the old paths:

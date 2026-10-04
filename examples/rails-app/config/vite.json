@@ -1,6 +1,6 @@
 {
   "all": {
-    "sourceCodeDir": "app/opal",
+    "sourceCodeDir": "app/frontend",
     "watchAdditionalPaths": []
   },
   "development": {
@@ -10,6 +10,6 @@
   },
   "production": {
     "autoBuild": false,
-    "publicOutputDir": "dist"
+    "publicOutputDir": "vite"
   }
 }

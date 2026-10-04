@@ -20,6 +20,22 @@ module Opal
 
         end
 
+        # app/* subdirectories are Zeitwerk roots, so without this the Opal
+        # sources (browser code) would be eager loaded by MRI in production
+        # and fail with LoadError on `require 'native'` etc.
+        initializer "opal_vite.ignore_opal_sources" do |app|
+          opal_dirs = [
+            ::Rails.root.join(app.config.opal_vite.source_path || Opal::Vite::Rails.config.source_path)
+          ]
+          if defined?(ViteRuby)
+            opal_dirs << ViteRuby.config.root.join(ViteRuby.config.source_code_dir, "opal")
+          end
+
+          ::Rails.autoloaders.each do |autoloader|
+            opal_dirs.uniq.each { |dir| autoloader.ignore(dir) }
+          end
+        end
+
         initializer "opal_vite.view_helpers" do
           ActiveSupport.on_load(:action_view) do
             include Opal::Vite::Rails::Helper

@@ -18,8 +18,9 @@ COPY app/controllers/ ./app/controllers/
 COPY app/views/ ./app/views/
 COPY bin/ ./bin/
 
-# Copy pre-built assets to public directory for Rails static serving
-COPY dist/assets/ ./public/assets/
+# Pre-built assets (RAILS_ENV=production bin/vite build) and their manifest,
+# resolved by vite_javascript_tag
+COPY public/vite/ ./public/vite/
 
 # Create necessary directories
 RUN mkdir -p tmp/pids log

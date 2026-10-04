@@ -70,7 +70,8 @@ export default defineConfig({
                 { text: 'Toastable', link: '/api/v1/en/toastable' },
                 { text: 'JsProxyEx', link: '/api/v1/en/js_proxy_ex' },
                 { text: 'VueHelpers', link: '/api/v1/en/vue_helpers' },
-                { text: 'ReactHelpers', link: '/api/v1/en/react_helpers' }
+                { text: 'ReactHelpers', link: '/api/v1/en/react_helpers' },
+                { text: 'opal_stimulus Compat', link: '/api/v1/en/opal_stimulus_compat' }
               ]
             }
           ]

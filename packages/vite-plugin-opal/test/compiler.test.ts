@@ -283,6 +283,19 @@ describe('OpalCompiler Performance Features', () => {
   })
 
   describe('disk cache', () => {
+    it('ignores cached output after compile options change', async () => {
+      const testFile = path.join(tempDir, 'options_change.rb')
+      fs.writeFileSync(testFile, 'puts "options change"')
+
+      const withMap = new OpalCompiler({ diskCache: true, cacheDir, sourceMap: true, gemPath: LOCAL_GEM_PATH })
+      expect((await withMap.compile(testFile)).map).toBeTruthy()
+
+      // A fresh instance (as after a dev server restart) with sourceMap off
+      // must not reuse the entry written with source maps on.
+      const withoutMap = new OpalCompiler({ diskCache: true, cacheDir, sourceMap: false, gemPath: LOCAL_GEM_PATH })
+      expect((await withoutMap.compile(testFile)).map).toBeFalsy()
+    })
+
     it('creates cache files on disk', async () => {
       const compiler = new OpalCompiler({
         diskCache: true,
@@ -491,6 +504,7 @@ describe('OpalCompiler Performance Features', () => {
     it('returns empty implementation for stubbed modules', async () => {
       const compiler = new OpalCompiler({
         diskCache: false,
+        loadPaths: [tempDir],
         stubs: ['active_support', 'my_server_gem'],
         gemPath: LOCAL_GEM_PATH
       })
@@ -501,13 +515,31 @@ describe('OpalCompiler Performance Features', () => {
       const result = await compiler.compile(testFile)
 
       expect(result.code).toContain('Stubbed module')
-      expect(result.code).toContain('Opal.loaded')
+      expect(result.code).toContain('Opal.loaded(["active_support"])')
       expect(result.dependencies).toEqual([])
+    })
+
+    it('stubs files below a stubbed require prefix by their require name', async () => {
+      const compiler = new OpalCompiler({
+        diskCache: false,
+        loadPaths: [tempDir],
+        stubs: ['active_support'],
+        gemPath: LOCAL_GEM_PATH
+      })
+
+      fs.mkdirSync(path.join(tempDir, 'active_support'))
+      const testFile = path.join(tempDir, 'active_support', 'core_ext.rb')
+      fs.writeFileSync(testFile, 'puts "core_ext"')
+
+      const result = await compiler.compile(testFile)
+
+      expect(result.code).toContain('Opal.loaded(["active_support/core_ext"])')
     })
 
     it('does not stub non-matching modules', async () => {
       const compiler = new OpalCompiler({
         diskCache: false,
+        loadPaths: [tempDir],
         stubs: ['active_support'],
         gemPath: LOCAL_GEM_PATH
       })
@@ -519,6 +551,91 @@ describe('OpalCompiler Performance Features', () => {
 
       expect(result.code).not.toContain('Stubbed module')
       expect(result.code).toContain('not stubbed')
+    })
+
+    it('does not stub an entry just because a directory on its path matches', async () => {
+      // Regression: stubs: ['opal'] used to match app/opal/application.rb by
+      // substring and replace the whole entry with an empty module.
+      const opalDir = path.join(tempDir, 'app', 'opal')
+      fs.mkdirSync(opalDir, { recursive: true })
+      const compiler = new OpalCompiler({
+        diskCache: false,
+        loadPaths: [opalDir],
+        stubs: ['opal'],
+        gemPath: LOCAL_GEM_PATH
+      })
+
+      const testFile = path.join(opalDir, 'application.rb')
+      fs.writeFileSync(testFile, 'puts "entry survives"')
+
+      const result = await compiler.compile(testFile)
+
+      expect(result.code).not.toContain('Stubbed module')
+      expect(result.code).toContain('entry survives')
+    })
+  })
+
+  describe('shared runtime (external_runtime)', () => {
+    it('leaves the corelib out of compiled modules that require opal', async () => {
+      const compiler = new OpalCompiler({ diskCache: false, gemPath: LOCAL_GEM_PATH })
+
+      const testFile = path.join(tempDir, 'requires_opal.rb')
+      fs.writeFileSync(testFile, "require 'opal'\nputs 'app code'")
+
+      const result = await compiler.compile(testFile)
+
+      expect(result.code).toContain('app code')
+      expect(result.code).not.toContain('Opal already loaded')
+      expect(result.code).not.toContain('Opal.modules["corelib/kernel"]')
+    })
+
+    it('prepends an import of the runtime module and shifts the source map', async () => {
+      const compiler = new OpalCompiler({ diskCache: false, gemPath: LOCAL_GEM_PATH })
+
+      const wrapped = await compiler.withRuntimeImport({
+        code: 'Opal.queue(function() {});',
+        map: JSON.stringify({ version: 3, sources: ['a.rb'], names: [], mappings: 'AAAA' }),
+        dependencies: []
+      })
+
+      expect(wrapped.code.split('\n')[0]).toBe('import "/@opal-runtime";')
+      expect(JSON.parse(wrapped.map!).mappings).toBe(';AAAA')
+    })
+
+    it('marks opal as loaded in the runtime module', async () => {
+      const compiler = new OpalCompiler({ gemPath: LOCAL_GEM_PATH })
+
+      const runtime = await compiler.getOpalRuntime()
+
+      expect(runtime).toContain('Opal.loaded(["opal"])')
+    })
+  })
+
+  describe('gem compatibility', () => {
+    it('reports the installed gem version and supported options', async () => {
+      const compiler = new OpalCompiler({ gemPath: LOCAL_GEM_PATH })
+
+      const env = await compiler.getRubyEnvironment()
+
+      expect(env?.opalViteVersion).toMatch(/^\d+\.\d+\.\d+/)
+      expect(env?.compileOptions).toEqual(expect.arrayContaining(['stubs', 'external_runtime']))
+    })
+
+    it('fails with a clear message when the gem does not support stubs', () => {
+      const compiler = new OpalCompiler({ stubs: ['foo'], gemPath: LOCAL_GEM_PATH })
+      const oldGem = { opalViteVersion: '0.3.0', opalVersion: '1.8.2', compileOptions: ['file_path', 'include_concerns', 'source_map'] }
+
+      expect(() => (compiler as any).getCompilerScript(oldGem)).toThrow(/requires the opal-vite gem >= 0\.3\.12/)
+    })
+
+    it('omits keywords an older gem does not accept', () => {
+      const compiler = new OpalCompiler({ gemPath: LOCAL_GEM_PATH })
+      const oldGem = { opalViteVersion: '0.3.0', opalVersion: '1.8.2', compileOptions: ['file_path', 'include_concerns', 'source_map'] }
+
+      const script: string = (compiler as any).getCompilerScript(oldGem)
+
+      expect(script).not.toContain('stubs:')
+      expect(script).not.toContain('external_runtime:')
     })
   })
 

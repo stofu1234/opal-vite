@@ -131,11 +131,30 @@ interface DiskCacheEntry {
   result: CompileResult
   /** Resolved dependency mtimes at compile time, keyed by absolute path. */
   depMtimes?: Record<string, number>
+  /** Hash of everything besides the source that affects the output. */
+  fingerprint?: string
 }
 
-// Bumped to 1.1.0: entries now carry dependency mtimes for dependency-aware
-// invalidation. Older 1.0.0 entries lack depMtimes and are treated as stale.
-const CACHE_VERSION = '1.1.0'
+// Bumped to 1.2.0: entries now carry a fingerprint of the compile options and
+// Ruby-side versions. Older entries lack it and are treated as stale.
+const CACHE_VERSION = '1.2.0'
+
+/**
+ * Ruby-side facts probed once per plugin instance.
+ */
+interface RubyEnvironment {
+  opalViteVersion: string
+  opalVersion: string
+  /** Keyword arguments accepted by Opal::Vite.compile_for_vite. */
+  compileOptions: string[]
+}
+
+// opal-vite gem versions that added keyword arguments the plugin relies on.
+const GEM_VERSION_FOR_STUBS = '0.3.12'
+const GEM_VERSION_FOR_EXTERNAL_RUNTIME = '0.3.15'
+
+// Specifier for the shared runtime module that compiled .rb modules import.
+export const VIRTUAL_RUNTIME_ID = '/@opal-runtime'
 
 // Default Opal version for CDN
 const DEFAULT_OPAL_VERSION = '1.8.2'
@@ -157,6 +176,8 @@ export class OpalCompiler {
   private metrics: CompileMetrics[] = []
   private compilationQueue: Promise<void> = Promise.resolve()
   private activeCompilations = 0
+  private rubyEnvironment: Promise<RubyEnvironment | null> | null = null
+  private fingerprint: Promise<string> | null = null
 
   constructor(options: OpalPluginOptions = {}) {
     this.options = {
@@ -222,6 +243,114 @@ export class OpalCompiler {
     } catch (e) {
       this.log(`Warning: Could not create cache directory: ${e}`)
     }
+  }
+
+  /**
+   * Probe the installed opal-vite gem once: its version, Opal's version, and
+   * which keyword arguments compile_for_vite accepts. Returns null when the
+   * probe fails (compilation will then report the underlying Ruby error).
+   */
+  getRubyEnvironment(): Promise<RubyEnvironment | null> {
+    if (!this.rubyEnvironment) {
+      const script = [
+        'params = Opal::Vite.method(:compile_for_vite).parameters.map { |_, name| name.to_s }',
+        'puts JSON.generate(opal_vite: Opal::Vite::VERSION, opal: Opal::VERSION, compile_options: params)'
+      ].join('; ')
+      this.rubyEnvironment = this.runRuby(script)
+        .then((stdout) => {
+          const parsed = JSON.parse(stdout)
+          const env: RubyEnvironment = {
+            opalViteVersion: parsed.opal_vite,
+            opalVersion: parsed.opal,
+            compileOptions: parsed.compile_options
+          }
+          this.log(`opal-vite gem ${env.opalViteVersion}, Opal ${env.opalVersion}`)
+          if (!env.compileOptions.includes('external_runtime')) {
+            console.warn(
+              `[vite-plugin-opal] opal-vite gem ${env.opalViteVersion} is older than ${GEM_VERSION_FOR_EXTERNAL_RUNTIME}; ` +
+              `each compiled .rb file will bundle its own copy of the Opal corelib. ` +
+              `Update the opal-vite gem to share a single runtime.`
+            )
+          }
+          return env
+        })
+        .catch((e) => {
+          this.log(`Could not probe the opal-vite gem: ${e}`)
+          return null
+        })
+    }
+    return this.rubyEnvironment
+  }
+
+  /**
+   * Whether compiled .rb modules leave the corelib out and import the shared
+   * runtime module instead.
+   */
+  async usesExternalRuntime(): Promise<boolean> {
+    const env = await this.getRubyEnvironment()
+    return !!env && env.compileOptions.includes('external_runtime')
+  }
+
+  /**
+   * Prepend an import of the shared runtime module so Opal's corelib is
+   * evaluated (once) before the compiled code runs. The source map is shifted
+   * down by the inserted line.
+   */
+  async withRuntimeImport(result: CompileResult): Promise<CompileResult> {
+    if (!(await this.usesExternalRuntime())) return result
+
+    let map = result.map
+    if (map) {
+      const parsed = JSON.parse(map)
+      if (typeof parsed.mappings === 'string') {
+        parsed.mappings = ';' + parsed.mappings
+      } else if (Array.isArray(parsed.sections)) {
+        for (const section of parsed.sections) {
+          if (section.offset) section.offset.line += 1
+        }
+      }
+      map = JSON.stringify(parsed)
+    }
+
+    return {
+      ...result,
+      code: `import ${JSON.stringify(VIRTUAL_RUNTIME_ID)};\n${result.code}`,
+      map
+    }
+  }
+
+  /**
+   * Hash of everything besides the source files that affects compiled output:
+   * compile options, gem/Opal versions and the Gemfile.lock contents. Stored
+   * in disk cache entries so that changing any of them invalidates the cache.
+   */
+  private getFingerprint(): Promise<string> {
+    if (!this.fingerprint) {
+      this.fingerprint = this.getRubyEnvironment().then((env) => {
+        let gemfileLock = ''
+        try {
+          gemfileLock = this.getContentHash(readFileSync(path.join(process.cwd(), 'Gemfile.lock'), 'utf-8'))
+        } catch {
+          // No Gemfile.lock (e.g. useBundler: false)
+        }
+        const data = {
+          sourceMap: this.options.sourceMap,
+          stubs: [...this.options.stubs].sort(),
+          includeConcerns: this.options.includeConcerns,
+          arityCheck: this.options.arityCheck,
+          freezing: this.options.freezing,
+          loadPaths: this.options.loadPaths,
+          gemPath: this.options.gemPath,
+          useBundler: this.useBundler,
+          opalVite: env?.opalViteVersion ?? null,
+          opal: env?.opalVersion ?? null,
+          compileOptions: env?.compileOptions ?? null,
+          gemfileLock
+        }
+        return this.getContentHash(JSON.stringify(data))
+      })
+    }
+    return this.fingerprint
   }
 
   private getCacheKey(filePath: string): string {
@@ -333,7 +462,8 @@ export class OpalCompiler {
 
   private async loadFromDiskCache(
     filePath: string,
-    contentHash: string
+    contentHash: string,
+    fingerprint: string
   ): Promise<{ result: CompileResult; depMtimes?: Record<string, number> } | null> {
     if (!this.options.diskCache) return null
 
@@ -352,6 +482,11 @@ export class OpalCompiler {
 
       if (entry.contentHash !== contentHash) {
         this.log(`Disk cache content hash mismatch for ${filePath}`)
+        return null
+      }
+
+      if (entry.fingerprint !== fingerprint) {
+        this.log(`Disk cache options/version mismatch for ${filePath}`)
         return null
       }
 
@@ -375,7 +510,8 @@ export class OpalCompiler {
     contentHash: string,
     mtime: number,
     result: CompileResult,
-    depMtimes: Record<string, number>
+    depMtimes: Record<string, number>,
+    fingerprint: string
   ): void {
     if (!this.options.diskCache) return
 
@@ -386,7 +522,8 @@ export class OpalCompiler {
         contentHash,
         mtime,
         result,
-        depMtimes
+        depMtimes,
+        fingerprint
       }
       writeFileSync(cachePath, JSON.stringify(entry), 'utf-8')
       this.log(`Disk cache saved: ${filePath}`)
@@ -468,8 +605,10 @@ export class OpalCompiler {
       this.cache.delete(filePath)
     }
 
-    // Check disk cache (also validated against dependency mtimes)
-    const diskCached = await this.loadFromDiskCache(filePath, contentHash)
+    // Check disk cache (also validated against dependency mtimes and the
+    // options/version fingerprint)
+    const fingerprint = await this.getFingerprint()
+    const diskCached = await this.loadFromDiskCache(filePath, contentHash, fingerprint)
     if (diskCached) {
       // Update memory cache
       this.cache.set(filePath, {
@@ -510,7 +649,7 @@ export class OpalCompiler {
     })
 
     // Cache the result on disk
-    this.saveToDiskCache(filePath, contentHash, stat.mtimeMs, result, depMtimes)
+    this.saveToDiskCache(filePath, contentHash, stat.mtimeMs, result, depMtimes, fingerprint)
 
     this.recordMetrics(filePath, startTime, false, 'compile')
     return result
@@ -563,22 +702,40 @@ export class OpalCompiler {
     }
   }
 
+  /**
+   * The Opal require name of a file: its path relative to the load path that
+   * contains it, without the .rb extension (e.g. "active_support/core_ext").
+   * Returns null for files outside every load path.
+   */
+  private logicalName(filePath: string): string | null {
+    const abs = normalizePath(path.resolve(filePath))
+    for (const loadPath of this.options.loadPaths) {
+      const root = normalizePath(path.resolve(process.cwd(), loadPath)).replace(/\/$/, '')
+      if (abs.startsWith(root + '/')) {
+        return abs.slice(root.length + 1).replace(/\.rb$/, '')
+      }
+    }
+    return null
+  }
+
+  /**
+   * Stubs for .rb files that Vite imports directly. Requires inside a compiled
+   * file are stubbed by Opal::Builder on the Ruby side. Matching uses the
+   * require name, never the absolute path, so a directory such as app/opal/
+   * does not stub everything below it.
+   */
   private checkStub(filePath: string): CompileResult | null {
     if (this.options.stubs.length === 0) return null
 
-    const fileName = path.basename(filePath, '.rb')
-    const isStubbed = this.options.stubs.some(stub => {
-      // Match exact name or pattern
-      if (stub === fileName) return true
-      // Match as a path component (e.g., 'active_support' matches any active_support/*.rb)
-      if (filePath.includes(`/${stub}/`) || filePath.includes(`/${stub}.rb`)) return true
-      return false
-    })
+    const name = this.logicalName(filePath)
+    if (name === null) return null
+
+    const isStubbed = this.options.stubs.some(stub => name === stub || name.startsWith(`${stub}/`))
 
     if (isStubbed) {
       this.log(`Stubbed module: ${filePath}`)
       return {
-        code: '// Stubbed module\nOpal.loaded(["' + fileName + '"]);\n',
+        code: `// Stubbed module\nOpal.loaded([${JSON.stringify(name)}]);\n`,
         map: undefined,
         dependencies: []
       }
@@ -722,31 +879,73 @@ export class OpalCompiler {
     }
   }
 
-  private async compileViaRuby(filePath: string): Promise<CompileResult> {
-    return new Promise((resolve, reject) => {
-      let command: string
-      let args: string[]
-
-      if (this.useBundler) {
-        command = 'bundle'
-        args = [
-          'exec', 'ruby',
-          '-r', 'opal-vite',
-          '-e', this.getCompilerScript(),
-          filePath
-        ]
-      } else {
-        const gemLibPath = this.resolveGemLibPath()
-        command = 'ruby'
-        args = [
-          '-I', gemLibPath,
-          '-e', `$LOAD_PATH.unshift('${gemLibPath}'); require 'opal-vite'; ${this.getCompilerScript()}`,
-          filePath
-        ]
+  /**
+   * Build the command line that runs a Ruby script with opal-vite loaded.
+   */
+  private rubyCommand(script: string, extraArgs: string[] = []): { command: string; args: string[] } {
+    if (this.useBundler) {
+      return {
+        command: 'bundle',
+        args: ['exec', 'ruby', '-r', 'opal-vite', '-e', script, ...extraArgs]
       }
+    }
+    const gemLibPath = this.resolveGemLibPath()
+    return {
+      command: 'ruby',
+      args: [
+        '-I', gemLibPath,
+        '-e', `$LOAD_PATH.unshift('${gemLibPath}'); require 'opal-vite'; ${script}`,
+        ...extraArgs
+      ]
+    }
+  }
 
-      this.log(`Spawning Ruby: ${command} ${args.join(' ')}`)
+  /**
+   * Run a Ruby script and resolve with its stdout. Rejects with stderr on a
+   * non-zero exit.
+   */
+  private runRuby(script: string, extraArgs: string[] = []): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const { command, args } = this.rubyCommand(script, extraArgs)
+      const ruby = spawn(command, args, {
+        cwd: process.cwd()
+      })
 
+      let stdout = ''
+      let stderr = ''
+
+      // cross-spawn types stdout/stderr as nullable; with the default
+      // stdio: 'pipe' they are always present, but guard to satisfy the types.
+      ruby.stdout?.on('data', (data) => {
+        stdout += data.toString()
+      })
+
+      ruby.stderr?.on('data', (data) => {
+        stderr += data.toString()
+      })
+
+      ruby.on('close', (code) => {
+        if (code === 0) {
+          resolve(stdout)
+        } else {
+          reject(new Error(stderr))
+        }
+      })
+
+      ruby.on('error', (err) => {
+        reject(new Error(`Failed to spawn Ruby process: ${err.message}`))
+      })
+    })
+  }
+
+  private async compileViaRuby(filePath: string): Promise<CompileResult> {
+    const env = await this.getRubyEnvironment()
+    const script = this.getCompilerScript(env)
+    const { command, args } = this.rubyCommand(script, [filePath])
+
+    this.log(`Spawning Ruby: ${command} ${args.join(' ')}`)
+
+    return new Promise((resolve, reject) => {
       const ruby = spawn(command, args, {
         cwd: process.cwd()
       })
@@ -808,68 +1007,41 @@ export class OpalCompiler {
   }
 
   private async getRuntimeViaRuby(): Promise<string> {
-    return new Promise((resolve, reject) => {
-      let command: string
-      let args: string[]
-
-      if (this.useBundler) {
-        command = 'bundle'
-        args = [
-          'exec', 'ruby',
-          '-r', 'opal-vite',
-          '-e', 'puts Opal::Vite::Compiler.runtime_code'
-        ]
-      } else {
-        const gemLibPath = this.resolveGemLibPath()
-        command = 'ruby'
-        args = [
-          '-I', gemLibPath,
-          '-e', `$LOAD_PATH.unshift('${gemLibPath}'); require 'opal-vite'; puts Opal::Vite::Compiler.runtime_code`
-        ]
-      }
-
-      const ruby = spawn(command, args, {
-        cwd: process.cwd()
-      })
-
-      let stdout = ''
-      let stderr = ''
-
-      // cross-spawn types stdout/stderr as nullable; with the default
-      // stdio: 'pipe' they are always present, but guard to satisfy the types.
-      ruby.stdout?.on('data', (data) => {
-        stdout += data.toString()
-      })
-
-      ruby.stderr?.on('data', (data) => {
-        stderr += data.toString()
-      })
-
-      ruby.on('close', (code) => {
-        if (code === 0) {
-          resolve(stdout)
-        } else {
-          reject(new Error(`Failed to get Opal runtime:\n${stderr}`))
-        }
-      })
-
-      ruby.on('error', (err) => {
-        reject(new Error(`Failed to spawn Ruby process: ${err.message}`))
-      })
-    })
+    try {
+      return await this.runRuby('puts Opal::Vite::Compiler.runtime_code')
+    } catch (e) {
+      throw new Error(`Failed to get Opal runtime:\n${e instanceof Error ? e.message : e}`)
+    }
   }
 
-  private getCompilerScript(): string {
-    const includeConcerns = this.options.includeConcerns
-    const sourceMap = this.options.sourceMap
-    const stubs = JSON.stringify(this.options.stubs)
+  /**
+   * Ruby snippet that compiles ARGV[0]. Only passes keyword arguments the
+   * installed gem accepts (see getRubyEnvironment), so an older gem keeps
+   * working instead of failing with "unknown keyword".
+   */
+  private getCompilerScript(env: RubyEnvironment | null): string {
+    const supported = env?.compileOptions
+    const kwargs = [
+      `include_concerns: ${this.options.includeConcerns}`,
+      `source_map: ${this.options.sourceMap}`
+    ]
+
+    if (this.options.stubs.length > 0) {
+      if (supported && !supported.includes('stubs')) {
+        throw new Error(
+          `The 'stubs' option requires the opal-vite gem >= ${GEM_VERSION_FOR_STUBS} ` +
+          `(installed: ${env!.opalViteVersion}). Update the gem or remove 'stubs'.`
+        )
+      }
+      kwargs.push(`stubs: ${JSON.stringify(this.options.stubs)}`)
+    }
+
+    if (supported?.includes('external_runtime')) {
+      kwargs.push('external_runtime: true')
+    }
+
     // Note: opal-vite is already required via -r flag or -I flag
-    // The $LOAD_PATH is set up by -I option, so require 'opal-vite' will find it
-    return `
-      file_path = ARGV[0]
-      stubs = ${stubs}
-      Opal::Vite.compile_for_vite(file_path, include_concerns: ${includeConcerns}, source_map: ${sourceMap}, stubs: stubs)
-    `.trim()
+    return `Opal::Vite.compile_for_vite(ARGV[0], ${kwargs.join(', ')})`
   }
 
   private resolveGemLibPath(): string {

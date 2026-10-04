@@ -37,12 +37,17 @@ Run the generator:
 rails generate opal_vite:install
 ```
 
-This will:
-- Create `app/opal/` directory for your Ruby code
-- Generate `app/opal/application.rb` entry point
+This will (paths assume vite_ruby's default `sourceCodeDir` of `app/frontend`;
+the generator reads `config/vite.json`):
+- Generate `app/frontend/opal/application.rb`, the Ruby entry point
+- Generate `app/frontend/entrypoints/opal.js`, the Vite entrypoint that imports it
 - Configure Vite with the Opal plugin
-- Create an example controller and view
+- Create an example controller and view (`/opal_demo`)
 - Add necessary routes
+
+The engine tells Zeitwerk to ignore the Opal source directories
+(`config.opal_vite.source_path`, default `app/opal`, and `<sourceCodeDir>/opal`),
+so the browser-side Ruby is never loaded by the server.
 
 Install JavaScript dependencies:
 
@@ -72,10 +77,16 @@ Visit `http://localhost:3000/opal_demo` to see Opal in action!
 
 ### Writing Opal Code
 
-Create Ruby files in `app/opal/`:
+Create Ruby files in `app/frontend/opal/` and import them from an entrypoint
+in `app/frontend/entrypoints/`:
+
+```js
+// app/frontend/entrypoints/hello.js
+import '../opal/hello.rb'
+```
 
 ```ruby
-# app/opal/hello.rb
+# app/frontend/opal/hello.rb
 require 'native'
 
 puts "Hello from Ruby running in the browser!"
@@ -117,9 +128,12 @@ Add Opal JavaScript to your views with the helper:
 <%= opal_javascript_tag "hello" %>
 ```
 
-The helper automatically handles development vs production modes:
-- **Development**: Loads from Vite dev server with HMR
-- **Production**: Loads precompiled assets from manifest
+`opal_javascript_tag "hello"` is `vite_javascript_tag "hello.js"`, so it
+emits `type="module"` and switches between the Vite dev server and the build
+manifest the same way.
+
+The Opal runtime is imported by the compiled Ruby itself; you don't need a
+separate tag or `import '/@opal-runtime'` for it.
 
 ### View Helpers
 
@@ -130,8 +144,11 @@ Loads an Opal JavaScript bundle:
 ```erb
 <%= opal_javascript_tag "application" %>
 <%= opal_javascript_tag "application", defer: true %>
-<%= opal_javascript_tag "application", type: "module" %>
 ```
+
+#### `opal_runtime_tag` (deprecated)
+
+Outputs nothing. The runtime is loaded by the compiled `.rb` modules.
 
 #### `opal_asset_path`
 
@@ -158,14 +175,14 @@ Checks if Vite dev server is running:
 Organize your code with `require`:
 
 ```ruby
-# app/opal/lib/calculator.rb
+# app/frontend/opal/lib/calculator.rb
 class Calculator
   def add(a, b)
     a + b
   end
 end
 
-# app/opal/application.rb
+# app/frontend/opal/application.rb
 require 'lib/calculator'
 
 calc = Calculator.new
@@ -211,15 +228,18 @@ config.opal_vite.public_output_path = "vite"  # Default
 
 ```
 app/
-├── opal/
-│   ├── application.rb          # Entry point
-│   ├── application_loader.js   # JS loader (required for Vite)
-│   └── lib/
-│       └── my_module.rb        # Your Ruby modules
+├── frontend/                   # vite_ruby sourceCodeDir
+│   ├── entrypoints/
+│   │   ├── application.js      # Created by `vite install`
+│   │   └── opal.js             # Imports ../opal/application.rb
+│   └── opal/
+│       ├── application.rb      # Ruby entry point
+│       └── lib/
+│           └── my_module.rb    # Your Ruby modules
 ├── controllers/
 └── views/
 
-vite.config.ts                   # Vite config with opal plugin
+vite.config.ts                  # Vite config with the opal plugin
 ```
 
 ## How It Works
@@ -243,14 +263,14 @@ Customize `vite.config.ts`:
 
 ```typescript
 import { defineConfig } from 'vite'
-import RubyPlugin from 'vite_ruby/plugins/ruby'
+import RubyPlugin from 'vite-plugin-ruby'
 import opal from 'vite-plugin-opal'
 
 export default defineConfig({
   plugins: [
     RubyPlugin(),
     opal({
-      loadPaths: ['./app/opal', './lib/opal'],
+      loadPaths: ['./app/frontend/opal', './lib/opal'],
       sourceMap: true,
       debug: process.env.NODE_ENV === 'development'
     })
@@ -278,7 +298,7 @@ require 'ostruct'     # OpenStruct
 
 Make sure:
 1. Vite dev server is running (`bin/vite dev`)
-2. You're using the JavaScript loader pattern (`.rb` files imported via `.js` loaders)
+2. The `.rb` file is imported from a file in `entrypoints/` (directly or via other imports)
 3. Rails is configured to proxy to Vite in development
 
 ### Assets not loading in production
@@ -299,6 +319,16 @@ opal({
   // ...
 })
 ```
+
+## Version Compatibility
+
+The npm plugin runs the gem's Ruby code, so keep the two in step:
+
+| vite-plugin-opal (npm) | opal-vite (gem) | opal-vite-rails (gem) | Notes |
+|------------------------|-----------------|-----------------------|-------|
+| >= 0.3.16 | >= 0.3.15 | >= 0.3.14 | Shared runtime: corelib is loaded once |
+| >= 0.3.16 | 0.3.12 – 0.3.14 | — | Works; each `.rb` bundle carries its own corelib (warning at startup) |
+| >= 0.3.16 | < 0.3.12 | — | Works without the `stubs` option (using it fails with a clear error) |
 
 ## Examples
 

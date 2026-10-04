@@ -131,6 +131,30 @@ RSpec.describe Opal::Vite::Compiler do
     end
   end
 
+  describe 'external_runtime option' do
+    let(:source) { "require 'opal'\nrequire 'set'\nputs 'app'" }
+
+    it 'bundles corelib by default' do
+      result = described_class.new.compile(source, 'app.rb')
+
+      expect(result[:code]).to include('Opal.modules["corelib/kernel"]')
+    end
+
+    it 'leaves corelib out of the output when enabled' do
+      result = described_class.new(external_runtime: true).compile(source, 'app.rb')
+
+      expect(result[:code]).not_to include('Opal.modules["corelib/kernel"]')
+      expect(result[:code]).not_to include('Opal already loaded')
+      expect(result[:code]).to include('$puts("app")')
+    end
+  end
+
+  describe '.runtime_requires' do
+    it 'lists opal and the corelib files bundled in runtime_code' do
+      expect(described_class.runtime_requires).to include('opal', 'corelib/runtime', 'corelib/kernel')
+    end
+  end
+
   describe '.runtime_code' do
     it 'returns Opal runtime code' do
       runtime = described_class.runtime_code
@@ -138,6 +162,10 @@ RSpec.describe Opal::Vite::Compiler do
       expect(runtime).to be_a(String)
       expect(runtime).to include('Opal')
       expect(runtime.length).to be > 0
+    end
+
+    it 'marks opal itself as loaded so bundles can require it' do
+      expect(described_class.runtime_code).to include('Opal.loaded(["opal"])')
     end
   end
 end

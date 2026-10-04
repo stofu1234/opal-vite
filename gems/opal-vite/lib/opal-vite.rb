@@ -32,12 +32,14 @@ module Opal
       # @param include_concerns [Boolean] Whether to include built-in concerns
       # @param source_map [Boolean] Whether to generate source maps
       # @param stubs [Array<String>] List of modules to stub (return empty implementations)
-      def compile_for_vite(file_path, include_concerns: true, source_map: true, stubs: [])
+      # @param external_runtime [Boolean] Leave Opal's corelib out of the output
+      #   (the caller loads it separately, e.g. via the `/@opal-runtime` module)
+      def compile_for_vite(file_path, include_concerns: true, source_map: true, stubs: [], external_runtime: false)
         # Temporarily override source map setting if specified
         original_source_map = config.source_map_enabled
         config.source_map_enabled = source_map
 
-        compiler = Compiler.new(include_concerns: include_concerns, stubs: stubs)
+        compiler = Compiler.new(include_concerns: include_concerns, stubs: stubs, external_runtime: external_runtime)
         result = compiler.compile_file(file_path)
 
         # Output JSON to stdout for the Vite plugin to consume
