@@ -9,6 +9,10 @@ jobs:
   release:
     name: Create Release
     runs-on: ubuntu-latest
+    # The repository's default GITHUB_TOKEN is read-only; creating a GitHub
+    # Release needs write access to contents.
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout code
