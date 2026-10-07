@@ -35,22 +35,31 @@ module Opal
       # @param stubs [Array<String>] List of modules to stub (return empty implementations)
       # @param external_runtime [Boolean] Leave Opal's corelib out of the output
       #   (the caller loads it separately, e.g. via the `/@opal-runtime` module)
-      def compile_for_vite(file_path, include_concerns: true, source_map: true, stubs: [], external_runtime: false)
+      # @param load_paths [Array<String>] Extra directories searched by `require`
+      # @param arity_check [Boolean, nil] Opal's arity_check compiler option (nil: Opal's default)
+      # @param freezing [Boolean, nil] Opal's freezing compiler option (nil: Opal's default)
+      def compile_for_vite(file_path, include_concerns: true, source_map: true, stubs: [], external_runtime: false,
+                           load_paths: [], arity_check: nil, freezing: nil)
         # Temporarily override source map setting if specified
         original_source_map = config.source_map_enabled
         config.source_map_enabled = source_map
 
-        compiler = Compiler.new(include_concerns: include_concerns, stubs: stubs, external_runtime: external_runtime)
+        compiler = Compiler.new(
+          include_concerns: include_concerns,
+          stubs: stubs,
+          external_runtime: external_runtime,
+          load_paths: load_paths,
+          compiler_options: { arity_check: arity_check, freezing: freezing }.compact
+        )
         result = compiler.compile_file(file_path)
 
         # Output JSON to stdout for the Vite plugin to consume
         puts JSON.generate(result)
-
-        # Restore original setting
-        config.source_map_enabled = original_source_map
       rescue Compiler::CompilationError => e
         STDERR.puts e.message
         exit 1
+      ensure
+        config.source_map_enabled = original_source_map
       end
     end
   end

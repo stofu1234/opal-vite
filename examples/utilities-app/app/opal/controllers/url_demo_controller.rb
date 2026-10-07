@@ -31,22 +31,24 @@ class UrlDemoController < StimulusController
       return
     end
 
+    # The URL comes from the address bar or the input, and query parameters
+    # are decoded, so escape every part before building HTML.
     output = <<~HTML
       <div class="space-y-2">
-        <div><strong>Protocol:</strong> #{url_protocol(url)}</div>
-        <div><strong>Hostname:</strong> #{url_hostname(url)}</div>
-        <div><strong>Port:</strong> #{url_port(url) || '(default)'}</div>
-        <div><strong>Pathname:</strong> #{url_pathname(url)}</div>
-        <div><strong>Search:</strong> #{url_search(url) || '(none)'}</div>
-        <div><strong>Hash:</strong> #{url_hash(url) || '(none)'}</div>
-        <div><strong>Origin:</strong> #{url_origin(url)}</div>
+        <div><strong>Protocol:</strong> #{escape_html(url_protocol(url))}</div>
+        <div><strong>Hostname:</strong> #{escape_html(url_hostname(url))}</div>
+        <div><strong>Port:</strong> #{escape_html(url_port(url) || '(default)')}</div>
+        <div><strong>Pathname:</strong> #{escape_html(url_pathname(url))}</div>
+        <div><strong>Search:</strong> #{escape_html(url_search(url) || '(none)')}</div>
+        <div><strong>Hash:</strong> #{escape_html(url_hash(url) || '(none)')}</div>
+        <div><strong>Origin:</strong> #{escape_html(url_origin(url))}</div>
       </div>
     HTML
 
     # Add query parameters if any
     params = url_all_params(url)
     unless params.empty?
-      params_html = params.map { |k, v| "<li><code>#{k}</code> = <code>#{v}</code></li>" }.join
+      params_html = params.map { |k, v| "<li><code>#{escape_html(k)}</code> = <code>#{escape_html(v)}</code></li>" }.join
       output += <<~HTML
         <div class="mt-4">
           <strong>Query Parameters:</strong>

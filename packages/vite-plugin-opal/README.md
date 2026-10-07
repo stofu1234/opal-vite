@@ -36,6 +36,7 @@ the installed gem at startup.
 
 | vite-plugin-opal | opal-vite gem | Behavior |
 |------------------|---------------|----------|
+| >= 0.3.19 | >= 0.3.18 | `loadPaths`, `arityCheck` and `freezing` are applied when compiling |
 | >= 0.3.16 | >= 0.3.15 | Opal corelib is loaded once, from the shared `/@opal-runtime` module |
 | >= 0.3.16 | 0.3.12 – 0.3.14 | Works; each compiled `.rb` bundle carries its own corelib (warning at startup) |
 | >= 0.3.16 | < 0.3.12 | Works, but the `stubs` option fails with a clear error |
@@ -125,21 +126,25 @@ Enable source map generation for debugging.
 - Type: `string[]`
 - Default: `['./src']`
 
-Directories to search for Ruby files when using `require`.
+Directories to search for Ruby files when using `require`. Relative paths
+are resolved from the current working directory. The directory of the
+compiled file is always searched first. Applied when compiling with the
+opal-vite gem >= 0.3.18; with an older gem only the plugin's own import
+resolution uses them (a warning is shown at startup).
 
 ### `arityCheck`
 
 - Type: `boolean`
 - Default: `false`
 
-Enable arity checking in compiled code.
+Enable arity checking in compiled code (requires the opal-vite gem >= 0.3.18).
 
 ### `freezing`
 
 - Type: `boolean`
 - Default: `true`
 
-Enable object freezing for immutability.
+Enable object freezing for immutability (requires the opal-vite gem >= 0.3.18).
 
 ### `debug`
 

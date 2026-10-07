@@ -621,12 +621,60 @@ describe('OpalCompiler Performance Features', () => {
       const wrapped = await compiler.withRuntimeImport({
         code: 'Opal.queue(function() {});',
         map: JSON.stringify({ version: 3, sources: ['a.rb'], names: [], mappings: 'AAAA' }),
-        dependencies: []
+        dependencies: [],
+        externalRuntime: true
       })
 
       expect(wrapped.code.split('\n')[0]).toBe('import "/@opal-runtime";')
       expect(JSON.parse(wrapped.map!).mappings).toBe(';AAAA')
     })
+
+    it('imports the runtime into stubbed modules', async () => {
+      const compiler = new OpalCompiler({ diskCache: false, stubs: ['ignored'], loadPaths: [tempDir], gemPath: LOCAL_GEM_PATH })
+      const file = path.join(tempDir, 'ignored.rb')
+      fs.writeFileSync(file, "puts 'not compiled'")
+
+      const result = await compiler.withRuntimeImport(await compiler.compile(file))
+
+      expect(result.code).toContain('Opal.loaded(["ignored"])')
+      expect(result.code.startsWith('import "/@opal-runtime";')).toBe(true)
+    })
+
+    it('does not import the runtime into code compiled with the corelib', async () => {
+      // e.g. compiled while the gem probe was failing, before a retry succeeded
+      const compiler = new OpalCompiler({ diskCache: false, gemPath: LOCAL_GEM_PATH })
+      const result = { code: 'Opal.queue(function() {});', dependencies: [], externalRuntime: false }
+
+      expect(await compiler.withRuntimeImport(result)).toBe(result)
+    })
+
+    it('records the runtime mode on each compile result', async () => {
+      const file = path.join(tempDir, 'runtime_mode.rb')
+      fs.writeFileSync(file, "puts 'mode'")
+      const compiler = new OpalCompiler({ diskCache: false, gemPath: LOCAL_GEM_PATH })
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      const realRunRuby = (compiler as any).runRuby.bind(compiler)
+      // Fail both probes of the first compile (the cache fingerprint and the
+      // compile itself each ask for the gem environment)
+      vi.spyOn(compiler as any, 'runRuby')
+        .mockRejectedValueOnce(new Error('transient probe failure'))
+        .mockRejectedValueOnce(new Error('transient probe failure'))
+        .mockImplementation((...args: unknown[]) => realRunRuby(...args))
+
+      // The probe fails: compiled with the corelib, so no runtime import
+      const first = await compiler.withRuntimeImport(await compiler.compile(file))
+      expect(first.externalRuntime).toBe(false)
+      expect(first.code.startsWith('import')).toBe(false)
+
+      // The probe is retried and succeeds: compiled for the shared runtime
+      fs.writeFileSync(file, "puts 'mode 2'")
+      fs.utimesSync(file, new Date(Date.now() + 5000), new Date(Date.now() + 5000))
+      const second = await compiler.withRuntimeImport(await compiler.compile(file))
+      expect(second.externalRuntime).toBe(true)
+      expect(second.code.startsWith('import "/@opal-runtime";')).toBe(true)
+
+      warn.mockRestore()
+    }, 60000)
 
     it('marks opal as loaded in the runtime module', async () => {
       const compiler = new OpalCompiler({ gemPath: LOCAL_GEM_PATH })
@@ -644,24 +692,39 @@ describe('OpalCompiler Performance Features', () => {
       const env = await compiler.getRubyEnvironment()
 
       expect(env?.opalViteVersion).toMatch(/^\d+\.\d+\.\d+/)
-      expect(env?.compileOptions).toEqual(expect.arrayContaining(['stubs', 'external_runtime']))
+      expect(env?.compileOptions).toEqual(expect.arrayContaining(['stubs', 'external_runtime', 'load_paths']))
     })
 
     it('fails with a clear message when the gem does not support stubs', () => {
       const compiler = new OpalCompiler({ stubs: ['foo'], gemPath: LOCAL_GEM_PATH })
       const oldGem = { opalViteVersion: '0.3.0', opalVersion: '1.8.2', compileOptions: ['file_path', 'include_concerns', 'source_map'] }
 
-      expect(() => (compiler as any).getCompilerScript(oldGem)).toThrow(/requires the opal-vite gem >= 0\.3\.12/)
+      expect(() => (compiler as any).getCompileOptions(oldGem)).toThrow(/requires the opal-vite gem >= 0\.3\.12/)
     })
 
     it('omits keywords an older gem does not accept', () => {
       const compiler = new OpalCompiler({ gemPath: LOCAL_GEM_PATH })
       const oldGem = { opalViteVersion: '0.3.0', opalVersion: '1.8.2', compileOptions: ['file_path', 'include_concerns', 'source_map'] }
 
-      const script: string = (compiler as any).getCompilerScript(oldGem)
+      const options = (compiler as any).getCompileOptions(oldGem)
 
-      expect(script).not.toContain('stubs:')
-      expect(script).not.toContain('external_runtime:')
+      expect(Object.keys(options).sort()).toEqual(['include_concerns', 'source_map'])
+    })
+
+    it('passes loadPaths, arityCheck and freezing to a gem that accepts them', () => {
+      const compiler = new OpalCompiler({ loadPaths: ['./lib/opal'], arityCheck: true, gemPath: LOCAL_GEM_PATH })
+      const gem = {
+        opalViteVersion: '0.3.18',
+        opalVersion: '1.8.2',
+        compileOptions: ['file_path', 'include_concerns', 'source_map', 'stubs', 'external_runtime', 'load_paths', 'arity_check', 'freezing']
+      }
+
+      const options = (compiler as any).getCompileOptions(gem)
+
+      expect(options.load_paths).toEqual([path.resolve(process.cwd(), 'lib/opal')])
+      expect(options.arity_check).toBe(true)
+      expect(options.freezing).toBe(true)
+      expect(options.external_runtime).toBe(true)
     })
   })
 
@@ -810,5 +873,77 @@ describe('OpalCompiler Performance Features', () => {
       // Bad file should not be in results
       expect(results.has(badFile)).toBe(false)
     })
+  })
+})
+
+describe('OpalCompiler Ruby process handling', () => {
+  let tempDir: string
+
+  beforeAll(() => {
+    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'opal-proc-test-'))
+  })
+
+  afterAll(() => {
+    fs.rmSync(tempDir, { recursive: true, force: true })
+  })
+
+  it('keeps multibyte characters intact in large outputs', async () => {
+    // Several hundred KB of output, so pipe chunk boundaries fall inside
+    // 3-byte UTF-8 characters.
+    const text = 'あいうえお漢字'.repeat(20000)
+    const file = path.join(tempDir, 'multibyte.rb')
+    fs.writeFileSync(file, `TEXT = "${text}"\n`)
+
+    const compiler = new OpalCompiler({ diskCache: false, sourceMap: true, gemPath: LOCAL_GEM_PATH })
+    const result = await compiler.compile(file)
+
+    expect(result.code).toContain(text)
+    expect(result.code).not.toContain('�')
+  }, 60000)
+
+  it('applies loadPaths when compiling', async () => {
+    const shared = path.join(tempDir, 'shared')
+    const app = path.join(tempDir, 'app', 'opal')
+    fs.mkdirSync(shared, { recursive: true })
+    fs.mkdirSync(app, { recursive: true })
+    fs.writeFileSync(path.join(shared, 'shared_util.rb'), "SHARED_UTIL = 'from-load-path'\n")
+    const entry = path.join(app, 'main.rb')
+    fs.writeFileSync(entry, "require 'shared_util'\n")
+
+    const compiler = new OpalCompiler({ diskCache: false, loadPaths: [shared], gemPath: LOCAL_GEM_PATH })
+    const result = await compiler.compile(entry)
+
+    expect(result.code).toContain('from-load-path')
+  }, 60000)
+
+  it('passes stubs as data rather than Ruby code', async () => {
+    const file = path.join(tempDir, 'stub.rb')
+    fs.writeFileSync(file, "puts 'stubbed'\n")
+
+    // Interpolated into a Ruby string literal, this would run `exit 1`
+    const compiler = new OpalCompiler({ diskCache: false, stubs: ['#{exit 1}'], gemPath: LOCAL_GEM_PATH })
+    const result = await compiler.compile(file)
+
+    expect(result.code).toContain('stubbed')
+  }, 60000)
+
+  it('retries the gem probe after a failure and ignores leading output', async () => {
+    const compiler = new OpalCompiler({ diskCache: false, gemPath: LOCAL_GEM_PATH })
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const runRuby = vi.spyOn(compiler as any, 'runRuby')
+      .mockRejectedValueOnce(new Error('Bundler error'))
+      .mockResolvedValueOnce(
+        'warning: something\n{"opal_vite":"9.9.9","opal":"1.8.2","compile_options":["external_runtime","load_paths"]}\n'
+      )
+
+    expect(await compiler.getRubyEnvironment()).toBeNull()
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('Could not probe the opal-vite gem'))
+
+    const env = await compiler.getRubyEnvironment()
+    expect(env?.opalViteVersion).toBe('9.9.9')
+    expect(runRuby).toHaveBeenCalledTimes(2)
+
+    runRuby.mockRestore()
+    warn.mockRestore()
   })
 })

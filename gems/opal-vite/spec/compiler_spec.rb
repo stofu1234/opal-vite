@@ -1,6 +1,7 @@
 require 'spec_helper'
 require 'tempfile'
 require 'fileutils'
+require 'tmpdir'
 
 RSpec.describe Opal::Vite::Compiler do
   let(:compiler) { described_class.new }
@@ -206,6 +207,34 @@ RSpec.describe Opal::Vite::Compiler do
       # does not wrap it in CompilationError.
       expect { described_class.new(include_concerns: false).compile(source, 'entry.rb') }
         .to raise_error(Opal::Builder::MissingRequire, %r{opal_vite/concerns/v1/base64_helpers})
+    end
+  end
+
+  describe 'load_paths option' do
+    it 'resolves requires from the given directories' do
+      Dir.mktmpdir do |dir|
+        FileUtils.mkdir_p(File.join(dir, 'lib'))
+        FileUtils.mkdir_p(File.join(dir, 'app'))
+        File.write(File.join(dir, 'lib', 'shared_util.rb'), "SHARED_UTIL = 'from-load-path'")
+        entry = File.join(dir, 'app', 'main.rb')
+
+        expect { described_class.new.compile("require 'shared_util'", entry) }
+          .to raise_error(Opal::Builder::MissingRequire)
+
+        result = described_class.new(load_paths: [File.join(dir, 'lib')]).compile("require 'shared_util'", entry)
+        expect(result[:code]).to include('from-load-path')
+      end
+    end
+  end
+
+  describe 'compiler_options option' do
+    it "passes them to Opal's compiler" do
+      source = "def one(a); a; end"
+      default = described_class.new.compile(source, 'entry.rb')[:code]
+      checked = described_class.new(compiler_options: { arity_check: true }).compile(source, 'entry.rb')[:code]
+
+      expect(checked).not_to eq(default)
+      expect(checked).to include('$$parameters').or include('Opal.ac(')
     end
   end
 end

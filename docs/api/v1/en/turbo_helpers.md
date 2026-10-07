@@ -161,12 +161,28 @@ Render raw Turbo Stream HTML.
 
 ### `on_turbo(event_name, &block)`
 
-Listen for Turbo Drive events.
+Listen for Turbo Drive events. Returns the registered listener.
+
+The listener is attached to `document`, so it outlives the controller. Remove
+it in `disconnect`, otherwise each reconnect after a Turbo visit adds another
+listener and the handler runs several times.
 
 ```ruby
-on_turbo("before-visit") { |e| validate_form }
-on_turbo("load") { init_components }
+def connect
+  on_turbo("before-visit") { |e| validate_form }
+  on_turbo("load") { init_components }
+end
+
+def disconnect
+  off_all_turbo
+end
 ```
+
+### `off_turbo(event_name, handler)` / `off_all_turbo`
+
+`off_turbo` removes one listener returned by `on_turbo`. `off_all_turbo`
+removes every listener the object added with `on_turbo`, the `on_turbo_*`
+helpers and `turbo_loading_class`.
 
 ### Event-Specific Listeners
 
@@ -253,6 +269,10 @@ class NavigationController < StimulusController
   def connect
     on_turbo_before_fetch { show_spinner }
     on_turbo_load { hide_spinner }
+  end
+
+  def disconnect
+    off_all_turbo
   end
 
   def navigate(event)

@@ -155,10 +155,15 @@ module OpalVite
             return value
           end
 
-          # Handle predicates (e.g., has_attribute?)
+          # Handle predicates: call a method (has_attribute?('x') ->
+          # hasAttribute('x')), or read a property (disabled? -> disabled)
           if name_str.end_with?('?')
             prop_name = name_str[0..-2]
             camel_name = snake_to_camel(prop_name)
+            if `typeof #{@native}[#{camel_name}] === 'function'`
+              native_args = args.map { |a| a.respond_to?(:to_n) ? a.to_n : a }
+              return !!`#{@native}[#{camel_name}].apply(#{@native}, #{native_args})`
+            end
             return !!`#{@native}[#{camel_name}]`
           end
 

@@ -286,6 +286,12 @@ export interface CompileResult {
   dependencies?: string[]
 
   /**
+   * Whether the code was compiled without Opal's corelib, expecting the
+   * shared runtime module to be imported first
+   */
+  externalRuntime?: boolean
+
+  /**
    * Compilation timestamp
    */
   timestamp?: number

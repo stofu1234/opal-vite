@@ -42,9 +42,24 @@ module OpalVite
           {}
         end
 
-        # Override to return the component's HTML as a String.
+        # Override to return the component's HTML as a String. Escape
+        # user- or server-provided values with #escape_html.
         def render
           ''
+        end
+
+        # Escape a value for use inside HTML (text or a quoted attribute value).
+        # Use it for anything user- or server-provided that #render
+        # interpolates into its HTML.
+        # @param value [Object] Value to escape (nil and JS null become "")
+        # @return [String] Escaped string
+        def escape_html(value)
+          str = `#{value} == null || #{value} === #{nil} ? '' : #{value}`
+          unless `typeof #{str} === 'string'`
+            # Ruby objects use to_s; plain JS objects (e.g. from JSON.parse) use String()
+            str = `#{str}.$$class` ? str.to_s : `String(#{str})`
+          end
+          `#{str}.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;')`
         end
 
         # Optional hook run after every render. Attach event listeners here

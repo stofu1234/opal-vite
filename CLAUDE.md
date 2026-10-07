@@ -302,6 +302,13 @@ npm の plugin は gem の Ruby コードを呼び出すため、3 パッケー�
 
 ---
 
+### 18. HTML に値を入れるとき・document へのリスナー
+
+- `set_html` / `target_set_html` / OpalComponent の `render` は文字列を HTML として解釈する。ユーザー入力・URL・サーバーから来た値は `escape_html`（StimulusHelpers / OpalComponent）を通すか、`set_text` / `target_set_text` を使う
+- `on_turbo` など document に付けるリスナーはコントローラーより長生きする。`disconnect` で `off_all_turbo` を呼ぶ
+
+---
+
 ## ポート番号一覧
 
 `vite.config.ts` の `server.port` の実際の値。E2E の `spec/spec_helper.rb` の `app_host` もこのポートを前提にしているため、変更する場合は両方を直す。**重複しているアプリは同時に起動できない**。

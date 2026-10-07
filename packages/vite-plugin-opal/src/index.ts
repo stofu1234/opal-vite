@@ -1,5 +1,5 @@
 import type { Plugin, ViteDevServer } from 'vite'
-import { normalizePath } from 'vite'
+import { isFileServingAllowed, normalizePath } from 'vite'
 import { OpalCompiler, VIRTUAL_RUNTIME_ID } from './compiler'
 import { OpalResolver } from './resolver'
 import type { OpalPluginOptions } from './types'
@@ -48,6 +48,7 @@ export default function opalPlugin(options: OpalPluginOptions = {}): Plugin {
   const compiler = new OpalCompiler(options)
   const resolver = new OpalResolver(options)
   let isBuild = false
+  let devServer: ViteDevServer | undefined
   // Absolute paths of the files each compiled .rb module inlines, by id
   const dependencyFiles = new Map<string, string[]>()
   const useCdn = compiler.isCdnEnabled()
@@ -114,6 +115,14 @@ export default function opalPlugin(options: OpalPluginOptions = {}): Plugin {
 
       // Handle .rb files
       if (id.endsWith('.rb')) {
+        // Vite checks server.fs.allow only for files no plugin loads, so
+        // check it here: otherwise a request like /@fs/<any path>.rb?import
+        // would return any .rb file on disk (its source is in the source map).
+        if (devServer && !isFileServingAllowed(id, devServer)) {
+          this.error(
+            `[vite-plugin-opal] ${id} is outside the Vite serving allow list (server.fs.allow).`
+          )
+        }
         if (options.debug) {
           console.log(`[vite-plugin-opal] load: Compiling ${id}`)
         }
@@ -210,6 +219,7 @@ export default function opalPlugin(options: OpalPluginOptions = {}): Plugin {
     // Note: a function returned from configureServer is a post hook that Vite
     // runs right after startup, not a cleanup callback, so none is returned.
     configureServer(server: ViteDevServer) {
+      devServer = server
       server.watcher.on('add', (file: string) => {
         // A new file can satisfy a require that previously failed to resolve,
         // and those misses are cached without a path to match, so clear all.

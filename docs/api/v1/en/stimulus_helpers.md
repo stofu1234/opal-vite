@@ -55,6 +55,22 @@ html = target_html(:output)
 target_set_html(:output, '<strong>Updated</strong>')
 ```
 
+The string is parsed as HTML. Escape values that come from users or servers
+with `escape_html`, or use `target_set_text` for plain text:
+
+```ruby
+target_set_html(:output, "<strong>#{escape_html(target_value(:name))}</strong>")
+```
+
+### escape_html(value)
+Escape `&`, `<`, `>`, `"` and `'` for use in HTML text or a quoted attribute
+value. `nil` and JS `null` become `""`.
+
+```ruby
+escape_html(%q{<b class="x">Tom & 'Jerry'</b>})
+# => "&lt;b class=&quot;x&quot;&gt;Tom &amp; &#39;Jerry&#39;&lt;/b&gt;"
+```
+
 ### target_text(name) / target_set_text(name, text)
 Get/set target textContent
 

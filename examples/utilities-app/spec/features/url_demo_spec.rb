@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'spec_helper'
+require 'cgi'
 
 RSpec.describe 'URL Demo', type: :feature do
   describe 'URL parsing' do
@@ -15,6 +16,16 @@ RSpec.describe 'URL Demo', type: :feature do
       expect(output).to have_content('example.com')
       expect(output).to have_content('8080')
       expect(output).to have_content('/path')
+    end
+
+    it 'shows decoded query parameters from the page URL as text' do
+      # connect parses the current URL, so this renders without any click
+      visit "/?x=#{CGI.escape('<img src=x class="injected">')}"
+      wait_for_stimulus_ready
+
+      output = find('[data-url-demo-target="output"]')
+      expect(output).to have_css('code', text: '<img src=x class="injected">')
+      expect(page).to have_no_css('.injected')
     end
 
     it 'parses current page URL' do

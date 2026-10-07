@@ -15,7 +15,9 @@ module OpalVite
       #     def connect
       #       if has_target?(:input)
       #         value = target_value(:input)
-      #         target_set_html(:output, "Value: #{value}")
+      #         target_set_text(:output, "Value: #{value}")
+      #         # When building HTML, escape values that come from users:
+      #         target_set_html(:preview, "<strong>#{escape_html(value)}</strong>")
       #       end
       #     end
       #   end
@@ -74,7 +76,8 @@ module OpalVite
         `this[#{method_name}].innerHTML`
       end
 
-      # Set the innerHTML of a target
+      # Set the innerHTML of a target. The string is parsed as HTML, so escape
+      # interpolated values with #escape_html (or use #target_set_text).
       # @param name [Symbol, String] Target name
       # @param html [String] The HTML to set
       def target_set_html(name, html)
@@ -564,12 +567,28 @@ module OpalVite
         `#{el}.style[#{property}] = #{value}`
       end
 
-      # Set element innerHTML
+      # Set element innerHTML. The string is parsed as HTML, so escape
+      # interpolated values with #escape_html (or use #set_text).
       # @param element [Native] DOM element
       # @param html [String] HTML content
       def set_html(element, html)
         el = to_native_element(element)
         `#{el}.innerHTML = #{html}`
+      end
+
+      # Escape a value for use inside HTML (text or a quoted attribute value).
+      # Use it for anything user- or server-provided that goes into
+      # set_html / target_set_html; prefer set_text / target_set_text when
+      # the content is plain text.
+      # @param value [Object] Value to escape (nil and JS null become "")
+      # @return [String] Escaped string
+      def escape_html(value)
+        str = `#{value} == null || #{value} === #{nil} ? '' : #{value}`
+        unless `typeof #{str} === 'string'`
+          # Ruby objects use to_s; plain JS objects (e.g. from JSON.parse) use String()
+          str = `#{str}.$$class` ? str.to_s : `String(#{str})`
+        end
+        `#{str}.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;')`
       end
 
       # Set element textContent
@@ -1872,6 +1891,8 @@ module OpalVite
       # @param phone [String] Phone number to validate
       # @return [Boolean] True if valid
       def valid_phone?(phone)
+        return false if nullish?(phone)
+
         # Remove common separators and check for digits
         cleaned = `#{phone}.replace(/[\s\-\(\)\.]/g, '')`
         `
@@ -1880,11 +1901,20 @@ module OpalVite
         `
       end
 
+      # Whether a value is Ruby nil or JS null/undefined. Values from DOM APIs
+      # (getAttribute, localStorage, ...) are JS null, which has no Ruby
+      # methods, so `value.nil?` would raise on them.
+      # @param value [Object] Value to check
+      # @return [Boolean]
+      def nullish?(value)
+        `#{value} == null || #{value} === #{nil}`
+      end
+
       # Check if a value is blank (nil, empty string, or whitespace only)
       # @param value [Object] Value to check
       # @return [Boolean] True if blank
       def blank?(value)
-        return true if value.nil?
+        return true if nullish?(value)
         return `#{value}.trim() === ''` if `typeof #{value} === 'string'`
         return `#{value}.length === 0` if `Array.isArray(#{value})`
         false
@@ -1902,7 +1932,7 @@ module OpalVite
       # @param min [Integer] Minimum length
       # @return [Boolean] True if valid
       def min_length?(value, min)
-        return false if value.nil?
+        return false if nullish?(value)
         `#{value}.length >= #{min}`
       end
 
@@ -1911,7 +1941,7 @@ module OpalVite
       # @param max [Integer] Maximum length
       # @return [Boolean] True if valid
       def max_length?(value, max)
-        return false if value.nil?
+        return false if nullish?(value)
         `#{value}.length <= #{max}`
       end
 
@@ -1920,7 +1950,7 @@ module OpalVite
       # @param pattern [String] Regular expression pattern
       # @return [Boolean] True if matches
       def matches_pattern?(value, pattern)
-        return false if value.nil?
+        return false if nullish?(value)
         `new RegExp(#{pattern}).test(#{value})`
       end
 

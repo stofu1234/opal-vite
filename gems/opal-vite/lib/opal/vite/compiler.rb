@@ -16,6 +16,10 @@ module Opal
         # of the output. The Vite plugin then imports the shared runtime
         # (`/@opal-runtime`) instead, so corelib is only loaded once.
         @external_runtime = options.fetch(:external_runtime, false)
+        # Extra directories searched by `require` (the plugin's loadPaths)
+        @load_paths = options.fetch(:load_paths, [])
+        # Passed to Opal's compiler, e.g. arity_check / freezing
+        @compiler_options = options.fetch(:compiler_options, {})
       end
 
       # Compile Ruby source code to JavaScript
@@ -23,13 +27,17 @@ module Opal
       def compile(source, file_path)
         begin
           # Use Opal::Builder and add the file's directory to load paths
-          builder = Opal::Builder.new(stubs: @stubs)
+          builder = Opal::Builder.new(stubs: @stubs, compiler_options: @compiler_options)
           builder.prerequired = self.class.runtime_requires if @external_runtime
 
           # Add the directory containing the file to load paths
           # This allows require statements to work relative to the file
           file_dir = File.dirname(File.expand_path(file_path))
           builder.append_paths(file_dir)
+
+          @load_paths.each do |load_path|
+            builder.append_paths(File.expand_path(load_path))
+          end
 
           # Also add parent directories for common patterns like 'lib/foo'
           parent_dir = File.dirname(file_dir)
@@ -153,10 +161,6 @@ module Opal
             builder.append_paths(path) unless builder.path_reader.paths.include?(path)
           end
         end
-      end
-
-      def compiler_options
-        @config.to_compiler_options
       end
 
       def extract_dependencies(builder)

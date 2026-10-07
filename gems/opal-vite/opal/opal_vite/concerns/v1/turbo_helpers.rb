@@ -251,14 +251,51 @@ module OpalVite
         # ===== Turbo Events =====
 
         # Listen for Turbo Drive events
+        #
+        # The listener is registered on document, so it outlives the
+        # controller: remove it in disconnect with #off_all_turbo (or
+        # #off_turbo), otherwise every reconnect after a Turbo visit adds
+        # another listener.
+        #
         # @param event_name [String] Event name (without 'turbo:' prefix)
         # @yield [event] Block to execute when event fires
+        # @return [Native] The registered listener (for #off_turbo)
         # @example
-        #   on_turbo("before-visit") { |e| validate_form }
-        #   on_turbo("load") { init_components }
+        #   def connect
+        #     on_turbo("before-visit") { |e| validate_form }
+        #     on_turbo("load") { init_components }
+        #   end
+        #
+        #   def disconnect
+        #     off_all_turbo
+        #   end
         def on_turbo(event_name, &block)
-          full_name = event_name.start_with?("turbo:") ? event_name : "turbo:#{event_name}"
-          `document.addEventListener(#{full_name}, function(event) { #{block.call(`event`)} })`
+          full_name = turbo_event_name(event_name)
+          handler = `function(event) { #{block.call(`event`)} }`
+          `document.addEventListener(#{full_name}, #{handler})`
+          @turbo_listeners ||= []
+          @turbo_listeners << [full_name, handler]
+          handler
+        end
+
+        # Remove a listener added with #on_turbo
+        # @param event_name [String] Event name passed to #on_turbo
+        # @param handler [Native] Listener returned by #on_turbo
+        def off_turbo(event_name, handler)
+          full_name = turbo_event_name(event_name)
+          `document.removeEventListener(#{full_name}, #{handler})`
+          @turbo_listeners&.reject! { |name, h| name == full_name && `#{h} === #{handler}` }
+          nil
+        end
+
+        # Remove every listener this object added with #on_turbo (including
+        # the on_turbo_* helpers and #turbo_loading_class)
+        def off_all_turbo
+          (@turbo_listeners || []).each do |name, handler|
+            `document.removeEventListener(#{name}, #{handler})`
+          end
+          @turbo_listeners = []
+          nil
         end
 
         # Listen for turbo:before-visit - cancel navigation
@@ -427,6 +464,12 @@ module OpalVite
 
           on_turbo("before-fetch-request") { `#{el}.classList.add(#{class_name})` }
           on_turbo("before-fetch-response") { `#{el}.classList.remove(#{class_name})` }
+        end
+
+        private
+
+        def turbo_event_name(event_name)
+          event_name.start_with?("turbo:") ? event_name : "turbo:#{event_name}"
         end
       end
 

@@ -137,7 +137,9 @@ interface DiskCacheEntry {
 
 // Bumped to 1.2.0: entries now carry a fingerprint of the compile options and
 // Ruby-side versions. Older entries lack it and are treated as stale.
-const CACHE_VERSION = '1.2.0'
+// Bumped to 1.3.0: results record whether they were compiled for the shared
+// runtime (externalRuntime).
+const CACHE_VERSION = '1.3.0'
 
 /**
  * Ruby-side facts probed once per plugin instance.
@@ -152,6 +154,7 @@ interface RubyEnvironment {
 // opal-vite gem versions that added keyword arguments the plugin relies on.
 const GEM_VERSION_FOR_STUBS = '0.3.12'
 const GEM_VERSION_FOR_EXTERNAL_RUNTIME = '0.3.15'
+const GEM_VERSION_FOR_LOAD_PATHS = '0.3.18'
 
 // Specifier for the shared runtime module that compiled .rb modules import.
 export const VIRTUAL_RUNTIME_ID = '/@opal-runtime'
@@ -178,8 +181,13 @@ export class OpalCompiler {
   private activeCompilations = 0
   private rubyEnvironment: Promise<RubyEnvironment | null> | null = null
   private fingerprint: Promise<string> | null = null
+  // Whether loadPaths / arityCheck / freezing were set explicitly (used to
+  // warn when the installed gem cannot apply them)
+  private hasCompilerPathOptions: boolean
 
   constructor(options: OpalPluginOptions = {}) {
+    this.hasCompilerPathOptions =
+      options.loadPaths !== undefined || options.arityCheck !== undefined || options.freezing !== undefined
     this.options = {
       gemPath: options.gemPath || 'opal-vite',
       sourceMap: options.sourceMap !== false,
@@ -258,7 +266,9 @@ export class OpalCompiler {
       ].join('; ')
       this.rubyEnvironment = this.runRuby(script)
         .then((stdout) => {
-          const parsed = JSON.parse(stdout)
+          // Parse only the last line: Bundler or gems may print warnings first.
+          const lines = stdout.trim().split('\n')
+          const parsed = JSON.parse(lines[lines.length - 1])
           const env: RubyEnvironment = {
             opalViteVersion: parsed.opal_vite,
             opalVersion: parsed.opal,
@@ -272,10 +282,21 @@ export class OpalCompiler {
               `Update the opal-vite gem to share a single runtime.`
             )
           }
+          if (!env.compileOptions.includes('load_paths') && this.hasCompilerPathOptions) {
+            console.warn(
+              `[vite-plugin-opal] opal-vite gem ${env.opalViteVersion} is older than ${GEM_VERSION_FOR_LOAD_PATHS}; ` +
+              `the loadPaths, arityCheck and freezing options are not applied when compiling. ` +
+              `Update the opal-vite gem.`
+            )
+          }
           return env
         })
         .catch((e) => {
-          this.log(`Could not probe the opal-vite gem: ${e}`)
+          // Don't keep the failure: the next call probes again (e.g. after a
+          // transient Bundler error), instead of compiling without the shared
+          // runtime for the rest of the session.
+          this.rubyEnvironment = null
+          console.warn(`[vite-plugin-opal] Could not probe the opal-vite gem; will retry: ${e instanceof Error ? e.message : e}`)
           return null
         })
     }
@@ -297,7 +318,10 @@ export class OpalCompiler {
    * down by the inserted line.
    */
   async withRuntimeImport(result: CompileResult): Promise<CompileResult> {
-    if (!(await this.usesExternalRuntime())) return result
+    // Decided per result, by how it was compiled: the gem probe can succeed
+    // later than the compilation (it is retried after a failure), and code
+    // that already bundles the corelib must not import the runtime again.
+    if (!result.externalRuntime) return result
 
     let map = result.map
     if (map) {
@@ -347,6 +371,9 @@ export class OpalCompiler {
           compileOptions: env?.compileOptions ?? null,
           gemfileLock
         }
+        // Without the gem versions the fingerprint is incomplete; compute it
+        // again once the probe succeeds.
+        if (!env) this.fingerprint = null
         return this.getContentHash(JSON.stringify(data))
       })
     }
@@ -584,7 +611,9 @@ export class OpalCompiler {
     const stubResult = this.checkStub(filePath)
     if (stubResult) {
       this.recordMetrics(filePath, startTime, true, 'memory')
-      return stubResult
+      // A stub is generated here rather than compiled, and it calls Opal, so
+      // it imports the shared runtime whenever the gem provides one.
+      return { ...stubResult, externalRuntime: await this.usesExternalRuntime() }
     }
 
     // Read file content for hash-based cache validation
@@ -609,7 +638,8 @@ export class OpalCompiler {
         return {
           code: cached.code,
           map: cached.map,
-          dependencies: cached.dependencies
+          dependencies: cached.dependencies,
+          externalRuntime: cached.externalRuntime
         }
       }
       // Cache is stale, remove it
@@ -932,12 +962,16 @@ export class OpalCompiler {
 
       // cross-spawn types stdout/stderr as nullable; with the default
       // stdio: 'pipe' they are always present, but guard to satisfy the types.
-      ruby.stdout?.on('data', (data) => {
-        stdout += data.toString()
+      // Decode as UTF-8 streams so a multibyte character split across two
+      // chunks is not replaced with U+FFFD.
+      ruby.stdout?.setEncoding('utf8')
+      ruby.stderr?.setEncoding('utf8')
+      ruby.stdout?.on('data', (data: string) => {
+        stdout += data
       })
 
-      ruby.stderr?.on('data', (data) => {
-        stderr += data.toString()
+      ruby.stderr?.on('data', (data: string) => {
+        stderr += data
       })
 
       ruby.on('close', (code) => {
@@ -956,8 +990,9 @@ export class OpalCompiler {
 
   private async compileViaRuby(filePath: string): Promise<CompileResult> {
     const env = await this.getRubyEnvironment()
-    const script = this.getCompilerScript(env)
-    const { command, args } = this.rubyCommand(script, [filePath])
+    const script = this.getCompilerScript()
+    const compileOptions = this.getCompileOptions(env)
+    const { command, args } = this.rubyCommand(script, [filePath, JSON.stringify(compileOptions)])
 
     this.log(`Spawning Ruby: ${command} ${args.join(' ')}`)
 
@@ -971,12 +1006,16 @@ export class OpalCompiler {
 
       // cross-spawn types stdout/stderr as nullable; with the default
       // stdio: 'pipe' they are always present, but guard to satisfy the types.
-      ruby.stdout?.on('data', (data) => {
-        stdout += data.toString()
+      // Decode as UTF-8 streams so a multibyte character split across two
+      // chunks is not replaced with U+FFFD.
+      ruby.stdout?.setEncoding('utf8')
+      ruby.stderr?.setEncoding('utf8')
+      ruby.stdout?.on('data', (data: string) => {
+        stdout += data
       })
 
-      ruby.stderr?.on('data', (data) => {
-        stderr += data.toString()
+      ruby.stderr?.on('data', (data: string) => {
+        stderr += data
       })
 
       ruby.on('close', (code) => {
@@ -1000,7 +1039,7 @@ export class OpalCompiler {
 
         try {
           const result = JSON.parse(stdout)
-          resolve(result)
+          resolve({ ...result, externalRuntime: compileOptions.external_runtime === true })
         } catch (e) {
           const parseError = new Error(`Failed to parse compiler output: ${e}`)
           console.error('\x1b[31m✖ Opal Compiler Output Parse Error\x1b[0m')
@@ -1031,16 +1070,26 @@ export class OpalCompiler {
   }
 
   /**
-   * Ruby snippet that compiles ARGV[0]. Only passes keyword arguments the
-   * installed gem accepts (see getRubyEnvironment), so an older gem keeps
-   * working instead of failing with "unknown keyword".
+   * Ruby snippet that compiles ARGV[0] with the keyword arguments given as
+   * JSON in ARGV[1]. Passing them as data rather than interpolating them into
+   * the Ruby code keeps paths and stub names from being evaluated as Ruby.
    */
-  private getCompilerScript(env: RubyEnvironment | null): string {
+  private getCompilerScript(): string {
+    // Note: opal-vite is already required via -r flag or -I flag
+    return "require 'json'; Opal::Vite.compile_for_vite(ARGV[0], **JSON.parse(ARGV[1], symbolize_names: true))"
+  }
+
+  /**
+   * Keyword arguments for compile_for_vite. Only passes those the installed
+   * gem accepts (see getRubyEnvironment), so an older gem keeps working
+   * instead of failing with "unknown keyword".
+   */
+  private getCompileOptions(env: RubyEnvironment | null): Record<string, unknown> {
     const supported = env?.compileOptions
-    const kwargs = [
-      `include_concerns: ${this.options.includeConcerns}`,
-      `source_map: ${this.options.sourceMap}`
-    ]
+    const options: Record<string, unknown> = {
+      include_concerns: this.options.includeConcerns,
+      source_map: this.options.sourceMap
+    }
 
     if (this.options.stubs.length > 0) {
       if (supported && !supported.includes('stubs')) {
@@ -1049,15 +1098,21 @@ export class OpalCompiler {
           `(installed: ${env!.opalViteVersion}). Update the gem or remove 'stubs'.`
         )
       }
-      kwargs.push(`stubs: ${JSON.stringify(this.options.stubs)}`)
+      options.stubs = this.options.stubs
     }
 
     if (supported?.includes('external_runtime')) {
-      kwargs.push('external_runtime: true')
+      options.external_runtime = true
     }
 
-    // Note: opal-vite is already required via -r flag or -I flag
-    return `Opal::Vite.compile_for_vite(ARGV[0], ${kwargs.join(', ')})`
+    if (supported?.includes('load_paths')) {
+      // Same base directory the resolver and dependency tracking use
+      options.load_paths = this.options.loadPaths.map((lp) => path.resolve(process.cwd(), lp))
+      options.arity_check = this.options.arityCheck
+      options.freezing = this.options.freezing
+    }
+
+    return options
   }
 
   private resolveGemLibPath(): string {

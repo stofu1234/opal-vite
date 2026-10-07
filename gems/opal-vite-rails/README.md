@@ -326,6 +326,7 @@ The npm plugin runs the gem's Ruby code, so keep the two in step:
 
 | vite-plugin-opal (npm) | opal-vite (gem) | opal-vite-rails (gem) | Notes |
 |------------------------|-----------------|-----------------------|-------|
+| >= 0.3.19 | >= 0.3.18 | >= 0.3.14 | `loadPaths` / `arityCheck` / `freezing` are applied when compiling |
 | >= 0.3.16 | >= 0.3.15 | >= 0.3.14 | Shared runtime: corelib is loaded once |
 | >= 0.3.16 | 0.3.12 – 0.3.14 | — | Works; each `.rb` bundle carries its own corelib (warning at startup) |
 | >= 0.3.16 | < 0.3.12 | — | Works without the `stubs` option (using it fails with a clear error) |

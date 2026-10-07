@@ -5,27 +5,36 @@ on:
     branches: [ main, master ]
   workflow_dispatch:  # Allow manual trigger
 
+# Read-only by default. Only the deploy job, which runs no project code or
+# dependency scripts, gets write access to push to gh-pages.
 permissions:
-  contents: write
-  pages: write
+  contents: read
+
+# Don't let overlapping runs race each other pushing to gh-pages
+concurrency:
+  group: deploy-pages
+  cancel-in-progress: false
 
 jobs:
-  deploy:
-    name: Deploy Documentation & Playground
+  build:
+    name: Build Documentation & Playground
     runs-on: ubuntu-latest
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          # Keep the token out of .git/config while dependency scripts run
+          persist-credentials: false
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '22'
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v2
+        uses: pnpm/action-setup@v4
         with:
           version: 9
 
@@ -69,9 +78,31 @@ jobs:
             cp -r examples/$app/dist docs/.vitepress/dist/playground/$app
           done
 
+      - name: Upload site
+        uses: actions/upload-artifact@v4
+        with:
+          name: site
+          path: docs/.vitepress/dist
+          include-hidden-files: true
+          retention-days: 1
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download site
+        uses: actions/download-artifact@v4
+        with:
+          name: site
+          path: site
+
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+        uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./docs/.vitepress/dist
+          publish_dir: ./site
           publish_branch: gh-pages
