@@ -50,10 +50,13 @@ describe('HMR for required files', () => {
     const depModules = server.moduleGraph.getModulesByFile(normalizePath(depPath))
     expect(depModules?.size ?? 0).toBeGreaterThan(0)
 
+    // Vite 6+ sends updates through the client environment's hot channel
+    // (server.hot is only a compatibility wrapper there).
+    const hot = server.environments?.client?.hot ?? server.hot
     const sent: Array<{ type: string }> = []
-    const send = vi.spyOn(server.hot, 'send').mockImplementation(((payload: { type: string }) => {
+    const send = vi.spyOn(hot, 'send').mockImplementation(((payload: { type: string }) => {
       sent.push(payload)
-    }) as typeof server.hot.send)
+    }) as typeof hot.send)
 
     fs.writeFileSync(depPath, "def greeting\n  'hello-v2'\nend\n")
     // Make sure the mtime moves even on filesystems with coarse timestamps.

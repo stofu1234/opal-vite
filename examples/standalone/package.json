@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "devDependencies": {
-    "vite": "^5.0.10",
+    "vite": "^6.4.4",
     "vite-plugin-opal": "file:../../packages/vite-plugin-opal"
   }
 }
