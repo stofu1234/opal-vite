@@ -1,6 +1,7 @@
 # PWA Icons
 
-This directory should contain the following icon files for the PWA:
+This directory contains placeholder icons for the PWA (a white diamond on the
+theme color). Replace them with your own artwork of the same sizes:
 
 - `icon-192.png` - 192x192 pixels
 - `icon-512.png` - 512x512 pixels
