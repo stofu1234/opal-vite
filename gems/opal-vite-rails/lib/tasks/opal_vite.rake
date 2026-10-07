@@ -1,27 +1,19 @@
 namespace :opal_vite do
-  desc "Compile Opal assets for production"
+  # Opal sources are compiled by the Vite build (vite-plugin-opal), so this
+  # delegates to vite_ruby, the same build `rake vite:build` runs. vite_rails
+  # already hooks that build into `assets:precompile`, so nothing is added
+  # there.
+  desc "Compile Opal assets for production (runs the Vite build)"
   task compile: :environment do
-    require "opal/vite/rails"
-
     puts "Compiling Opal assets..."
 
-    # Ensure Vite is installed
-    unless system("which vite > /dev/null 2>&1")
-      puts "Error: Vite is not installed. Run 'npm install' first."
-      exit 1
-    end
-
-    # Run Vite build
-    puts "Running Vite build..."
-    system("npm run build") || system("npx vite build")
+    abort "❌ Vite build failed" unless ViteRuby.commands.build
 
     puts "✅ Opal assets compiled successfully!"
   end
 
   desc "Clean compiled Opal assets"
   task clean: :environment do
-    require "opal/vite/rails"
-
     puts "Cleaning Opal assets..."
 
     vite_dir = Rails.public_path.join("vite")
@@ -35,8 +27,6 @@ namespace :opal_vite do
 
   desc "Show Opal-Vite configuration"
   task info: :environment do
-    require "opal/vite/rails"
-
     puts "\n" + "="*60
     puts "Opal-Vite Rails Configuration"
     puts "="*60
@@ -54,12 +44,5 @@ namespace :opal_vite do
     end
 
     puts "\n" + "="*60
-  end
-end
-
-# Add compile task to assets:precompile
-if Rake::Task.task_defined?("assets:precompile")
-  Rake::Task["assets:precompile"].enhance do
-    Rake::Task["opal_vite:compile"].invoke
   end
 end

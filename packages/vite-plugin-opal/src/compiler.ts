@@ -394,6 +394,17 @@ export class OpalCompiler {
   }
 
   /**
+   * Resolve a compile result's dependencies to absolute (POSIX) file paths,
+   * excluding the entry itself. Opal inlines every `require`d file into the
+   * entry's output, so the plugin registers these with Vite (addWatchFile) to
+   * make an edit to any of them invalidate and reload the entry.
+   */
+  getDependencyFiles(dependencies: string[] | undefined, entryFile: string): string[] {
+    const entry = normalizePath(path.resolve(entryFile))
+    return Object.keys(this.computeDepMtimes(dependencies, entryFile)).filter((dep) => dep !== entry)
+  }
+
+  /**
    * Compute the current mtimes of a compile result's resolvable dependencies,
    * keyed by absolute path. Unresolvable dependencies are skipped.
    */

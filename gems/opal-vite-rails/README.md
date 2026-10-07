@@ -197,9 +197,9 @@ Compile Opal assets:
 rake opal_vite:compile
 ```
 
-This runs Vite build and creates optimized bundles in `public/vite/`.
+This runs the Vite build (through vite_ruby, like `rake vite:build`) and creates optimized bundles in `public/vite/`.
 
-The compile task is automatically added to `rake assets:precompile`, so it runs during deployment on platforms like Heroku.
+You usually don't need to run it yourself: vite_rails already runs the Vite build, which compiles the Opal sources, as part of `rake assets:precompile`, so deployment on platforms like Heroku works without an extra step.
 
 ## Rake Tasks
 

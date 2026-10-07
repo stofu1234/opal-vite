@@ -401,9 +401,6 @@ importers:
 
   packages/vite-plugin-opal:
     dependencies:
-      chokidar:
-        specifier: ^3.5.3
-        version: 3.6.0
       cross-spawn:
         specifier: ^7.0.6
         version: 7.0.6
@@ -6105,7 +6102,7 @@ snapshots:
     dependencies:
       '@types/estree': 1.0.8
       estree-walker: 2.0.2
-      picomatch: 4.0.3
+      picomatch: 4.0.7
     optionalDependencies:
       rollup: 2.79.2
 

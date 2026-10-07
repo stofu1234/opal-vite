@@ -146,8 +146,16 @@ wss.on('connection', (ws) => {
   })
 })
 
+// Usernames are rendered by every client. Keep them short plain text so a
+// crafted name cannot inject markup, even into clients built before the
+// client-side escaping fix.
+function normalizeUsername(value) {
+  const name = String(value ?? '').replace(/[<>"'&\u0000-\u001f]/g, '').trim().slice(0, 32)
+  return name || 'Anonymous'
+}
+
 function handleJoin(ws, message) {
-  const username = message.username || 'Anonymous'
+  const username = normalizeUsername(message.username)
   users.set(ws, username)
 
   const joinMessage = {

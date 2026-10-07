@@ -28,7 +28,10 @@ class ChatController < StimulusController
 
   def set_username
     puts "set_username called"
-    username = target_value(:username_input).to_s.strip
+    # Same normalization as the server (normalizeUsername), so the name the
+    # server broadcasts matches @username when checking own messages.
+    username = target_value(:username_input).to_s.gsub(/[<>"'&\x00-\x1f]/, '')
+    username = `#{username}.trim().slice(0, 32)`
     puts "username: #{username}"
     return if username.empty?
 
@@ -163,11 +166,10 @@ class ChatController < StimulusController
     return unless users
 
     user_list = get_target(:user_list)
-    html = ""
-
-    `#{users}.forEach(function(user) {
-      html += '<span class="user-badge"><span class="online-dot"></span>' + user + '</span>';
-    })`
+    # Usernames come from other clients, so escape them before building HTML.
+    html = users.map do |user|
+      "<span class=\"user-badge\"><span class=\"online-dot\"></span>#{escape_html(user)}</span>"
+    end.join
 
     set_html(user_list, html)
   end

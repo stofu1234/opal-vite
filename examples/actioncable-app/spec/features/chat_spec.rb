@@ -177,4 +177,21 @@ RSpec.describe 'ActionCable Chat', type: :feature do
       expect(page).to have_css('[data-chat-target="typing"]', visible: true)
     end
   end
+
+  describe 'Presence list' do
+    it 'shows usernames containing HTML as text' do
+      page.execute_script(<<~JS)
+        var el = document.querySelector('[data-controller="chat"]');
+        var controller = window.Stimulus.getControllerForElementAndIdentifier(el, 'chat');
+        controller.$update_presence({ type: 'presence', users: ['alice', '<img src=x class="injected">'] });
+      JS
+
+      # The list stays hidden until the user joins a room.
+      within('[data-chat-target="userList"]', visible: :all) do
+        expect(page).to have_css('.user-badge', text: 'alice', visible: :all)
+        expect(page).to have_css('.user-badge', text: '<img src=x class="injected">', visible: :all)
+        expect(page).to have_no_css('.injected', visible: :all)
+      end
+    end
+  end
 end

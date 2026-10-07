@@ -3,11 +3,19 @@ import { Counter } from './Counter'
 import { Greeting } from './Greeting'
 import { TodoList } from './TodoList'
 
-export function App() {
+export function App({ rubyCounter: RubyCounter }) {
   return (
     <div className="app">
       <div className="components-grid">
         <Counter />
+        {RubyCounter && (
+          <div className="counter-container" id="ruby-counter">
+            <div className="counter-card">
+              <h2>Counter Component (Ruby FunctionalComponent)</h2>
+              <RubyCounter />
+            </div>
+          </div>
+        )}
         <Greeting />
         <TodoList />
       </div>

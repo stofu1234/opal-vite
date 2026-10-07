@@ -108,6 +108,14 @@ function unsubscribeFromRoom(client, identifier) {
   client.subscriptions.delete(identifier);
 }
 
+// Usernames are rendered by every client. Keep them short plain text so a
+// crafted name cannot inject markup, even into clients built before the
+// client-side escaping fix.
+function normalizeUsername(value) {
+  const name = String(value ?? '').replace(/[<>"'&\u0000-\u001f]/g, '').trim().slice(0, 32);
+  return name || 'Anonymous';
+}
+
 function handleAction(client, identifier, dataStr) {
   const data = JSON.parse(dataStr);
   const action = data.action;
@@ -117,10 +125,10 @@ function handleAction(client, identifier, dataStr) {
 
   switch (action) {
     case 'join':
-      client.username = data.username;
+      client.username = normalizeUsername(data.username);
       broadcastToRoom(roomKey, identifier, {
         type: 'system',
-        text: `${data.username} joined the chat`
+        text: `${client.username} joined the chat`
       });
       broadcastPresence(roomKey, identifier);
       break;
@@ -128,7 +136,7 @@ function handleAction(client, identifier, dataStr) {
     case 'speak':
       broadcastToRoom(roomKey, identifier, {
         type: 'message',
-        user: data.user,
+        user: client.username || normalizeUsername(data.user),
         text: data.text,
         time: new Date().toISOString()
       });
@@ -137,7 +145,7 @@ function handleAction(client, identifier, dataStr) {
     case 'typing':
       broadcastToRoom(roomKey, identifier, {
         type: 'typing',
-        user: data.user
+        user: client.username || normalizeUsername(data.user)
       }, client.id); // Exclude sender
       break;
   }

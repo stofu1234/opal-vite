@@ -54,8 +54,10 @@ class ChatController < StimulusController
 
   # Join chat with username
   def join_chat
-    username = target_value(:usernameInput)
-    username = `#{username}.trim()`
+    # Same normalization as the server (normalizeUsername), so the name the
+    # server broadcasts matches usernameValue when checking own messages.
+    username = target_value(:usernameInput).to_s.gsub(/[<>"'&\x00-\x1f]/, '')
+    username = `#{username}.trim().slice(0, 32)`
 
     if `#{username} === ''`
       `alert('Please enter a username')`
@@ -181,9 +183,10 @@ class ChatController < StimulusController
     msg_el = create_element('div')
     add_class(msg_el, 'message')
 
-    username = js_get(message, :username)
-    is_own = `#{username} === this.usernameValue`
+    raw_username = js_get(message, :username)
+    is_own = `#{raw_username} === this.usernameValue`
     add_class(msg_el, 'own-message') if is_own
+    username = escape_html(raw_username)
 
     timestamp = js_get(message, :timestamp)
     time = `new Date(#{timestamp}).toLocaleTimeString()`

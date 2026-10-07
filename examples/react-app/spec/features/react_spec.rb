@@ -20,18 +20,18 @@ RSpec.describe 'React + Opal App', type: :feature do
   end
 
   describe 'Counter component' do
-    let(:counter_container) { '.counter-container' }
-    let(:count_value) { '.count-value' }
-    let(:increment_btn) { '.btn-increment' }
-    let(:decrement_btn) { '.btn-decrement' }
-    let(:reset_btn) { '.btn-reset' }
+    let(:counter_container) { '#jsx-counter' }
+    let(:count_value) { '#jsx-counter .count-value' }
+    let(:increment_btn) { '#jsx-counter .btn-increment' }
+    let(:decrement_btn) { '#jsx-counter .btn-decrement' }
+    let(:reset_btn) { '#jsx-counter .btn-reset' }
 
     it 'displays initial count of 0' do
       expect(page).to have_css(count_value, text: '0')
     end
 
     it 'displays zero status initially' do
-      expect(page).to have_css('.zero', text: 'Zero')
+      expect(page).to have_css('#jsx-counter .zero', text: 'Zero')
     end
 
     it 'increments the counter' do
@@ -44,7 +44,7 @@ RSpec.describe 'React + Opal App', type: :feature do
 
     it 'shows positive status when count is positive' do
       find(increment_btn).click
-      expect(page).to have_css('.positive', text: 'Positive')
+      expect(page).to have_css('#jsx-counter .positive', text: 'Positive')
     end
 
     it 'decrements the counter' do
@@ -54,7 +54,7 @@ RSpec.describe 'React + Opal App', type: :feature do
 
     it 'shows negative status when count is negative' do
       find(decrement_btn).click
-      expect(page).to have_css('.negative', text: 'Negative')
+      expect(page).to have_css('#jsx-counter .negative', text: 'Negative')
     end
 
     it 'resets the counter to zero' do
@@ -65,7 +65,7 @@ RSpec.describe 'React + Opal App', type: :feature do
       # Reset
       find(reset_btn).click
       expect(page).to have_css(count_value, text: '0')
-      expect(page).to have_css('.zero', text: 'Zero')
+      expect(page).to have_css('#jsx-counter .zero', text: 'Zero')
     end
   end
 

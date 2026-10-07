@@ -4,7 +4,7 @@ export function Counter() {
   const [count, setCount] = useState(0)
 
   return (
-    <div className="counter-container">
+    <div className="counter-container" id="jsx-counter">
       <div className="counter-card">
         <h2>Counter Component</h2>
 

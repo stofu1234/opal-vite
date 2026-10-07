@@ -1,6 +1,6 @@
 {
   "name": "vite-plugin-opal",
-  "version": "0.3.17",
+  "version": "0.3.18",
   "description": "Vite plugin for Opal - Compile Ruby to JavaScript",
   "type": "module",
   "main": "./dist/index.js",
@@ -51,7 +51,6 @@
     "vitest": "^1.1.0"
   },
   "dependencies": {
-    "chokidar": "^3.5.3",
     "cross-spawn": "^7.0.6"
   }
 }

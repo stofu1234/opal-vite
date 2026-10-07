@@ -33,13 +33,24 @@ module OpalVite
         # @yieldparam hooks [Hooks] Hooks helper object
         # @return [Native] JavaScript function component
         def create_component(&block)
-          r = react
+          # The hooks call React's functions directly, so pass the raw React
+          # object rather than the Native wrapper ReactHelpers#react returns.
+          r = react.to_n
           hooks_class = Hooks
 
-          `(function(React, HooksClass) {
+          # Explicit return: Opal emits a multi-line x-string as a statement.
+          `return (function(React, HooksClass) {
             return function(props) {
               var hooks = HooksClass.$new(React, props);
               var element = #{block.call(`hooks`)};
+              if (element == null || element === #{nil}) {
+                return null;
+              }
+              // ReactHelpers return Native-wrapped elements; React needs the
+              // raw one. A raw JS element (from a backtick) is returned as is.
+              if (element.$$class && element['$respond_to?']('to_n')) {
+                return element.$to_n();
+              }
               return element;
             };
           })(#{r}, #{hooks_class})`
@@ -92,12 +103,22 @@ module OpalVite
           def use_effect(dependencies = nil, &block)
             react = @react
 
+            # React only accepts a cleanup function or undefined, so anything
+            # else the block ends with (nil, false, a value) becomes undefined.
+            # (Every Opal object has a $call method-missing stub, so check
+            # respond_to? rather than the presence of $call.)
             effect_fn = `function() {
               var result = #{block.call};
-              if (result && typeof result.$call === 'function') {
+              if (result == null || result === #{nil}) {
+                return undefined;
+              }
+              if (typeof result === 'function' && !result.$$is_proc) {
+                return result;
+              }
+              if (result['$respond_to?'] && result['$respond_to?']('call')) {
                 return function() { result.$call(); };
               }
-              return result;
+              return undefined;
             }`
 
             if dependencies.nil?
@@ -172,8 +193,10 @@ module OpalVite
           def use_reducer(reducer, initial_state)
             react = @react
 
+            # Hand the reducer Ruby-friendly wrappers (state[:count]) and turn
+            # its result back into a plain JS value for React.
             js_reducer = `function(state, action) {
-              return #{reducer.call(`state`, `action`)};
+              return #{reducer.call(Native(`state`), Native(`action`)).to_n};
             }`
 
             result = `#{react}.useReducer(#{js_reducer}, #{initial_state.to_n})`

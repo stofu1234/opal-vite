@@ -49,9 +49,8 @@ module Opal
           end
         end
 
-        rake_tasks do
-          load "tasks/opal_vite.rake"
-        end
+        # lib/tasks/*.rake is loaded by Rails::Engine automatically; loading it
+        # again here would define every task action twice.
 
         generators do
           require_relative "generators/install_generator"

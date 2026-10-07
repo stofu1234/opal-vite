@@ -1,9 +1,8 @@
 import type { Plugin, ViteDevServer } from 'vite'
+import { normalizePath } from 'vite'
 import { OpalCompiler, VIRTUAL_RUNTIME_ID } from './compiler'
 import { OpalResolver } from './resolver'
-import { OpalHMRManager } from './hmr'
 import type { OpalPluginOptions } from './types'
-import * as path from 'path'
 
 const VIRTUAL_RUNTIME_PREFIX = '\0' + VIRTUAL_RUNTIME_ID
 
@@ -48,9 +47,9 @@ const VIRTUAL_RUNTIME_PREFIX = '\0' + VIRTUAL_RUNTIME_ID
 export default function opalPlugin(options: OpalPluginOptions = {}): Plugin {
   const compiler = new OpalCompiler(options)
   const resolver = new OpalResolver(options)
-  let server: ViteDevServer | undefined
-  let hmrManager: OpalHMRManager | undefined
   let isBuild = false
+  // Absolute paths of the files each compiled .rb module inlines, by id
+  const dependencyFiles = new Map<string, string[]>()
   const useCdn = compiler.isCdnEnabled()
   const cdnUrl = compiler.getCdnUrl()
 
@@ -119,9 +118,13 @@ export default function opalPlugin(options: OpalPluginOptions = {}): Plugin {
           console.log(`[vite-plugin-opal] load: Compiling ${id}`)
         }
         try {
+          const compiled = await compiler.compile(id)
+          // Registered as watch files in the transform hook below.
+          dependencyFiles.set(id, compiler.getDependencyFiles(compiled.dependencies, id))
+
           // Compiled code leaves the corelib out and imports the shared
           // runtime module instead (when the installed gem supports it).
-          const result = await compiler.withRuntimeImport(await compiler.compile(id))
+          const result = await compiler.withRuntimeImport(compiled)
           if (options.debug) {
             console.log(`[vite-plugin-opal] load: Compiled ${id} -> ${result.code.length} bytes`)
             console.log(`[vite-plugin-opal] load: Source map: ${result.map ? 'yes' : 'no'}`)
@@ -140,6 +143,25 @@ export default function opalPlugin(options: OpalPluginOptions = {}): Plugin {
         }
       }
 
+      return null
+    },
+
+    // Opal inlines every `require`d file into the entry, so those files are
+    // not modules in Vite's graph. Registering them as watch files adds them
+    // to the graph as imports of the entry: editing one invalidates the entry
+    // and lets Vite propagate the update (a full reload, as Opal output does
+    // not accept HMR). The compiler cache already treats an entry as stale
+    // when one of its dependencies changes.
+    //
+    // This is done in transform rather than load: on the first request Vite 5
+    // creates the module node only after load, and drops files added there.
+    transform(_code: string, id: string) {
+      const deps = dependencyFiles.get(id)
+      if (deps) {
+        for (const dep of deps) {
+          this.addWatchFile(dep)
+        }
+      }
       return null
     },
 
@@ -181,20 +203,24 @@ export default function opalPlugin(options: OpalPluginOptions = {}): Plugin {
       }
     },
 
-    // Setup HMR for .rb files
-    configureServer(_server: ViteDevServer) {
-      server = _server
-
-      // Initialize HMR manager
-      hmrManager = new OpalHMRManager(server, compiler, resolver, options)
-      hmrManager.setup()
-
-      return () => {
-        // Cleanup function called when server closes
-        if (hmrManager) {
-          hmrManager.cleanup()
-        }
-      }
+    // Changes to .rb files are handled by Vite's own watcher and HMR (see
+    // the transform hook). Only drop cached resolutions when a .rb file is
+    // added or removed, so `require` picks up the new file layout.
+    //
+    // Note: a function returned from configureServer is a post hook that Vite
+    // runs right after startup, not a cleanup callback, so none is returned.
+    configureServer(server: ViteDevServer) {
+      server.watcher.on('add', (file: string) => {
+        // A new file can satisfy a require that previously failed to resolve,
+        // and those misses are cached without a path to match, so clear all.
+        if (file.endsWith('.rb')) resolver.clearCache()
+      })
+      server.watcher.on('unlink', (file: string) => {
+        if (!file.endsWith('.rb')) return
+        const normalized = normalizePath(file)
+        compiler.clearCache(normalized)
+        resolver.clearCache(normalized)
+      })
     },
 
     // Print metrics after build completes

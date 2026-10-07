@@ -84,6 +84,11 @@ class AppOrchestrator
   end
 end
 
+# Counter built with FunctionalComponent. main_loader.jsx renders it after
+# assigning window.React, so build the component on demand.
+require 'components/counter'
+`window.createRubyCounter = function() { return #{CounterComponent.to_n}; }`
+
 # Initialize when DOM is ready
 AppOrchestrator.on_dom_ready do
   puts '✅ DOM ready, initializing from Ruby...'

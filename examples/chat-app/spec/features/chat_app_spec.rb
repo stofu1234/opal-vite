@@ -109,4 +109,42 @@ RSpec.describe 'WebSocket Chat App', type: :feature do
       expect(result).to be true
     end
   end
+
+  describe 'joining' do
+    it 'normalizes the username the same way as the server' do
+      find('[data-chat-target="usernameInput"]').set("  O'Connor <b>  ")
+      find('.join-btn').click
+
+      username = page.evaluate_script(<<~JS)
+        (function() {
+          var el = document.querySelector('[data-controller~="chat"]');
+          return window.Stimulus.getControllerForElementAndIdentifier(el, 'chat').usernameValue;
+        })()
+      JS
+      expect(username).to eq('OConnor b')
+    end
+  end
+
+  describe 'message rendering' do
+    # Calls the controller's add_message directly, since the specs run without
+    # the WebSocket server.
+    def render_message(username:, text:)
+      page.execute_script(<<~JS, username, text)
+        var el = document.querySelector('[data-controller~="chat"]');
+        var controller = window.Stimulus.getControllerForElementAndIdentifier(el, 'chat');
+        controller.$add_message({ type: 'message', username: arguments[0], text: arguments[1],
+                                  timestamp: new Date().toISOString() }, false);
+      JS
+    end
+
+    it 'shows a username containing HTML as text' do
+      render_message(username: '<img src=x class="injected">', text: '<b class="injected">hi</b>')
+
+      within('[data-chat-target="messages"]', visible: :all) do
+        expect(page).to have_css('.message-username', text: '<img src=x class="injected">', visible: :all)
+        expect(page).to have_css('.message-text', text: '<b class="injected">hi</b>', visible: :all)
+        expect(page).to have_no_css('.injected', visible: :all)
+      end
+    end
+  end
 end
