@@ -290,6 +290,8 @@ npm の plugin は gem の Ruby コードを呼び出すため、3 パッケー�
 
 - `examples/chat-app/dist` はコミットされているので、chat-app で `pnpm build` した後は `git checkout -- examples/chat-app/dist` で戻す（新しいファイルが残るので `git clean -f examples/chat-app/dist` も）
 - chat-app の Railway デプロイ（Dockerfile ビルド）はコミット済みの `dist` を `production-server.mjs` で配信するだけで、Railway 上ではビルドしない。`app/` を変更したら `pnpm build` して `dist` もコミットする
+- actioncable-app の Railway デプロイ（Dockerfile ビルド）は、ビルド段階で `gem install opal opal-vite`（公開版）と `npm run build` を行い、実行段階では Node だけで `dist` を配信する。Gemfile はイメージに入れない（opal-vite が path 指定のため）
+- Railway のビルドは 3 アプリとも Dockerfile。Nixpacks（`nixpacks.toml`）は Railway 側で Railpack に置き換わり使われなくなったので使わない
 - chat-app / actioncable-app は Railway でアプリのディレクトリだけを `npm install` するため、`vite-plugin-opal` は `workspace:*` にできない（npm 版を指定し、peer の vite の範囲を合わせる）
 - ディスクキャッシュ（`node_modules/.cache/opal-vite`）はオプションや gem バージョンが変わると自動で無効になるが、`path:` 指定の gem のソースを編集した場合は手動で削除する
 

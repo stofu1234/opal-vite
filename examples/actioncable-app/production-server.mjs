@@ -279,23 +279,27 @@ server.listen(PORT, () => {
   console.log(`Serving static files from ${DIST_DIR}`)
 })
 
-// Graceful shutdown
-process.on('SIGINT', () => {
-  console.log('\nShutting down server...')
+// Graceful shutdown. wss.close() does not close open connections and waits
+// for them, so close the clients first or the process never exits while
+// someone is connected (e.g. when Railway replaces the container).
+function shutdown() {
+  for (const ws of wss.clients) {
+    ws.terminate()
+  }
   wss.close(() => {
     server.close(() => {
       console.log('Server closed')
       process.exit(0)
     })
   })
+}
+
+process.on('SIGINT', () => {
+  console.log('\nShutting down server...')
+  shutdown()
 })
 
 process.on('SIGTERM', () => {
   console.log('\nReceived SIGTERM, shutting down...')
-  wss.close(() => {
-    server.close(() => {
-      console.log('Server closed')
-      process.exit(0)
-    })
-  })
+  shutdown()
 })
