@@ -116,7 +116,9 @@ class ChatController < StimulusController
         console_log('✅ Connected to WebSocket server')
         js_set_prop(:isConnected, true)
         username = js_prop(:usernameValue)
-        if username
+        # '' is truthy in Ruby: only rejoin after the user has entered a name
+        # (otherwise every page load announces "Anonymous joined the chat").
+        if username && !username.empty?
           js_call_on(ws, :send, json_stringify({ type: 'join', username: username }))
         end
       end

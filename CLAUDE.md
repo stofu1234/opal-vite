@@ -288,7 +288,9 @@ npm の plugin は gem の Ruby コードを呼び出すため、3 パッケー�
 | opal-vite gem | `cd gems/opal-vite && bundle exec rspec`（CI の Test Vite Plugin ジョブでも実行） |
 | example の E2E | 該当 example で `pnpm dev` を起動してから `bundle exec rspec`（spec_helper の `app_host` のポートで待ち受けること） |
 
-- `examples/chat-app/dist` はコミットされているので、chat-app で `pnpm build` した後は `git checkout -- examples/chat-app/dist` で戻す
+- `examples/chat-app/dist` はコミットされているので、chat-app で `pnpm build` した後は `git checkout -- examples/chat-app/dist` で戻す（新しいファイルが残るので `git clean -f examples/chat-app/dist` も）
+- chat-app の Railway デプロイ（Dockerfile ビルド）はコミット済みの `dist` を `production-server.mjs` で配信するだけで、Railway 上ではビルドしない。`app/` を変更したら `pnpm build` して `dist` もコミットする
+- chat-app / actioncable-app は Railway でアプリのディレクトリだけを `npm install` するため、`vite-plugin-opal` は `workspace:*` にできない（npm 版を指定し、peer の vite の範囲を合わせる）
 - ディスクキャッシュ（`node_modules/.cache/opal-vite`）はオプションや gem バージョンが変わると自動で無効になるが、`path:` 指定の gem のソースを編集した場合は手動で削除する
 
 ---
