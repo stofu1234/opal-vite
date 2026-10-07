@@ -1,4 +1,4 @@
-FROM ruby:3.2-slim
+FROM ruby:3.4-slim
 
 # Install dependencies
 RUN apt-get update -qq && \
@@ -7,9 +7,13 @@ RUN apt-get update -qq && \
 
 WORKDIR /app
 
-# Copy production Gemfile
+# Copy the production Gemfile and its lockfile, and install exactly the
+# locked versions (BUNDLE_FROZEN fails the build if they don't match)
 COPY Gemfile.production ./Gemfile
-RUN bundle install --without development test
+COPY Gemfile.production.lock ./Gemfile.lock
+ENV BUNDLE_WITHOUT="development:test" \
+    BUNDLE_FROZEN=true
+RUN bundle install
 
 # Copy application files
 COPY config.ru ./

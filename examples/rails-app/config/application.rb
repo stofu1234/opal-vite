@@ -15,7 +15,7 @@ Bundler.require(*Rails.groups)
 module RailsAppExample
   class Application < Rails::Application
     # Initialize configuration defaults for originally generated Rails version.
-    config.load_defaults 7.1
+    config.load_defaults 8.1
 
     # Opal-Vite configuration (only in development when gem is available)
     if defined?(Opal::Vite::Rails)

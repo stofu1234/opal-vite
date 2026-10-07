@@ -1,10 +1,10 @@
 source "https://rubygems.org"
 
 # Rails (minimal - without ActiveRecord)
-gem "rails", "~> 7.1.0"
+gem "rails", "~> 8.1.0"
 
 # Server
-gem "puma", "~> 6.0"
+gem "puma", "~> 8.0", ">= 8.0.2"
 
 # Resolves the prebuilt assets in public/vite via the Vite manifest
 gem "vite_rails", "~> 3.0"
