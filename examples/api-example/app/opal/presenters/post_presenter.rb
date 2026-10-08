@@ -85,6 +85,6 @@ class PostPresenter
   end
 
   def build_post_html(title, body)
-    "<h4>#{title}</h4><p>#{body}</p>"
+    "<h4>#{escape_html(title)}</h4><p>#{escape_html(body)}</p>"
   end
 end

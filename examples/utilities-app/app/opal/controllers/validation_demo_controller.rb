@@ -107,8 +107,8 @@ class ValidationDemoController < StimulusController
 
     output = <<~HTML
       <div class="space-y-2">
-        <div><strong>Text:</strong> "#{text}"</div>
-        <div><strong>Pattern:</strong> /#{pattern}/</div>
+        <div><strong>Text:</strong> "#{escape_html(text)}"</div>
+        <div><strong>Pattern:</strong> /#{escape_html(pattern)}/</div>
         <div>
           <strong>Matches:</strong>
           <span class="#{matches ? 'text-green-600' : 'text-red-600'}">#{matches}</span>
@@ -144,7 +144,7 @@ class ValidationDemoController < StimulusController
         status = "<span class='text-red-600'>Invalid</span>"
       end
 
-      "<tr><td class='border px-2 py-1'>#{r[:field]}</td><td class='border px-2 py-1'>#{r[:value] || '-'}</td><td class='border px-2 py-1'>#{status}</td></tr>"
+      "<tr><td class='border px-2 py-1'>#{r[:field]}</td><td class='border px-2 py-1'>#{escape_html(r[:value] || '-')}</td><td class='border px-2 py-1'>#{status}</td></tr>"
     end.join
 
     output = <<~HTML
@@ -171,7 +171,7 @@ class ValidationDemoController < StimulusController
         <span class="#{valid ? 'text-green-600' : 'text-red-600'} text-xl">
           #{valid ? '✓' : '✗'}
         </span>
-        <span>#{message}</span>
+        <span>#{escape_html(message)}</span>
       </div>
     HTML
 

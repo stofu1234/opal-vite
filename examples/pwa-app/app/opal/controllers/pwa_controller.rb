@@ -266,7 +266,7 @@ class PwaController < StimulusController
 
       "<div class=\"note-item\">" \
         "<div class=\"note-content\">" \
-          "<p class=\"note-text\">#{note[:text]}</p>" \
+          "<p class=\"note-text\">#{escape_html(note[:text])}</p>" \
           "<small class=\"note-meta\">#{sync_icon} #{time_str}</small>" \
         "</div>" \
         "<button class=\"btn-delete\" data-action=\"click->pwa#delete_note\" data-note-id=\"#{note[:id]}\">×</button>" \
