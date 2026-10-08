@@ -22,12 +22,18 @@ module Opal
         @compiler_options = options.fetch(:compiler_options, {})
       end
 
+      # Opal compiler options for the Builder. Options explicitly set through
+      # Opal::Vite.configure come first; options given to Compiler.new win.
+      def builder_compiler_options
+        @config.explicit_compiler_options.merge(@compiler_options)
+      end
+
       # Compile Ruby source code to JavaScript
       # Returns a hash with :code, :map, and :dependencies
       def compile(source, file_path)
         begin
           # Use Opal::Builder and add the file's directory to load paths
-          builder = Opal::Builder.new(stubs: @stubs, compiler_options: @compiler_options)
+          builder = Opal::Builder.new(stubs: @stubs, compiler_options: builder_compiler_options)
           builder.prerequired = self.class.runtime_requires if @external_runtime
 
           # Add the directory containing the file to load paths
@@ -65,7 +71,8 @@ module Opal
           end
 
           result
-        rescue StandardError => e
+        rescue StandardError, ScriptError => e
+          # ScriptError covers LoadError / Opal::MissingRequire and syntax errors
           raise CompilationError, "Failed to compile #{file_path}: #{e.message}\n#{e.backtrace.first(5).join("\n")}"
         end
       end
@@ -323,6 +330,7 @@ module Opal
         section_abs_name = 0
 
         first_segment_processed = false
+        name_bridged = false
 
         lines.each do |line|
           if line.empty?
@@ -364,12 +372,21 @@ module Opal
                 new_name_delta = global_abs_name - prev_name
 
                 new_values = [gen_col_delta, new_source_delta, new_orig_line_delta, new_orig_col_delta]
-                new_values << new_name_delta if values.length > 4
+                if values.length > 4
+                  new_values << new_name_delta
+                  name_bridged = true
+                end
 
                 first_segment_processed = true
               else
                 # Subsequent segments: deltas are already correct (relative within section = relative within merged)
                 new_values = values.dup
+                if values.length > 4 && !name_bridged
+                  # The first segment of this section had no name, so this is
+                  # the section's first name: bridge from the merged name state
+                  new_values[4] = global_abs_name - prev_name
+                  name_bridged = true
+                end
               end
 
               result_segments << encode_vlq(new_values)

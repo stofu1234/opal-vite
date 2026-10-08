@@ -205,6 +205,8 @@ todos = storage_get_json('todos', [])
 storage_set_json('todos', todos)
 ```
 
+`storage_get_json` returns `default` when the key is missing **or the stored value is not valid JSON**.
+
 ### storage_remove(key)
 Remove key from localStorage
 
@@ -267,6 +269,8 @@ if event_key == 'Enter'
 end
 id = event_data('id')
 ```
+
+`prevent_default`, `event_target`, `event_key`, `event_data`, `event_data_int` and the `action_param*` helpers read the global `window.event` by default. That global is deprecated and is `undefined` after an `await` or inside a callback, so pass the event your action received: `prevent_default(evt: event)`, `event_key(evt: event)`, `event_data('id', evt: event)`, `action_param(:id, evt: event)`.
 
 ---
 
@@ -413,6 +417,8 @@ fetch_json('/api/data') do |data|
   process(data)
 end
 ```
+
+`fetch_json` does not check `response.ok`: an HTTP error whose body is JSON is passed to the block like a success. Use `fetch_json_safe` / `fetch_json_with_handlers` when HTTP errors must be rejected.
 
 ### fetch_json_promise(url)
 Fetch JSON returning Promise

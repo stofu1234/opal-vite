@@ -259,6 +259,8 @@ end
 | `action_param_bool(name)` | Get as boolean |
 | `has_action_param?(name)` | Check if parameter exists |
 
+Each of them reads the global `window.event` by default. Pass the event your action received with `evt:` (for example `action_param(:id, evt: event)`) so they keep working after an `await` or inside a callback.
+
 ---
 
 ## Controller Access

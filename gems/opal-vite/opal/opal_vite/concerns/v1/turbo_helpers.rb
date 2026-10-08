@@ -159,15 +159,18 @@ module OpalVite
 
         # Get the target frame from current event
         # @return [Native, nil] Frame element from event
-        def event_turbo_frame
-          `event.target.closest('turbo-frame')`
+        # @param evt [Native, nil] The event; defaults to the deprecated global window.event
+        def event_turbo_frame(evt: nil)
+          e = `(#{evt} == null || #{evt} === #{nil}) ? window.event : #{evt}`
+          `#{e}.target.closest('turbo-frame')`
         end
 
         # ===== Turbo Streams =====
 
         # Render a Turbo Stream action
         # @param action [Symbol, String] Stream action (:append, :prepend, :replace, :update, :remove, :before, :after)
-        # @param target [String] Target element ID
+        # @param target [String] Target element ID (HTML-escaped when rendered;
+        #   the html argument is NOT escaped, escape user data with escape_html)
         # @param html [String] HTML content (not needed for :remove)
         # @example
         #   turbo_stream(:append, "messages", "<div>New message</div>")
@@ -176,7 +179,7 @@ module OpalVite
           action_s = action.to_s
           template_content = html ? "<template>#{html}</template>" : ""
 
-          stream_html = %{<turbo-stream action="#{action_s}" target="#{target}">#{template_content}</turbo-stream>}
+          stream_html = %{<turbo-stream action="#{turbo_escape_attr(action_s)}" target="#{turbo_escape_attr(target)}">#{template_content}</turbo-stream>}
           render_turbo_stream(stream_html)
         end
 
@@ -468,6 +471,11 @@ module OpalVite
 
         private
 
+        # Escape a value for use inside a double-quoted HTML attribute
+        def turbo_escape_attr(value)
+          TurboStreamBuilder.escape_attr(value)
+        end
+
         def turbo_event_name(event_name)
           event_name.start_with?("turbo:") ? event_name : "turbo:#{event_name}"
         end
@@ -475,36 +483,42 @@ module OpalVite
 
       # Builder for creating multiple Turbo Stream operations
       class TurboStreamBuilder
+        # Escape a value for use inside a double-quoted HTML attribute
+        def self.escape_attr(value)
+          str = value.to_s
+          `#{str}.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;')`
+        end
+
         def initialize
           @streams = []
         end
 
         def append(target, html)
-          @streams << %{<turbo-stream action="append" target="#{target}"><template>#{html}</template></turbo-stream>}
+          @streams << %{<turbo-stream action="append" target="#{TurboStreamBuilder.escape_attr(target)}"><template>#{html}</template></turbo-stream>}
         end
 
         def prepend(target, html)
-          @streams << %{<turbo-stream action="prepend" target="#{target}"><template>#{html}</template></turbo-stream>}
+          @streams << %{<turbo-stream action="prepend" target="#{TurboStreamBuilder.escape_attr(target)}"><template>#{html}</template></turbo-stream>}
         end
 
         def replace(target, html)
-          @streams << %{<turbo-stream action="replace" target="#{target}"><template>#{html}</template></turbo-stream>}
+          @streams << %{<turbo-stream action="replace" target="#{TurboStreamBuilder.escape_attr(target)}"><template>#{html}</template></turbo-stream>}
         end
 
         def update(target, html)
-          @streams << %{<turbo-stream action="update" target="#{target}"><template>#{html}</template></turbo-stream>}
+          @streams << %{<turbo-stream action="update" target="#{TurboStreamBuilder.escape_attr(target)}"><template>#{html}</template></turbo-stream>}
         end
 
         def remove(target)
-          @streams << %{<turbo-stream action="remove" target="#{target}"></turbo-stream>}
+          @streams << %{<turbo-stream action="remove" target="#{TurboStreamBuilder.escape_attr(target)}"></turbo-stream>}
         end
 
         def before(target, html)
-          @streams << %{<turbo-stream action="before" target="#{target}"><template>#{html}</template></turbo-stream>}
+          @streams << %{<turbo-stream action="before" target="#{TurboStreamBuilder.escape_attr(target)}"><template>#{html}</template></turbo-stream>}
         end
 
         def after(target, html)
-          @streams << %{<turbo-stream action="after" target="#{target}"><template>#{html}</template></turbo-stream>}
+          @streams << %{<turbo-stream action="after" target="#{TurboStreamBuilder.escape_attr(target)}"><template>#{html}</template></turbo-stream>}
         end
 
         def render

@@ -164,7 +164,8 @@ module OpalVite
         # @return [String] Basic auth header value
         def basic_auth_header(username, password)
           credentials = "#{username}:#{password}"
-          encoded = base64_encode(credentials)
+          # UTF-8 (RFC 7617), so non-Latin-1 characters work; btoa alone fails on them
+          encoded = base64_encode_unicode(credentials)
           "Basic #{encoded}"
         end
 
@@ -177,6 +178,7 @@ module OpalVite
           encoded = header[6..-1]
           decoded = base64_decode(encoded)
           return nil unless decoded
+          decoded = binary_to_utf8(decoded)
 
           parts = decoded.split(':', 2)
           return nil if parts.length != 2
@@ -200,6 +202,7 @@ module OpalVite
           payload_base64 = parts[1]
           payload_json = base64_decode_urlsafe(payload_base64)
           return nil unless payload_json
+          payload_json = binary_to_utf8(payload_json)
 
           `JSON.parse(#{payload_json})`
         rescue Exception
@@ -267,6 +270,14 @@ module OpalVite
           # Use integer division: in Opal `len * 3 / 4` is JS float division, so
           # unpadded/URL-safe input (len % 4 == 2 or 3) would yield e.g. 16.5.
           ((len * 3) / 4).floor - padding
+        end
+
+        private
+
+        # Reinterpret a binary string (as returned by atob) as UTF-8 text.
+        # Input that is not valid UTF-8 is returned unchanged.
+        def binary_to_utf8(str)
+          `(function(s) { try { return decodeURIComponent(escape(s)); } catch (e) { return s; } })(#{str})`
         end
       end
     end

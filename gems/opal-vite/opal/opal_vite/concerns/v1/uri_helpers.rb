@@ -277,10 +277,12 @@ module OpalVite
         # ===== Path Utilities =====
 
         # Join path segments
-        # @param segments [Array<String>] Path segments
+        # @param segments [Array<String>] Path segments (a leading "/" on the first one is kept)
         # @return [String] Joined path
         def join_path(*segments)
-          segments.map { |s| s.to_s.gsub(%r{^/|/$}, '') }.reject(&:empty?).join('/')
+          joined = segments.map { |s| s.to_s.gsub(%r{^/+|/+$}, '') }.reject(&:empty?).join('/')
+          # Keep the leading slash of an absolute first segment (join_path('/api', 'users') => '/api/users')
+          segments.first.to_s.start_with?('/') ? "/#{joined}" : joined
         end
 
         # Get the filename from a path
@@ -294,9 +296,11 @@ module OpalVite
         # @param path [String] Path
         # @return [String] Directory path
         def path_dirname(path)
-          parts = path.to_s.split('/')
-          parts.pop
-          parts.join('/') || '/'
+          str = path.to_s.sub(%r{/+$}, '')
+          idx = str.rindex('/')
+          return '' if idx.nil?       # no directory part
+          return '/' if idx == 0      # '/file.txt' => '/'
+          str[0...idx]
         end
 
         # Get the file extension from a path

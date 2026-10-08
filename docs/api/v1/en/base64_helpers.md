@@ -130,6 +130,8 @@ basic_auth_header("admin", "secret123")
 # => "Basic YWRtaW46c2VjcmV0MTIz"
 ```
 
+The credentials are encoded as UTF-8 (RFC 7617), so non-Latin-1 characters work. `parse_basic_auth` and `decode_jwt_payload` decode UTF-8 as well (input that is not valid UTF-8 is returned as is). Note that the plain `base64_encode` is `btoa` and returns `nil` for non-Latin-1 text; use `base64_encode_unicode` for that.
+
 ### parse_basic_auth(header)
 
 Parse a Basic Auth header value.

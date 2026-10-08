@@ -76,6 +76,8 @@ subscribe_to("ChatChannel", room_id: 1) do |subscription|
 end
 ```
 
+Calling `subscribe_to` (or `cable_subscribe`) again with the same channel and params unsubscribes the earlier subscription first, so the channel is never subscribed twice.
+
 ### `cable_subscribe(channel_name, params:, on_connected:, on_disconnected:, on_received:, on_rejected:)`
 
 Subscribe with all callbacks in one call.
@@ -208,6 +210,8 @@ on_cable_received(subscription) do |data|
   })
 end
 ```
+
+Handlers are looked up by the type as given, then as a String, then as a Symbol, so a numeric type (`5`) matches `"5"` or `:"5"` without raising.
 
 ## Example: Real-time Chat
 

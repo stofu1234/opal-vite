@@ -259,6 +259,7 @@ Join path segments.
 
 ```ruby
 join_path("api", "v1", "users")  # => "api/v1/users"
+join_path("/api", "users")       # => "/api/users"  (leading "/" of the first segment is kept)
 ```
 
 ### path_basename(path)
@@ -275,6 +276,8 @@ Get the directory from a path.
 
 ```ruby
 path_dirname("/path/to/file.txt")  # => "/path/to"
+path_dirname("/file.txt")          # => "/"
+path_dirname("file.txt")           # => ""
 ```
 
 ### path_extname(path)
