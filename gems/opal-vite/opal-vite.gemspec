@@ -24,7 +24,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.add_dependency "opal", "~> 1.8"
-  spec.add_dependency "json", "~> 2.6"
+  spec.add_dependency "json", ">= 2.6", "< 4.0"
   spec.add_dependency "base64", "~> 0.2"
 
   spec.add_development_dependency "bundler", "~> 2.0"
