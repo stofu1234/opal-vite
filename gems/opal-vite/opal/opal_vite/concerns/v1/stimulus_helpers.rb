@@ -2005,10 +2005,11 @@ module OpalVite
 
       private
 
-      # The event to read: the one passed in, else the global window.event
+      # The event to read: the one passed in (a wrapper such as opal_stimulus's
+      # JS::Proxy or Native is unwrapped with to_n), else the global window.event
       # (deprecated, and undefined outside the synchronous event dispatch).
       def current_event(evt)
-        `(#{evt} == null || #{evt} === #{nil}) ? window.event : #{evt}`
+        `(function(e) { if (e == null || e === #{nil}) return window.event; return typeof e.$to_n === 'function' ? e.$to_n() : e; })(#{evt})`
       end
 
       # Convert snake_case to camelCase, preserving existing camelCase

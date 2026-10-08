@@ -161,7 +161,7 @@ module OpalVite
         # @return [Native, nil] Frame element from event
         # @param evt [Native, nil] The event; defaults to the deprecated global window.event
         def event_turbo_frame(evt: nil)
-          e = `(#{evt} == null || #{evt} === #{nil}) ? window.event : #{evt}`
+          e = `(function(e) { if (e == null || e === #{nil}) return window.event; return typeof e.$to_n === 'function' ? e.$to_n() : e; })(#{evt})`
           `#{e}.target.closest('turbo-frame')`
         end
 

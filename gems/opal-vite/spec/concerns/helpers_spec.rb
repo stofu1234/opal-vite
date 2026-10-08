@@ -208,6 +208,18 @@ RSpec.describe 'OpalVite::Concerns::V1 helpers' do
     expect(result).to eq('created' => 3, 'unsubscribed' => 2, 'hit' => 'five', 'sym' => 'msg')
   end
 
+  it 'unwraps a Native-wrapped event passed with evt:' do
+    result = run_opal(fake_dom, <<~'RUBY')
+      h = Helpers.new
+      wrapped = Native(`{ key: 'Enter', params: { id: 3 }, preventDefault: function() { this.prevented = true; } }`)
+      h.prevent_default(evt: wrapped)
+      results = { key: h.event_key(evt: wrapped), id: h.action_param(:id, evt: wrapped), prevented: `#{wrapped.to_n}.prevented` }
+      `console.log(JSON.stringify(#{results.to_n}))`
+    RUBY
+
+    expect(result).to eq('key' => 'Enter', 'id' => 3, 'prevented' => true)
+  end
+
   it 'reads the event passed in instead of window.event' do
     result = run_opal(fake_dom, <<~'RUBY')
       h = Helpers.new
