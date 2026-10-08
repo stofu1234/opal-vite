@@ -75,7 +75,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        vite: ['6', '7', '8']
+        vite: ['5', '6', '7', '8']
 
     steps:
       - name: Checkout code
@@ -108,9 +108,15 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # vitest 4 requires vite 6+ (it imports vite/module-runner), so vite 5
+      # runs the same tests with vitest 3.
       - name: Override vite with ${{ matrix.vite }}.x
         run: |
-          pnpm add -D "vite@^${{ matrix.vite }}"
+          if [ "${{ matrix.vite }}" = "5" ]; then
+            pnpm add -D "vite@^5" "vitest@^3"
+          else
+            pnpm add -D "vite@^${{ matrix.vite }}"
+          fi
           pnpm exec vite --version
         working-directory: packages/vite-plugin-opal
 
