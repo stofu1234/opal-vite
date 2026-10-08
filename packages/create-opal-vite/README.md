@@ -88,7 +88,7 @@ In the generated project:
 
 ## Requirements
 
-- Node.js 18+ or 20+
+- Node.js 20.19+ (required by vite-plugin-opal)
 - Ruby 3.0+
 - npm/pnpm/yarn
 - Bundler
