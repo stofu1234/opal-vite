@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <%= vite_client_tag %>
   <%= vite_javascript_tag 'application' %>
-  <style>
+  <style nonce="<%= content_security_policy_nonce %>">
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
       max-width: 800px;
@@ -42,6 +42,10 @@
       border-radius: 4px;
     }
 
+    .how-it-works {
+      margin-top: 30px;
+    }
+
     code {
       background: #f4f4f4;
       padding: 2px 6px;
@@ -64,7 +68,7 @@
       <p>Waiting for Opal to load...</p>
     </div>
 
-    <div class="info" style="margin-top: 30px;">
+    <div class="info how-it-works">
       <h3>How it works:</h3>
       <ul>
         <li>Ruby code in <code>app/frontend/opal/application.rb</code></li>

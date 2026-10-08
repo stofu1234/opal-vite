@@ -1,8 +1,8 @@
-FROM ruby:3.4-slim
+# Build stage: compilers are only needed to build native gems
+FROM ruby:3.4-slim AS build
 
-# Install dependencies
 RUN apt-get update -qq && \
-    apt-get install -y build-essential nodejs npm libyaml-dev && \
+    apt-get install -y --no-install-recommends build-essential libyaml-dev && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -11,9 +11,22 @@ WORKDIR /app
 # locked versions (BUNDLE_FROZEN fails the build if they don't match)
 COPY Gemfile.production ./Gemfile
 COPY Gemfile.production.lock ./Gemfile.lock
-ENV BUNDLE_WITHOUT="development:test" \
-    BUNDLE_FROZEN=true
-RUN bundle install
+ENV BUNDLE_FROZEN=true
+RUN bundle install && \
+    rm -rf /usr/local/bundle/cache
+
+# Runtime stage: no compilers and no Node (the assets are pre-built)
+FROM ruby:3.4-slim
+
+RUN apt-get update -qq && \
+    apt-get install -y --no-install-recommends libyaml-0-2 && \
+    rm -rf /var/lib/apt/lists/* && \
+    useradd --create-home --uid 1000 rails
+
+WORKDIR /app
+
+COPY --from=build /usr/local/bundle /usr/local/bundle
+COPY --from=build /app/Gemfile /app/Gemfile.lock ./
 
 # Copy application files
 COPY config.ru ./
@@ -26,14 +39,17 @@ COPY bin/ ./bin/
 # resolved by vite_javascript_tag
 COPY public/vite/ ./public/vite/
 
-# Create necessary directories
-RUN mkdir -p tmp/pids log
+# Rails writes to tmp/ and log/; everything else stays root-owned
+RUN mkdir -p tmp/pids log && chown -R rails:rails tmp log
 
-# Environment
-ENV RAILS_ENV=production
-ENV RAILS_LOG_TO_STDOUT=true
-ENV RAILS_SERVE_STATIC_FILES=true
-ENV SECRET_KEY_BASE=dummy_secret_for_demo_only_do_not_use_in_real_production
+# Environment. Set SECRET_KEY_BASE in the platform's variables if the app ever
+# uses sessions or cookies; this demo does not (see config/environments/production.rb).
+ENV BUNDLE_FROZEN=true \
+    RAILS_ENV=production \
+    RAILS_LOG_TO_STDOUT=true \
+    RAILS_SERVE_STATIC_FILES=true
+
+USER rails
 
 # Expose port
 EXPOSE 3000
