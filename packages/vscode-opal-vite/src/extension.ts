@@ -1,3 +1,4 @@
+import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 
@@ -126,8 +127,6 @@ function findServerModule(context: vscode.ExtensionContext): string | null {
     'server.js'
   );
 
-  const fs = require('fs');
-
   for (const serverPath of [bundledPath, nodeModulesPath, monoRepoPath]) {
     if (fs.existsSync(serverPath)) {
       console.log(`Found Opal Language Server at: ${serverPath}`);
@@ -179,7 +178,7 @@ function activateFallbackMode(context: vscode.ExtensionContext): void {
       severity: 'error'
     },
     {
-      pattern: /\brequire\s+['\"](nokogiri|mysql2|pg|sqlite3|redis|eventmachine)[\"\']/g,
+      pattern: /\brequire\s+['"](nokogiri|mysql2|pg|sqlite3|redis|eventmachine)["']/g,
       message: 'This gem uses native C extensions and is not available in Opal.',
       severity: 'error'
     }

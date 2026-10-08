@@ -5,7 +5,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import minimist from 'minimist'
 import prompts from 'prompts'
-import { red, green, cyan, blue, yellow, reset } from 'kolorist'
+import { red, green, cyan, blue, reset } from 'kolorist'
 
 const argv = minimist(process.argv.slice(2), {
   string: ['_', 'template'],
@@ -20,18 +20,6 @@ const TEMPLATES = [
     display: 'Basic',
     color: cyan,
     description: 'Simple Opal + Vite starter'
-  },
-  {
-    name: 'stimulus',
-    display: 'Stimulus',
-    color: blue,
-    description: 'Opal + Stimulus controllers'
-  },
-  {
-    name: 'pwa',
-    display: 'PWA',
-    color: yellow,
-    description: 'Progressive Web App with offline support'
   },
 ]
 
