@@ -12,6 +12,6 @@
     "vite": "^6.4.4"
   },
   "devDependencies": {
-    "vite-plugin-opal": "^0.3.20"
+    "vite-plugin-opal": "^0.4.0"
   }
 }

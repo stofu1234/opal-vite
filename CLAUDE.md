@@ -366,4 +366,4 @@ npm の plugin は gem の Ruby コードを呼び出すため、3 パッケー�
 
 ---
 
-*最終更新: 2026-10-05 (v0.3.16 リリース、PR #62〜#67 後)*
+*最終更新: 2026-10-09 (opal-vite / opal-vite-rails / vite-plugin-opal 0.4.0 リリース準備、PR #76〜#87 後)*
