@@ -1,3 +1,4 @@
 source 'https://rubygems.org'
 
 gem 'opal', '~> 1.8'
+gem 'opal-vite', '~> 0.3', '>= 0.3.15'
