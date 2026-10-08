@@ -2,7 +2,7 @@ version: 2
 
 # Keep PR volume low: one weekly, grouped PR per ecosystem. This is a
 # monorepo with many example apps, so npm is covered by the pnpm workspace
-# root (one lockfile) and bundler by a grouped list of directories.
+# root (one lockfile) and bundler by the two gems only.
 updates:
   - package-ecosystem: github-actions
     directory: /
@@ -26,11 +26,13 @@ updates:
       - dependency-name: vite
         update-types: [version-update:semver-major]
 
+  # The examples are left out: their Gemfiles reference the opal-vite gem by
+  # path and no Gemfile.lock is committed, so each example produced a
+  # duplicate PR for the same opal-vite.gemspec change (one per directory).
   - package-ecosystem: bundler
     directories:
       - /gems/opal-vite
       - /gems/opal-vite-rails
-      - /examples/*
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
