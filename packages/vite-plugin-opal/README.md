@@ -21,7 +21,7 @@ pnpm add vite-plugin-opal
 yarn add vite-plugin-opal
 ```
 
-You also need to have Ruby and the `opal-vite` gem installed:
+Requires Node.js >= 20.19 (since 0.3.21). You also need to have Ruby and the `opal-vite` gem installed:
 
 ```bash
 gem install opal-vite
