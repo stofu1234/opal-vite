@@ -116,12 +116,7 @@ jobs:
         run: |
           pnpm dev &
           sleep 10
-          # Headless Chrome sometimes fails to start in time on the hosted
-          # runners (Ferrum::ProcessTimeoutError). Retry the suite once.
-          bundle exec rspec || {
-            echo "::warning::E2E failed; retrying once"
-            bundle exec rspec
-          }
+          bash "$GITHUB_WORKSPACE/.github/scripts/rspec-e2e.sh"
         working-directory: examples/practical-app
         env:
           CI: true
@@ -178,12 +173,7 @@ jobs:
         run: |
           pnpm dev &
           sleep 10
-          # Headless Chrome sometimes fails to start in time on the hosted
-          # runners (Ferrum::ProcessTimeoutError). Retry the suite once.
-          bundle exec rspec || {
-            echo "::warning::E2E failed; retrying once"
-            bundle exec rspec
-          }
+          bash "$GITHUB_WORKSPACE/.github/scripts/rspec-e2e.sh"
         working-directory: examples/component-base-app
         env:
           CI: true
@@ -240,12 +230,7 @@ jobs:
         run: |
           pnpm dev &
           sleep 10
-          # Headless Chrome sometimes fails to start in time on the hosted
-          # runners (Ferrum::ProcessTimeoutError). Retry the suite once.
-          bundle exec rspec || {
-            echo "::warning::E2E failed; retrying once"
-            bundle exec rspec
-          }
+          bash "$GITHUB_WORKSPACE/.github/scripts/rspec-e2e.sh"
         working-directory: examples/chart-app
         env:
           CI: true
@@ -302,12 +287,7 @@ jobs:
         run: |
           pnpm dev &
           sleep 10
-          # Headless Chrome sometimes fails to start in time on the hosted
-          # runners (Ferrum::ProcessTimeoutError). Retry the suite once.
-          bundle exec rspec || {
-            echo "::warning::E2E failed; retrying once"
-            bundle exec rspec
-          }
+          bash "$GITHUB_WORKSPACE/.github/scripts/rspec-e2e.sh"
         working-directory: examples/vue-app
         env:
           CI: true
@@ -364,12 +344,7 @@ jobs:
         run: |
           pnpm dev &
           sleep 10
-          # Headless Chrome sometimes fails to start in time on the hosted
-          # runners (Ferrum::ProcessTimeoutError). Retry the suite once.
-          bundle exec rspec || {
-            echo "::warning::E2E failed; retrying once"
-            bundle exec rspec
-          }
+          bash "$GITHUB_WORKSPACE/.github/scripts/rspec-e2e.sh"
         working-directory: examples/i18n-app
         env:
           CI: true
@@ -426,12 +401,7 @@ jobs:
         run: |
           pnpm dev &
           sleep 10
-          # Headless Chrome sometimes fails to start in time on the hosted
-          # runners (Ferrum::ProcessTimeoutError). Retry the suite once.
-          bundle exec rspec || {
-            echo "::warning::E2E failed; retrying once"
-            bundle exec rspec
-          }
+          bash "$GITHUB_WORKSPACE/.github/scripts/rspec-e2e.sh"
         working-directory: examples/pwa-app
         env:
           CI: true
@@ -488,12 +458,7 @@ jobs:
         run: |
           pnpm dev &
           sleep 10
-          # Headless Chrome sometimes fails to start in time on the hosted
-          # runners (Ferrum::ProcessTimeoutError). Retry the suite once.
-          bundle exec rspec || {
-            echo "::warning::E2E failed; retrying once"
-            bundle exec rspec
-          }
+          bash "$GITHUB_WORKSPACE/.github/scripts/rspec-e2e.sh"
         working-directory: examples/react-app
         env:
           CI: true
@@ -550,12 +515,7 @@ jobs:
         run: |
           pnpm dev &
           sleep 10
-          # Headless Chrome sometimes fails to start in time on the hosted
-          # runners (Ferrum::ProcessTimeoutError). Retry the suite once.
-          bundle exec rspec || {
-            echo "::warning::E2E failed; retrying once"
-            bundle exec rspec
-          }
+          bash "$GITHUB_WORKSPACE/.github/scripts/rspec-e2e.sh"
         working-directory: examples/snabberb-app
         env:
           CI: true
@@ -612,12 +572,7 @@ jobs:
         run: |
           pnpm dev &
           sleep 10
-          # Headless Chrome sometimes fails to start in time on the hosted
-          # runners (Ferrum::ProcessTimeoutError). Retry the suite once.
-          bundle exec rspec || {
-            echo "::warning::E2E failed; retrying once"
-            bundle exec rspec
-          }
+          bash "$GITHUB_WORKSPACE/.github/scripts/rspec-e2e.sh"
         working-directory: examples/tabs-app
         env:
           CI: true
@@ -674,12 +629,7 @@ jobs:
         run: |
           pnpm dev &
           sleep 10
-          # Headless Chrome sometimes fails to start in time on the hosted
-          # runners (Ferrum::ProcessTimeoutError). Retry the suite once.
-          bundle exec rspec || {
-            echo "::warning::E2E failed; retrying once"
-            bundle exec rspec
-          }
+          bash "$GITHUB_WORKSPACE/.github/scripts/rspec-e2e.sh"
         working-directory: examples/counter-app
         env:
           CI: true
@@ -736,12 +686,7 @@ jobs:
         run: |
           pnpm dev &
           sleep 10
-          # Headless Chrome sometimes fails to start in time on the hosted
-          # runners (Ferrum::ProcessTimeoutError). Retry the suite once.
-          bundle exec rspec || {
-            echo "::warning::E2E failed; retrying once"
-            bundle exec rspec
-          }
+          bash "$GITHUB_WORKSPACE/.github/scripts/rspec-e2e.sh"
         working-directory: examples/crud-app
         env:
           CI: true
@@ -798,12 +743,7 @@ jobs:
         run: |
           pnpm dev &
           sleep 10
-          # Headless Chrome sometimes fails to start in time on the hosted
-          # runners (Ferrum::ProcessTimeoutError). Retry the suite once.
-          bundle exec rspec || {
-            echo "::warning::E2E failed; retrying once"
-            bundle exec rspec
-          }
+          bash "$GITHUB_WORKSPACE/.github/scripts/rspec-e2e.sh"
         working-directory: examples/stimulus-components-app
         env:
           CI: true
