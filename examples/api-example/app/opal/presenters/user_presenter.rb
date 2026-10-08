@@ -95,24 +95,24 @@ class UserPresenter
 
     <<~HTML
       <div class="user-header">
-        <div class="user-avatar">#{data[:initial]}</div>
+        <div class="user-avatar">#{escape_html(data[:initial])}</div>
         <div class="user-info">
-          <h3>#{data[:name]}</h3>
-          <p class="user-email">#{data[:email]}</p>
+          <h3>#{escape_html(data[:name])}</h3>
+          <p class="user-email">#{escape_html(data[:email])}</p>
         </div>
       </div>
       <div class="user-details">
         <div class="detail-item">
           <span class="detail-label">Company:</span>
-          <span class="detail-value">#{data[:company]}</span>
+          <span class="detail-value">#{escape_html(data[:company])}</span>
         </div>
         <div class="detail-item">
           <span class="detail-label">City:</span>
-          <span class="detail-value">#{data[:city]}</span>
+          <span class="detail-value">#{escape_html(data[:city])}</span>
         </div>
         <div class="detail-item">
           <span class="detail-label">Phone:</span>
-          <span class="detail-value">#{data[:phone]}</span>
+          <span class="detail-value">#{escape_html(data[:phone])}</span>
         </div>
       </div>
     HTML

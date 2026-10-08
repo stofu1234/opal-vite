@@ -157,11 +157,25 @@ function addToHistory(message) {
   }
 }
 
-// Graceful shutdown
-process.on('SIGINT', () => {
-  console.log('\n👋 Shutting down WebSocket server...')
+// Graceful shutdown. wss.close() does not close open connections, so
+// terminate the clients first or the process never exits while someone is
+// connected.
+function shutdown() {
+  for (const client of clients) {
+    client.terminate()
+  }
   wss.close(() => {
     console.log('✅ Server closed')
     process.exit(0)
   })
+}
+
+process.on('SIGINT', () => {
+  console.log('\n👋 Shutting down WebSocket server...')
+  shutdown()
+})
+
+process.on('SIGTERM', () => {
+  console.log('\n👋 Received SIGTERM, shutting down WebSocket server...')
+  shutdown()
 })

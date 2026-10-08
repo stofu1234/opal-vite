@@ -46,7 +46,7 @@ class ClipboardDemoController < StimulusController
       @search_count += 1
       query = target_value(:searchInput)
       target_set_html(:searchOutput,
-        "Searching for: <strong>#{query}</strong><br>" \
+        "Searching for: <strong>#{escape_html(query)}</strong><br>" \
         "<small>Search triggered #{@search_count} time(s)</small>")
     end
   end
