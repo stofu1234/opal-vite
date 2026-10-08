@@ -40,6 +40,11 @@
   "pnpm": {
     "overrides": {
       "vitepress>vite": "^6.4.4"
-    }
+    },
+    "ignoredBuiltDependencies": [
+      "@vscode/vsce-sign",
+      "esbuild",
+      "keytar"
+    ]
   }
 }
