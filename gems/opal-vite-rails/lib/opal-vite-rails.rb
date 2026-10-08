@@ -6,7 +6,6 @@ require "vite_rails"
 require_relative "opal/vite/rails/version"
 require_relative "opal/vite/rails/engine"
 require_relative "opal/vite/rails/helper"
-require_relative "opal/vite/rails/manifest"
 
 module Opal
   module Vite
