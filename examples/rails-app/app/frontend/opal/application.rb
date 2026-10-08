@@ -19,6 +19,8 @@ doc.addEventListener('DOMContentLoaded') do
   # Example: Add content to the page
   content = doc.getElementById('opal-content')
   if content
+    # Replace the "Waiting for Opal to load..." placeholder from the view
+    content.innerHTML = ''
     p_el = doc.createElement('p')
     p_el.textContent = 'This content was added by Ruby code running in the browser!'
     p_el.style.color = '#CC342D'

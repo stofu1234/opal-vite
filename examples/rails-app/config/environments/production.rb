@@ -32,7 +32,16 @@ Rails.application.configure do
   # config.action_dispatch.x_sendfile_header = "X-Accel-Redirect" # for NGINX
 
   # Force all access to the app over SSL, use Strict-Transport-Security, and use secure cookies.
-  # config.force_ssl = true
+  # Railway terminates TLS at its proxy and forwards X-Forwarded-Proto, which
+  # Rails trusts. The health check (/up) comes in over plain http, so it is
+  # excluded from the redirect.
+  config.force_ssl = true
+  config.ssl_options = { redirect: { exclude: ->(request) { request.path == "/up" } } }
+
+  # Per-boot fallback so the app still starts when SECRET_KEY_BASE is not set.
+  # This demo has no sessions, cookies or credentials, so nothing depends on it.
+  # An app that does must set SECRET_KEY_BASE (e.g. `bin/rails secret`).
+  config.secret_key_base = ENV["SECRET_KEY_BASE"].presence || SecureRandom.hex(64)
 
   # Log to STDOUT by default
   config.logger = ActiveSupport::Logger.new(STDOUT)
@@ -59,8 +68,31 @@ Rails.application.configure do
 
   # ActiveRecord is not used in this demo app
 
-  # Allow all hosts for Railway deployment
-  config.hosts.clear
+  # Only answer for the Railway domains. Railway sets RAILWAY_PUBLIC_DOMAIN;
+  # add other domains (comma separated) with APP_HOSTS. /up (the health check,
+  # sent with Host: healthcheck.railway.app) is excluded by default.
+  config.hosts << ".up.railway.app"
+  config.hosts << ENV["RAILWAY_PUBLIC_DOMAIN"] if ENV["RAILWAY_PUBLIC_DOMAIN"].present?
+  ENV.fetch("APP_HOSTS", "").split(",").map(&:strip).reject(&:empty?).each { |host| config.hosts << host }
+  config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
+
+  # Content Security Policy. The page loads only same-origin Vite output (an ES
+  # module; the Opal runtime does not call eval at load time) and has one inline
+  # <style>, allowed by a per-request nonce.
+  config.content_security_policy do |policy|
+    policy.default_src :self
+    policy.script_src  :self
+    policy.style_src   :self
+    policy.img_src     :self, :data
+    policy.font_src    :self, :data
+    policy.connect_src :self
+    policy.object_src  :none
+    policy.base_uri    :self
+    policy.form_action :self
+    policy.frame_ancestors :none
+  end
+  config.content_security_policy_nonce_generator = ->(_request) { SecureRandom.base64(16) }
+  config.content_security_policy_nonce_directives = %w[style-src]
 
   # Enable static file serving for Railway (no nginx/apache in front)
   config.public_file_server.enabled = true
