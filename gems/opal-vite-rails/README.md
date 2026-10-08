@@ -13,7 +13,7 @@ Seamless integration of [Opal](https://opalrb.com/) (Ruby to JavaScript compiler
 ## Requirements
 
 - Ruby >= 3.0
-- Rails >= 7.0
+- Rails >= 7.0, < 9
 - Node.js >= 18.0
 - Opal >= 1.8
 
