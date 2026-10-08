@@ -1,0 +1,39 @@
+version: 2
+
+# Keep PR volume low: one weekly, grouped PR per ecosystem. This is a
+# monorepo with many example apps, so npm is covered by the pnpm workspace
+# root (one lockfile) and bundler by a grouped list of directories.
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      github-actions:
+        patterns: ['*']
+
+  # pnpm workspace: packages/* and examples/* share the root pnpm-lock.yaml
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      npm-minor-patch:
+        update-types: [minor, patch]
+    ignore:
+      # The plugin's peerDependency range is managed by hand
+      - dependency-name: vite
+        update-types: [version-update:semver-major]
+
+  - package-ecosystem: bundler
+    directories:
+      - /gems/opal-vite
+      - /gems/opal-vite-rails
+      - /examples/*
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      bundler-minor-patch:
+        update-types: [minor, patch]

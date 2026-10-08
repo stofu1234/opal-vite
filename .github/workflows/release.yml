@@ -16,29 +16,29 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0  # Fetch all history for changelog
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '22'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
         with:
           version: 9
 
       - name: Setup Ruby
-        uses: ruby/setup-ruby@v1
+        uses: ruby/setup-ruby@14594264cd68ce8a2345dd349bc3d138a4ef85c8 # v1.327.0
         with:
           ruby-version: '3.2'
 
       - name: Install opal and opal-vite gems
         run: |
-          gem install opal
+          gem install opal -v '~> 1.8'
           cd gems/opal-vite && gem build opal-vite.gemspec && gem install *.gem
 
       - name: Install dependencies
@@ -67,13 +67,24 @@ jobs:
       - name: Generate changelog
         id: changelog
         run: |
-          CHANGELOG=$(git log $(git describe --tags --abbrev=0 HEAD^)..HEAD --pretty=format:"- %s (%h)" --no-merges)
-          echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
-          echo "$CHANGELOG" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          # Use the previous tag as the start of the range; for the very first
+          # tag there is none, so fall back to the whole history.
+          if PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null); then
+            RANGE="$PREV_TAG..HEAD"
+          else
+            RANGE="HEAD"
+          fi
+          CHANGELOG=$(git log "$RANGE" --pretty=format:"- %s (%h)" --no-merges)
+          # Random delimiter so a commit subject can't terminate the value early
+          DELIMITER="CHANGELOG_$(openssl rand -hex 16)"
+          {
+            echo "CHANGELOG<<$DELIMITER"
+            echo "$CHANGELOG"
+            echo "$DELIMITER"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
         with:
           name: Release ${{ steps.version.outputs.VERSION }}
           body: |
@@ -104,10 +115,10 @@ jobs:
   #
   #   steps:
   #     - name: Checkout code
-  #       uses: actions/checkout@v4
+  #       uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
   #
   #     - name: Setup Ruby
-  #       uses: ruby/setup-ruby@v1
+  #       uses: ruby/setup-ruby@14594264cd68ce8a2345dd349bc3d138a4ef85c8 # v1.327.0
   #       with:
   #         ruby-version: '3.2'
   #         bundler-cache: true

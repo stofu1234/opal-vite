@@ -23,29 +23,29 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           # Keep the token out of .git/config while dependency scripts run
           persist-credentials: false
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '22'
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
         with:
           version: 9
 
       - name: Setup Ruby
-        uses: ruby/setup-ruby@v1
+        uses: ruby/setup-ruby@14594264cd68ce8a2345dd349bc3d138a4ef85c8 # v1.327.0
         with:
           ruby-version: '3.2'
 
       - name: Install opal and opal-vite gems
         run: |
-          gem install opal
+          gem install opal -v '~> 1.8'
           cd gems/opal-vite && gem build opal-vite.gemspec && gem install *.gem
 
       - name: Install dependencies
@@ -64,7 +64,7 @@ jobs:
           for app in $EXAMPLES; do
             echo "Building $app..."
             cd examples/$app
-            bundle install || true  # Some apps may not have Gemfile
+            bundle install
             # Set base path for GitHub Pages subdirectory
             VITE_BASE=/opal-vite/playground/$app/ pnpm build
             cd ../..
@@ -79,7 +79,7 @@ jobs:
           done
 
       - name: Upload site
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: site
           path: docs/.vitepress/dist
@@ -95,13 +95,13 @@ jobs:
 
     steps:
       - name: Download site
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: site
           path: site
 
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
+        uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e # v4.0.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./site
