@@ -51,7 +51,7 @@ module Opal
           end
 
           def create_package_json_entry
-            if File.exist?("package.json")
+            if File.exist?(File.join(destination_root, "package.json"))
               say "Adding vite-plugin-opal to package.json...", :green
               say "Run: npm install vite-plugin-opal", :yellow
             end

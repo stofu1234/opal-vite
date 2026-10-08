@@ -12,7 +12,10 @@ module Opal
         # modulepreload links), and vite_ruby already switches between the dev
         # server and the build manifest.
         def opal_javascript_tag(name, **options)
-          vite_javascript_tag("#{name}.js", **options)
+          name = name.to_s
+          # "application" and "application.js" are the same entrypoint
+          name = "#{name}.js" if File.extname(name).empty?
+          vite_javascript_tag(name, **options)
         end
 
         # Generate multiple script tags for Opal JavaScript files
@@ -39,12 +42,7 @@ module Opal
         # Hash's inspect string instead of a URL. #path_for returns the resolved
         # asset URL string.
         def opal_asset_path(name)
-          if defined?(ViteRuby)
-            ViteRuby.instance.manifest.path_for(name)
-          else
-            # Fallback to standard asset path
-            "/#{Opal::Vite::Rails.config.public_output_path}/#{name}"
-          end
+          ViteRuby.instance.manifest.path_for(name)
         end
 
         # Deprecated: outputs nothing.
@@ -54,7 +52,7 @@ module Opal
         # chunks, so there is no separate runtime file to load. A standalone
         # tag would load a second copy of the runtime in development.
         def opal_runtime_tag(**_options)
-          ActiveSupport::Deprecation.new("0.4", "opal-vite-rails").warn(
+          Opal::Vite::Rails.deprecator.warn(
             "opal_runtime_tag is no longer needed and outputs nothing; remove it from your views."
           )
           "".html_safe

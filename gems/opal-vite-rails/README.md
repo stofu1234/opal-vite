@@ -207,7 +207,8 @@ You usually don't need to run it yourself: vite_rails already runs the Vite buil
 # Compile Opal assets for production
 rake opal_vite:compile
 
-# Clean compiled assets
+# Remove the Vite build output of the current RAILS_ENV
+# (public/vite-dev in development; public/vite only with RAILS_ENV=production)
 rake opal_vite:clean
 
 # Show configuration info
