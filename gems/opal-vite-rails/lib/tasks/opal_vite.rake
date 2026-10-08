@@ -20,7 +20,15 @@ namespace :opal_vite do
     # publicOutputDir), e.g. public/vite-dev in development and public/vite in
     # production. A build you commit (public/vite) is only removed when this
     # runs with RAILS_ENV=production.
-    vite_dir = ViteRuby.config.build_output_dir
+    vite = ViteRuby.config
+    vite_dir = vite.build_output_dir.expand_path
+    # Only ever delete a subdirectory of the public dir, so a misconfigured
+    # publicOutputDir ("", ".", "..") cannot wipe public/ or the app itself.
+    public_dir = vite.root.join(vite.public_dir).expand_path
+    unless vite_dir.to_s.start_with?("#{public_dir}#{File::SEPARATOR}")
+      abort "❌ Refusing to delete #{vite_dir}: it is not inside #{public_dir}"
+    end
+
     if vite_dir.exist?
       FileUtils.rm_rf(vite_dir)
       puts "✅ Cleaned #{vite_dir}"
