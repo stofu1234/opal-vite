@@ -32,4 +32,4 @@ npm run dev
 
 - [Opal Documentation](https://opalrb.com/)
 - [Vite Documentation](https://vitejs.dev/)
-- [Opal-Vite GitHub](https://github.com/yourusername/opal-vite)
+- [Opal-Vite GitHub](https://github.com/stofu1234/opal-vite)

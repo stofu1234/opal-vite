@@ -42,8 +42,6 @@ yarn create opal-vite my-app --template basic
 Currently supported templates:
 
 - **basic** - Simple Opal + Vite starter
-- **stimulus** - Opal + Stimulus controllers *(coming soon)*
-- **pwa** - Progressive Web App with offline support *(coming soon)*
 
 ## What Gets Scaffolded
 
@@ -90,7 +88,7 @@ In the generated project:
 
 ## Requirements
 
-- Node.js 18+ or 20+
+- Node.js 20.19+ (required by vite-plugin-opal)
 - Ruby 3.0+
 - npm/pnpm/yarn
 - Bundler
@@ -108,7 +106,7 @@ In the generated project:
 
 - [Opal Documentation](https://opalrb.com/)
 - [Vite Documentation](https://vitejs.dev/)
-- [Opal-Vite GitHub](https://github.com/yourusername/opal-vite)
+- [Opal-Vite GitHub](https://github.com/stofu1234/opal-vite)
 
 ## License
 
