@@ -1,9 +1,21 @@
 import type { ViteDevServer } from 'vite'
 import { normalizePath } from 'vite'
+import { existsSync } from 'fs'
+import * as path from 'path'
 
 const isWindows = process.platform === 'win32'
-// Windows and macOS file systems are case-insensitive by default (as in Vite)
-const isCaseInsensitiveFS = isWindows || process.platform === 'darwin'
+// Detect (rather than assume) a case-insensitive file system: macOS can be
+// formatted either way. The node binary exists under its upper-cased name
+// only on a case-insensitive one.
+const isCaseInsensitiveFS = (() => {
+  try {
+    const exec = process.execPath
+    const swapped = path.join(path.dirname(exec), path.basename(exec).toUpperCase())
+    return swapped !== exec && existsSync(swapped)
+  } catch {
+    return false
+  }
+})()
 const windowsDriveRE = /^[A-Z]:/i
 
 type DenyGlob = (file: string) => boolean

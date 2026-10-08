@@ -969,11 +969,7 @@ export class OpalCompiler {
       console.warn(`[vite-plugin-opal] ${message}`)
       // Reaches the caller as the rejection message (the exit code is null)
       ruby.stderr?.emit('data', message)
-      ruby.kill()
-      // A process that ignores SIGTERM must not keep its concurrency slot
-      setTimeout(() => {
-        if (this.childProcesses.has(ruby)) ruby.kill('SIGKILL')
-      }, 5000).unref?.()
+      this.killRuby(ruby)
     }, RUBY_TIMEOUT_MS)
     timer.unref?.()
     const done = () => {
@@ -989,8 +985,18 @@ export class OpalCompiler {
    * Kill the Ruby processes that are still running (on server shutdown).
    */
   dispose(): void {
-    for (const child of this.childProcesses) child.kill()
-    this.childProcesses.clear()
+    for (const child of this.childProcesses) this.killRuby(child)
+  }
+
+  /**
+   * SIGTERM, then SIGKILL if the process has not exited shortly after (it
+   * stays tracked until it closes), so it cannot hold a concurrency slot.
+   */
+  private killRuby(ruby: ChildProcess): void {
+    ruby.kill()
+    setTimeout(() => {
+      if (this.childProcesses.has(ruby)) ruby.kill('SIGKILL')
+    }, 5000).unref?.()
   }
 
   /**
