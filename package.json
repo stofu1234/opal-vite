@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "Integrate Opal with Vite - Compile Ruby to JavaScript with Vite's fast development experience",
   "private": true,
+  "packageManager": "pnpm@10.25.0",
   "workspaces": [
     "packages/*"
   ],
