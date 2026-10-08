@@ -81,8 +81,9 @@ module Opal
         # @param value [String] Value to set
         # @param timeout [Integer] Maximum wait time in seconds
         def stable_set(selector, value, timeout: DEFAULT_TIMEOUT)
-          escaped_value = escape_js(value)
-          js_retry_action(selector, 'set', value: escaped_value, timeout: timeout)
+          # js_retry_action escapes the value itself; escaping here too would
+          # double-escape quotes and backslashes
+          js_retry_action(selector, 'set', value: value.to_s, timeout: timeout)
         end
 
         # Send keys to element with stability check
@@ -360,7 +361,7 @@ module Opal
         # @param timeout [Integer] Maximum wait time in seconds
         def js_retry_action(selector, action, value: nil, timeout: DEFAULT_TIMEOUT)
           escaped_selector = escape_js(selector)
-          escaped_value = value ? escape_js(value) : ''
+          escaped_value = value.nil? ? '' : escape_js(value)
           start_time = Time.now
 
           loop do
@@ -404,7 +405,7 @@ module Opal
 
         # Escape string for JavaScript
         def escape_js(str)
-          str.to_s.gsub('\\', '\\\\\\\\').gsub("'", "\\\\'").gsub("\n", '\\n')
+          str.to_s.gsub('\\', '\\\\\\\\').gsub("'", "\\\\'").gsub("\n", '\\n').gsub("\r", '\\r')
         end
       end
     end

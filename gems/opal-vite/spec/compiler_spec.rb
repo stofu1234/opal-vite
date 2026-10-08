@@ -203,10 +203,9 @@ RSpec.describe Opal::Vite::Compiler do
     end
 
     it 'leaves the built-in concerns out of the load path when disabled' do
-      # MissingRequire is a LoadError, so #compile's `rescue StandardError`
-      # does not wrap it in CompilationError.
+      # MissingRequire is a LoadError (a ScriptError); #compile wraps it in CompilationError.
       expect { described_class.new(include_concerns: false).compile(source, 'entry.rb') }
-        .to raise_error(Opal::Builder::MissingRequire, %r{opal_vite/concerns/v1/base64_helpers})
+        .to raise_error(Opal::Vite::Compiler::CompilationError, %r{opal_vite/concerns/v1/base64_helpers})
     end
   end
 
@@ -219,7 +218,7 @@ RSpec.describe Opal::Vite::Compiler do
         entry = File.join(dir, 'app', 'main.rb')
 
         expect { described_class.new.compile("require 'shared_util'", entry) }
-          .to raise_error(Opal::Builder::MissingRequire)
+          .to raise_error(Opal::Vite::Compiler::CompilationError, /shared_util/)
 
         result = described_class.new(load_paths: [File.join(dir, 'lib')]).compile("require 'shared_util'", entry)
         expect(result[:code]).to include('from-load-path')
@@ -235,6 +234,57 @@ RSpec.describe Opal::Vite::Compiler do
 
       expect(checked).not_to eq(default)
       expect(checked).to include('$$parameters').or include('Opal.ac(')
+    end
+  end
+
+  describe 'error handling' do
+    it 'wraps syntax errors in CompilationError' do
+      expect { described_class.new.compile('def (', 'broken.rb') }
+        .to raise_error(Opal::Vite::Compiler::CompilationError, /broken\.rb/)
+    end
+  end
+
+  describe 'config compiler options' do
+    it 'passes explicitly configured options to the Builder and leaves the rest alone' do
+      config = Opal::Vite::Config.new
+      expect(described_class.new(config: config).builder_compiler_options).to eq({})
+
+      config.arity_check = true
+      config.apply_hash('missing_require_severity' => 'warning')
+      options = described_class.new(config: config, compiler_options: { freezing: false }).builder_compiler_options
+      expect(options).to eq(arity_check: true, missing_require_severity: :warning, freezing: false)
+    end
+  end
+
+  describe 'source map merging' do
+    # Absolute name index of every segment that has a name, following the
+    # relative (delta) encoding of the mappings
+    def absolute_names(compiler, mappings)
+      name = 0
+      mappings.split(';').flat_map { |line| line.split(',') }.filter_map do |segment|
+        values = compiler.send(:decode_vlq, segment)
+        next unless values.length > 4
+        name += values[4]
+      end
+    end
+
+    it 'keeps name indices right when a section starts with an unnamed segment' do
+      compiler = described_class.new
+      enc = ->(*v) { compiler.send(:encode_vlq, v) }
+      index = {
+        'sections' => [
+          { 'offset' => { 'line' => 0, 'column' => 0 },
+            'map' => { 'sources' => ['a.rb'], 'names' => ['a'], 'mappings' => enc.call(0, 0, 0, 0, 0) } },
+          { 'offset' => { 'line' => 1, 'column' => 0 },
+            'map' => { 'sources' => ['b.rb'], 'names' => ['b', 'c'],
+                       'mappings' => [enc.call(0, 0, 0, 0), enc.call(2, 0, 0, 2, 0), enc.call(2, 0, 0, 2, 1)].join(',') } }
+        ]
+      }
+
+      merged = compiler.send(:merge_all_sections, index, 'out.rb')
+
+      expect(merged['names']).to eq(%w[a b c])
+      expect(absolute_names(compiler, merged['mappings'])).to eq([0, 1, 2])
     end
   end
 end

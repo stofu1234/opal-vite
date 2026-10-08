@@ -88,6 +88,9 @@ module OpalVite
           raise "Cable not connected. Call cable_connect first." unless @_cable_consumer
 
           @_cable_subscriptions ||= {}
+          # Subscribing again with the same channel and params replaces the
+          # earlier subscription instead of leaving both active
+          unsubscribe_from(channel_name, params)
           subscription_params = { channel: channel_name }.merge(params)
           native_params = subscription_params.to_n
 
@@ -204,6 +207,9 @@ module OpalVite
           raise "Cable not connected. Call cable_connect first." unless @_cable_consumer
 
           @_cable_subscriptions ||= {}
+          # Subscribing again with the same channel and params replaces the
+          # earlier subscription instead of leaving both active
+          unsubscribe_from(channel_name, params)
           subscription_params = { channel: channel_name }.merge(params)
           native_params = subscription_params.to_n
 
@@ -354,7 +360,8 @@ module OpalVite
         def cable_route(data, handlers, type_key = "type")
           data_type = cable_data_type(data, type_key)
           return unless data_type
-          handler = handlers[data_type] || handlers[data_type.to_sym]
+          # The type may be a non-String (e.g. a number), so convert before to_sym
+          handler = handlers[data_type] || handlers[data_type.to_s] || handlers[data_type.to_s.to_sym]
           handler&.call
         end
 

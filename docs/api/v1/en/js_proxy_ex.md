@@ -170,6 +170,10 @@ obj[:items]     # => JsObject-wrapped array
 obj['items']    # => same
 ```
 
+### Methods defined by Ruby's Object
+
+`JsObject` inherits from `Object`, so the names Ruby already defines are **not** forwarded to the JavaScript object: `hash`, `method`, `display`, `class`, `send`, `freeze` and so on. For example `url.hash` returns Ruby's hash value, not `location.hash`. Read such properties with `[]` (`url[:hash]`) or on the native object (`url.to_n`).
+
 ### Native Value Access
 
 ```ruby

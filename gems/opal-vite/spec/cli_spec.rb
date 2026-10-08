@@ -1,6 +1,8 @@
 require 'spec_helper'
 require 'opal/vite/cli'
 require 'tempfile'
+require 'tmpdir'
+require 'stringio'
 
 RSpec.describe Opal::Vite::CLI do
   describe '#run' do
@@ -14,7 +16,7 @@ RSpec.describe Opal::Vite::CLI do
 
           expect {
             cli.run
-          }.to output(/Compiling/).to_stdout
+          }.to output(/Compiling/).to_stderr
         end
       end
 
@@ -135,9 +137,54 @@ RSpec.describe Opal::Vite::CLI do
 
           expect {
             cli.run
-          }.to output(/Dependencies/).to_stdout
+          }.to output(/Dependencies/).to_stderr
         end
       end
+    end
+
+    context 'with options before the file name' do
+      it 'keeps stdout a clean JS stream and skips the source map unless -m is given' do
+        Tempfile.create(['test', '.rb']) do |file|
+          file.write('puts "test"')
+          file.flush
+
+          cli = described_class.new(['compile', '-v', file.path])
+          stdout = nil
+          expect { stdout = capture_stdout { cli.run } }.to output(/Compiling/).to_stderr
+
+          expect(stdout).not_to include('Compiling')
+          expect(stdout).not_to include('Compilation successful')
+        end
+      end
+
+      it 'writes a source map only with -m' do
+        Tempfile.create(['test', '.rb']) do |file|
+          file.write("puts 1\nputs 2")
+          file.flush
+          Dir.mktmpdir do |dir|
+            out = File.join(dir, 'out.js')
+            expect { described_class.new(['compile', file.path, '-o', out]).run }.to output.to_stdout
+            expect(File.exist?("#{out}.map")).to be false
+
+            expect { described_class.new(['compile', '-m', '-o', out, file.path]).run }.to output.to_stdout
+            expect(File.exist?("#{out}.map")).to be true
+          end
+        end
+      end
+
+      it 'reports unknown options' do
+        expect { described_class.new(['compile', '--bogus', 'x.rb']).run }
+          .to output(/invalid option/).to_stdout.and raise_error(SystemExit)
+      end
+    end
+
+    def capture_stdout
+      original = $stdout
+      $stdout = StringIO.new
+      yield
+      $stdout.string
+    ensure
+      $stdout = original
     end
   end
 end

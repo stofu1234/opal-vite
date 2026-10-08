@@ -116,6 +116,8 @@ end
 
 Get the target frame from current event.
 
+Pass the event Stimulus gave your action (`event_turbo_frame(evt: event)`) when you can. Without it the deprecated global `window.event` is used, which is `undefined` after an `await` or inside a callback.
+
 ## Turbo Streams
 
 ### `turbo_stream(action, target, html = nil)`
@@ -128,6 +130,8 @@ turbo_stream(:remove, "message_1")
 ```
 
 Actions: `:append`, `:prepend`, `:replace`, `:update`, `:remove`, `:before`, `:after`
+
+`action` and `target` are HTML-escaped when the element is built, so a value taken from data cannot break out of the attribute. `html` is **not** escaped: escape user- or server-provided text with `escape_html` before putting it in `html`.
 
 ### Convenience Methods
 

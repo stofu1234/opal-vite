@@ -367,12 +367,14 @@ module OpalVite
 
       # Get JSON-parsed value from localStorage
       # @param key [String] Storage key
-      # @param default [Object] Default value if key doesn't exist
+      # @param default [Object] Default value if key doesn't exist or is not valid JSON
       # @return [Object] Parsed value or default
       def storage_get_json(key, default = nil)
         stored = storage_get(key)
         return default if `#{stored} === null`
-        `JSON.parse(#{stored})`
+        # A value that is not valid JSON (e.g. written by something else)
+        # yields the default instead of raising
+        `(function(s, d) { try { return JSON.parse(s); } catch (e) { return d; } })(#{stored}, #{default})`
       end
 
       # Set JSON-stringified value in localStorage
@@ -457,34 +459,41 @@ module OpalVite
       end
 
       # Get the current event's target element
+      # @param evt [Native, nil] The event (the argument Stimulus passes to the
+      #   action). Pass it when you can: without it the deprecated global
+      #   window.event is used, which is undefined after an await / in callbacks.
       # @return [Native] Event target element
-      def event_target
-        `event.currentTarget`
+      def event_target(evt: nil)
+        e = current_event(evt)
+        `#{e}.currentTarget`
       end
 
       # Get data attribute from current event target
       # @param attr [String] Data attribute name (without 'data-' prefix)
       # @return [String, nil] Attribute value
-      def event_data(attr)
-        `event.currentTarget.getAttribute('data-' + #{attr})`
+      def event_data(attr, evt: nil)
+        e = current_event(evt)
+        `#{e}.currentTarget.getAttribute('data-' + #{attr})`
       end
 
       # Get integer data attribute from current event target
       # @param attr [String] Data attribute name (without 'data-' prefix)
       # @return [Integer, nil] Parsed integer value
-      def event_data_int(attr)
-        parse_int(event_data(attr))
+      def event_data_int(attr, evt: nil)
+        parse_int(event_data(attr, evt: evt))
       end
 
       # Prevent default event behavior
-      def prevent_default
-        `event.preventDefault()`
+      def prevent_default(evt: nil)
+        e = current_event(evt)
+        `#{e}.preventDefault()`
       end
 
       # Get event key (for keyboard events)
       # @return [String] Key name
-      def event_key
-        `event.key`
+      def event_key(evt: nil)
+        e = current_event(evt)
+        `#{e}.key`
       end
 
       # ===== Element Methods =====
@@ -1585,8 +1594,9 @@ module OpalVite
       #   def delete(event)
       #     params = action_params  # => { id: 123 }
       #   end
-      def action_params
-        `event.params || {}`
+      def action_params(evt: nil)
+        e = current_event(evt)
+        `#{e}.params || {}`
       end
 
       # Get a specific action parameter
@@ -1595,16 +1605,17 @@ module OpalVite
       # @example
       #   action_param(:id)   # => 123 (Number)
       #   action_param(:url)  # => "/api/item" (String)
-      def action_param(name)
-        `(event.params || {})[#{name.to_s}]`
+      def action_param(name, evt: nil)
+        e = current_event(evt)
+        `(#{e}.params || {})[#{name.to_s}]`
       end
 
       # Get action parameter as integer with default
       # @param name [Symbol, String] Parameter name
       # @param default [Integer] Default value if missing or NaN
       # @return [Integer] Parameter value
-      def action_param_int(name, default = 0)
-        value = action_param(name)
+      def action_param_int(name, default = 0, evt: nil)
+        value = action_param(name, evt: evt)
         result = parse_int(value)
         is_nan?(result) ? default : result
       end
@@ -1612,16 +1623,17 @@ module OpalVite
       # Get action parameter as boolean
       # @param name [Symbol, String] Parameter name
       # @return [Boolean] Parameter value
-      def action_param_bool(name)
-        value = action_param(name)
+      def action_param_bool(name, evt: nil)
+        value = action_param(name, evt: evt)
         `!!#{value} && #{value} !== "false" && #{value} !== "0"`
       end
 
       # Check if an action parameter exists
       # @param name [Symbol, String] Parameter name
       # @return [Boolean] true if parameter exists
-      def has_action_param?(name)
-        `(event.params || {}).hasOwnProperty(#{name.to_s})`
+      def has_action_param?(name, evt: nil)
+        e = current_event(evt)
+        `(#{e}.params || {}).hasOwnProperty(#{name.to_s})`
       end
 
       # ===== Stimulus Controller Access =====
@@ -1777,13 +1789,15 @@ module OpalVite
       # Deep merge two objects
       # @param target [Hash] Target object
       # @param source [Hash] Source object
-      # @return [Hash] Merged object
+      # @return [Native] Merged plain JavaScript object (not a Ruby Hash);
+      #   the keys __proto__ / constructor / prototype are skipped
       def deep_merge(target, source)
         `
           function deepMerge(target, source) {
             var result = Object.assign({}, target);
             for (var key in source) {
-              if (source.hasOwnProperty(key)) {
+              if (key === '__proto__' || key === 'constructor' || key === 'prototype') continue;
+              if (Object.prototype.hasOwnProperty.call(source, key)) {
                 if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
                   result[key] = deepMerge(result[key] || {}, source[key]);
                 } else {
@@ -1990,6 +2004,13 @@ module OpalVite
       end
 
       private
+
+      # The event to read: the one passed in (a wrapper such as opal_stimulus's
+      # JS::Proxy or Native is unwrapped with to_n), else the global window.event
+      # (deprecated, and undefined outside the synchronous event dispatch).
+      def current_event(evt)
+        `(function(e) { if (e == null || e === #{nil}) return window.event; return typeof e.$to_n === 'function' ? e.$to_n() : e; })(#{evt})`
+      end
 
       # Convert snake_case to camelCase, preserving existing camelCase
       # @param name [Symbol, String] The name to convert

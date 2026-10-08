@@ -29,6 +29,8 @@ module Opal
       private
 
       def compile_command
+        # Parse options first so they may appear before or after the file name
+        parse_compile_options
         file_path = @argv.shift
 
         unless file_path
@@ -42,12 +44,16 @@ module Opal
           exit 1
         end
 
-        parse_compile_options
+        # Without -o the compiled JS goes to stdout, so progress messages go to
+        # stderr to keep stdout a clean JS stream
+        log = @options[:output] ? $stdout : $stderr
 
         begin
-          puts "Compiling #{file_path}..."
+          log.puts "Compiling #{file_path}..."
 
-          compiler = Opal::Vite::Compiler.new
+          config = Opal::Vite::Config.new
+          config.source_map_enabled = !!@options[:source_map]
+          compiler = Opal::Vite::Compiler.new(config: config)
           source = File.read(file_path)
           result = compiler.compile(source, file_path)
 
@@ -66,13 +72,13 @@ module Opal
           end
 
           if @options[:verbose]
-            puts "\nDependencies:"
+            log.puts "\nDependencies:"
             result[:dependencies].each do |dep|
-              puts "  - #{dep}"
+              log.puts "  - #{dep}"
             end
           end
 
-          puts "✅ Compilation successful!"
+          log.puts "✅ Compilation successful!"
         rescue => e
           puts "❌ Compilation failed: #{e.message}"
           puts e.backtrace.first(5).join("\n") if @options[:verbose]
@@ -133,6 +139,9 @@ module Opal
             @options[:verbose] = true
           end
         end.parse!(@argv)
+      rescue OptionParser::ParseError => e
+        puts "Error: #{e.message}"
+        exit 1
       end
     end
   end
