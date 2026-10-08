@@ -98,6 +98,17 @@ describe('opalPlugin', () => {
       }
     })
 
+    it('resolveId leaves bare specifiers alone unless imported from a .rb file', async () => {
+      const plugin = opalPlugin({ loadPaths: ['./test'] })
+
+      if (typeof plugin.resolveId === 'function') {
+        const call = (id: string, importer?: string) =>
+          (plugin.resolveId as any).call({ meta: { watchMode: true } }, id, importer, {})
+        expect(await call('plugin', '/proj/main.js')).toBeNull()
+        expect(await call('plugin')).toBeNull()
+      }
+    })
+
     it('resolveId returns null for non-Ruby files', async () => {
       const plugin = opalPlugin()
 

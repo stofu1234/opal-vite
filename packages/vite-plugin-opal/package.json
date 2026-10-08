@@ -19,7 +19,13 @@
     "build": "tsup",
     "dev": "tsup --watch",
     "test": "vitest",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "prepack": "node -e \"require('fs').copyFileSync('../../LICENSE', 'LICENSE')\"",
+    "postpack": "node -e \"require('fs').rmSync('LICENSE', { force: true })\"",
+    "prepublishOnly": "pnpm run build && vitest run"
+  },
+  "engines": {
+    "node": ">=20.19.0"
   },
   "keywords": [
     "vite",

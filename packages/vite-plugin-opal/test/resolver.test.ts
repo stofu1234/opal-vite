@@ -70,6 +70,19 @@ describe('OpalResolver', () => {
       expect(result).toBeNull()
     })
 
+    it('does not cache misses: a file created later is found', async () => {
+      const r = new OpalResolver({ loadPaths: [tempDir] })
+      expect(await r.resolve('late_file')).toBeNull()
+      fs.writeFileSync(path.join(tempDir, 'late_file.rb'), 'puts 1')
+      expect(await r.resolve('late_file')).toBe(path.join(tempDir, 'late_file.rb').replace(/\\/g, '/'))
+    })
+
+    it('resolves ids starting with / against the Vite root first', async () => {
+      const r = new OpalResolver({ loadPaths: [] })
+      r.setRoot(tempDir)
+      expect(await r.resolve('/lib/helper.rb')).toBe(path.join(tempDir, 'lib', 'helper.rb').replace(/\\/g, '/'))
+    })
+
     it('caches resolution results', async () => {
       const id1 = await resolver.resolve('helper')
       const id2 = await resolver.resolve('helper')

@@ -1,5 +1,6 @@
 import type { Plugin, ViteDevServer } from 'vite'
-import { isFileServingAllowed, normalizePath } from 'vite'
+import { normalizePath } from 'vite'
+import { isFileServingAllowedByServer } from './fs-access'
 import { OpalCompiler, VIRTUAL_RUNTIME_ID } from './compiler'
 import { OpalResolver } from './resolver'
 import type { OpalPluginOptions } from './types'
@@ -63,6 +64,10 @@ export default function opalPlugin(options: OpalPluginOptions = {}): Plugin {
       isBuild = command === 'build'
     },
 
+    configResolved(config) {
+      resolver.setRoot(config.root)
+    },
+
     // Mark .rb files as valid imports
     async resolveId(id: string, importer?: string) {
       // Handle virtual runtime module
@@ -73,8 +78,11 @@ export default function opalPlugin(options: OpalPluginOptions = {}): Plugin {
         return VIRTUAL_RUNTIME_PREFIX
       }
 
-      // Handle .rb files and files without extension (Opal style requires)
-      if (id.endsWith('.rb') || (!id.includes('.') && !id.startsWith('/'))) {
+      // Handle .rb files, and extensionless ids imported from a .rb file
+      // (Opal style requires). Other bare specifiers such as `react` are left
+      // to Vite so a local react.rb cannot shadow an npm package.
+      const importerIsRuby = !!importer && importer.replace(/[?#].*$/, '').endsWith('.rb')
+      if (id.endsWith('.rb') || (importerIsRuby && !id.includes('.') && !id.startsWith('/'))) {
         const resolved = await resolver.resolve(id, importer)
         if (options.debug) {
           console.log(`[vite-plugin-opal] resolveId: ${id} -> ${resolved}`)
@@ -118,7 +126,7 @@ export default function opalPlugin(options: OpalPluginOptions = {}): Plugin {
         // Vite checks server.fs.allow only for files no plugin loads, so
         // check it here: otherwise a request like /@fs/<any path>.rb?import
         // would return any .rb file on disk (its source is in the source map).
-        if (devServer && !isFileServingAllowed(id, devServer)) {
+        if (devServer && !isFileServingAllowedByServer(id, devServer)) {
           this.error(
             `[vite-plugin-opal] ${id} is outside the Vite serving allow list (server.fs.allow).`
           )
@@ -220,6 +228,8 @@ export default function opalPlugin(options: OpalPluginOptions = {}): Plugin {
     // runs right after startup, not a cleanup callback, so none is returned.
     configureServer(server: ViteDevServer) {
       devServer = server
+      // Do not leave Ruby processes behind when the server shuts down
+      server.httpServer?.once('close', () => compiler.dispose())
       server.watcher.on('add', (file: string) => {
         // A new file can satisfy a require that previously failed to resolve,
         // and those misses are cached without a path to match, so clear all.
@@ -235,6 +245,7 @@ export default function opalPlugin(options: OpalPluginOptions = {}): Plugin {
 
     // Print metrics after build completes
     closeBundle() {
+      compiler.dispose()
       if (options.metrics) {
         compiler.printMetricsSummary()
       }

@@ -4,6 +4,7 @@
 // (see issue #46). cross-spawn resolves .cmd/.bat via PATHEXT and escapes args
 // while behaving identically to child_process.spawn on POSIX.
 import spawn from 'cross-spawn'
+import type { ChildProcess } from 'child_process'
 import { normalizePath } from 'vite'
 import * as fs from 'fs/promises'
 import { accessSync, existsSync, mkdirSync, readFileSync, readdirSync, statSync, unlinkSync, writeFileSync } from 'fs'
@@ -155,6 +156,10 @@ interface RubyEnvironment {
 const GEM_VERSION_FOR_STUBS = '0.3.12'
 const GEM_VERSION_FOR_EXTERNAL_RUNTIME = '0.3.15'
 const GEM_VERSION_FOR_LOAD_PATHS = '0.3.18'
+/** Ruby child processes that run longer than this are killed (ms) */
+const RUBY_TIMEOUT_MS = 120_000
+/** Maximum number of entries kept in the metrics list */
+const MAX_METRICS = 10_000
 
 // Specifier for the shared runtime module that compiled .rb modules import.
 export const VIRTUAL_RUNTIME_ID = '/@opal-runtime'
@@ -179,6 +184,7 @@ export class OpalCompiler {
   private metrics: CompileMetrics[] = []
   private compilationQueue: Promise<void> = Promise.resolve()
   private activeCompilations = 0
+  private childProcesses = new Set<ChildProcess>()
   private rubyEnvironment: Promise<RubyEnvironment | null> | null = null
   private fingerprint: Promise<string> | null = null
   // Whether loadPaths / arityCheck / freezing were set explicitly (used to
@@ -201,7 +207,8 @@ export class OpalCompiler {
       diskCache: options.diskCache !== false,
       cacheDir: options.cacheDir || '',
       stubs: options.stubs || [],
-      parallelCompilation: options.parallelCompilation || 4,
+      // At least 1: a zero or negative value would never let a compilation start
+      parallelCompilation: Math.max(1, Math.floor(options.parallelCompilation || 4)),
       metrics: options.metrics || false,
       // CDN options (v0.3.5+)
       cdn: options.cdn || false,
@@ -800,6 +807,10 @@ export class OpalCompiler {
       cacheHit,
       source
     })
+    // Keep the dev server's memory bounded: drop the oldest entries
+    if (this.metrics.length > MAX_METRICS) {
+      this.metrics.splice(0, this.metrics.length - MAX_METRICS)
+    }
   }
 
   /**
@@ -940,10 +951,52 @@ export class OpalCompiler {
       command: 'ruby',
       args: [
         '-I', gemLibPath,
-        '-e', `$LOAD_PATH.unshift('${gemLibPath}'); require 'opal-vite'; ${script}`,
+        '-e', `require 'opal-vite'; ${script}`,
         ...extraArgs
       ]
     }
+  }
+
+  /**
+   * Spawn a Ruby process that is killed after RUBY_TIMEOUT_MS (a hung process
+   * would hold a concurrency slot forever) and by dispose().
+   */
+  private spawnRuby(command: string, args: string[]): ChildProcess {
+    const ruby = spawn(command, args, { cwd: process.cwd() })
+    this.childProcesses.add(ruby)
+    const timer = setTimeout(() => {
+      const message = `Ruby process timed out after ${RUBY_TIMEOUT_MS / 1000}s and was killed`
+      console.warn(`[vite-plugin-opal] ${message}`)
+      // Reaches the caller as the rejection message (the exit code is null)
+      ruby.stderr?.emit('data', message)
+      this.killRuby(ruby)
+    }, RUBY_TIMEOUT_MS)
+    timer.unref?.()
+    const done = () => {
+      clearTimeout(timer)
+      this.childProcesses.delete(ruby)
+    }
+    ruby.on('close', done)
+    ruby.on('error', done)
+    return ruby
+  }
+
+  /**
+   * Kill the Ruby processes that are still running (on server shutdown).
+   */
+  dispose(): void {
+    for (const child of this.childProcesses) this.killRuby(child)
+  }
+
+  /**
+   * SIGTERM, then SIGKILL if the process has not exited shortly after (it
+   * stays tracked until it closes), so it cannot hold a concurrency slot.
+   */
+  private killRuby(ruby: ChildProcess): void {
+    ruby.kill()
+    setTimeout(() => {
+      if (this.childProcesses.has(ruby)) ruby.kill('SIGKILL')
+    }, 5000).unref?.()
   }
 
   /**
@@ -953,9 +1006,7 @@ export class OpalCompiler {
   private runRuby(script: string, extraArgs: string[] = []): Promise<string> {
     return new Promise((resolve, reject) => {
       const { command, args } = this.rubyCommand(script, extraArgs)
-      const ruby = spawn(command, args, {
-        cwd: process.cwd()
-      })
+      const ruby = this.spawnRuby(command, args)
 
       let stdout = ''
       let stderr = ''
@@ -997,9 +1048,7 @@ export class OpalCompiler {
     this.log(`Spawning Ruby: ${command} ${args.join(' ')}`)
 
     return new Promise((resolve, reject) => {
-      const ruby = spawn(command, args, {
-        cwd: process.cwd()
-      })
+      const ruby = this.spawnRuby(command, args)
 
       let stdout = ''
       let stderr = ''
@@ -1119,7 +1168,7 @@ export class OpalCompiler {
     // Try to resolve the gem path
     // In development, this points to our local gem
     // In production, bundler will handle it
-    if (this.options.gemPath.startsWith('.') || this.options.gemPath.startsWith('/')) {
+    if (this.options.gemPath.startsWith('.') || path.isAbsolute(this.options.gemPath)) {
       return path.resolve(this.options.gemPath, 'lib')
     }
     return this.options.gemPath
