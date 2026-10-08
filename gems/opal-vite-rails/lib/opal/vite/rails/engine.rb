@@ -36,6 +36,11 @@ module Opal
           end
         end
 
+        initializer "opal_vite.deprecator" do |app|
+          # Rails.application.deprecators exists since Rails 7.1
+          app.deprecators[:opal_vite_rails] = Opal::Vite::Rails.deprecator if app.respond_to?(:deprecators)
+        end
+
         initializer "opal_vite.view_helpers" do
           ActiveSupport.on_load(:action_view) do
             include Opal::Vite::Rails::Helper

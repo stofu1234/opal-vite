@@ -12,16 +12,28 @@ namespace :opal_vite do
     puts "✅ Opal assets compiled successfully!"
   end
 
-  desc "Clean compiled Opal assets"
+  desc "Clean compiled Opal assets (the Vite build output of the current RAILS_ENV)"
   task clean: :environment do
     puts "Cleaning Opal assets..."
 
-    vite_dir = Rails.public_path.join("vite")
+    # The directory vite_ruby builds into for this environment (config/vite.json
+    # publicOutputDir), e.g. public/vite-dev in development and public/vite in
+    # production. A build you commit (public/vite) is only removed when this
+    # runs with RAILS_ENV=production.
+    vite = ViteRuby.config
+    vite_dir = vite.build_output_dir.expand_path
+    # Only ever delete a subdirectory of the public dir, so a misconfigured
+    # publicOutputDir ("", ".", "..") cannot wipe public/ or the app itself.
+    public_dir = vite.root.join(vite.public_dir).expand_path
+    unless vite_dir.to_s.start_with?("#{public_dir}#{File::SEPARATOR}")
+      abort "❌ Refusing to delete #{vite_dir}: it is not inside #{public_dir}"
+    end
+
     if vite_dir.exist?
       FileUtils.rm_rf(vite_dir)
       puts "✅ Cleaned #{vite_dir}"
     else
-      puts "No compiled assets found"
+      puts "No compiled assets found in #{vite_dir}"
     end
   end
 
@@ -33,15 +45,14 @@ namespace :opal_vite do
 
     puts "\nOpal-Vite version: #{Opal::Vite::VERSION}"
     puts "Rails root: #{Rails.root}"
-    puts "Vite manifest: #{Rails.public_path.join('vite', 'manifest.json')}"
-    puts "Opal source directory: #{Rails.root.join('app', 'opal')}"
 
-    if defined?(ViteRuby)
-      puts "\nViteRuby: Installed ✅"
-      puts "Vite dev server: #{ViteRuby.config.host}:#{ViteRuby.config.port}"
-    else
-      puts "\nViteRuby: Not installed ⚠️"
-    end
+    vite = ViteRuby.config
+    manifest = vite.manifest_paths.first
+    puts "Vite build output: #{vite.build_output_dir}"
+    puts "Vite manifest: #{manifest || vite.known_manifest_paths.first} (#{manifest ? 'found' : 'not built yet'})"
+    puts "Opal source directory: #{Rails.root.join(Opal::Vite::Rails.config.source_path)}"
+    puts "Vite source directory: #{vite.root.join(vite.source_code_dir)}"
+    puts "Vite dev server: #{vite.host}:#{vite.port}"
 
     puts "\n" + "="*60
   end

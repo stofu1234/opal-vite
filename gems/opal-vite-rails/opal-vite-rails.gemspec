@@ -22,8 +22,8 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "opal-vite", "~> 0.3", ">= 0.3.15"
   spec.add_dependency "ostruct", ">= 0.2"
-  spec.add_dependency "railties", ">= 6.0.0"
-  spec.add_dependency "actionview", ">= 6.0.0"
+  spec.add_dependency "railties", ">= 6.0.0", "< 9"
+  spec.add_dependency "actionview", ">= 6.0.0", "< 9"
   spec.add_dependency "vite_rails", "~> 3.0"
 
   spec.add_development_dependency "bundler", "~> 2.0"
