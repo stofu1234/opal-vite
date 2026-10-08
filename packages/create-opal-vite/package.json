@@ -8,26 +8,24 @@
   },
   "files": [
     "index.js",
-    "src",
     "templates"
   ],
   "engines": {
-    "node": "^18.0.0 || >=20.0.0"
+    "node": ">=18"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/opal-vite.git",
+    "url": "git+https://github.com/stofu1234/opal-vite.git",
     "directory": "packages/create-opal-vite"
   },
   "keywords": [
     "opal",
     "vite",
     "ruby",
-    "stimulus",
     "scaffold",
     "cli"
   ],
-  "author": "",
+  "author": "stofu1234",
   "license": "MIT",
   "dependencies": {
     "kolorist": "^1.8.0",
@@ -37,5 +35,12 @@
   "devDependencies": {
     "@types/minimist": "^1.2.5",
     "@types/prompts": "^2.4.9"
+  },
+  "homepage": "https://stofu1234.github.io/opal-vite/",
+  "bugs": {
+    "url": "https://github.com/stofu1234/opal-vite/issues"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
