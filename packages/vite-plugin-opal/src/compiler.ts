@@ -970,6 +970,10 @@ export class OpalCompiler {
       // Reaches the caller as the rejection message (the exit code is null)
       ruby.stderr?.emit('data', message)
       ruby.kill()
+      // A process that ignores SIGTERM must not keep its concurrency slot
+      setTimeout(() => {
+        if (this.childProcesses.has(ruby)) ruby.kill('SIGKILL')
+      }, 5000).unref?.()
     }, RUBY_TIMEOUT_MS)
     timer.unref?.()
     const done = () => {
