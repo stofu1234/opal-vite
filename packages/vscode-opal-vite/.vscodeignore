@@ -6,7 +6,8 @@
 !README.md
 !LICENSE
 !language-configuration.json
-!dist/**
+!dist/extension.js
+!server/**
 !images/**
 !snippets/**
 !syntaxes/**
