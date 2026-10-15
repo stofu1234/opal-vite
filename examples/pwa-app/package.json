@@ -16,7 +16,7 @@
     "vite": "^6.4.4"
   },
   "devDependencies": {
-    "playwright": "^1.57.0",
+    "playwright": "^1.64.0",
     "vite-plugin-opal": "workspace:*",
     "vite-plugin-pwa": "^1.3.0",
     "workbox-build": "^7.4.1",
