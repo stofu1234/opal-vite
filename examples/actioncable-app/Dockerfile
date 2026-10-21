@@ -1,5 +1,5 @@
 # Build stage: compiling the Opal code needs Ruby (opal-vite gem) and Node (Vite).
-FROM node:22-slim AS build
+FROM node:22.23.4-slim AS build
 
 RUN apt-get update -qq && \
     apt-get install -y --no-install-recommends ruby-full build-essential && \
@@ -18,7 +18,7 @@ COPY . .
 RUN npm run build
 
 # Runtime stage: serves dist/ and the WebSocket server, no Ruby needed.
-FROM node:22-slim
+FROM node:22.23.4-slim
 
 WORKDIR /app
 COPY package.json ./
