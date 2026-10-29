@@ -14,7 +14,7 @@
     "vite-plugin-opal": "workspace:*"
   },
   "devDependencies": {
-    "vite": "^8.3.2",
-    "vite-plugin-ruby": "^5.2.5"
+    "vite": "^6.4.5",
+    "vite-plugin-ruby": "^5.2.6"
   }
 }

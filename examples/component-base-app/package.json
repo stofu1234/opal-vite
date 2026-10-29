@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "vite": "^6.4.4"
+    "vite": "^6.4.5"
   },
   "devDependencies": {
     "vite-plugin-opal": "workspace:*"

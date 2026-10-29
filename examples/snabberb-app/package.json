@@ -12,8 +12,8 @@
     "test:slowmo": "HEADLESS=false SLOWMO=0.5 bundle exec rspec"
   },
   "dependencies": {
-    "snabbdom": "^3.6.0",
-    "vite": "^6.4.4"
+    "snabbdom": "^3.6.4",
+    "vite": "^6.4.5"
   },
   "devDependencies": {
     "vite-plugin-opal": "workspace:*"
