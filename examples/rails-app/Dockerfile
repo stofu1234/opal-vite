@@ -39,8 +39,12 @@ COPY bin/ ./bin/
 # resolved by vite_javascript_tag
 COPY public/vite/ ./public/vite/
 
-# Rails writes to tmp/ and log/; everything else stays root-owned
-RUN mkdir -p tmp/pids log && chown -R rails:rails tmp log
+# COPY keeps each file's mode from the build context, and a local checkout
+# deployed with `railway up` can contain owner-only (600) files that the rails
+# user cannot read. Make the app readable; it stays root-owned. Rails writes
+# only to tmp/ and log/.
+RUN chmod -R a+rX . && \
+    mkdir -p tmp/pids log && chown -R rails:rails tmp log
 
 # Environment. Set SECRET_KEY_BASE in the platform's variables if the app ever
 # uses sessions or cookies; this demo does not (see config/environments/production.rb).
