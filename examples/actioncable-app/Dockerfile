@@ -8,7 +8,7 @@ RUN apt-get update -qq && \
 # No Gemfile in the image (its opal-vite is a path gem outside this directory),
 # so vite-plugin-opal uses these globally installed gems.
 RUN gem install --no-document opal -v '~> 1.8' && \
-    gem install --no-document opal-vite -v '~> 0.3'
+    gem install --no-document opal-vite -v '~> 0.4'
 
 WORKDIR /app
 COPY package.json ./

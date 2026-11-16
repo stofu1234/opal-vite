@@ -37,8 +37,8 @@ importers:
         version: 8.22.0
     devDependencies:
       vite-plugin-opal:
-        specifier: ^0.3.20
-        version: 0.3.20(vite@6.4.4(@types/node@20.19.26)(lightningcss@1.33.0)(terser@5.51.2))
+        specifier: ^0.4.0
+        version: 0.4.0(vite@6.4.4(@types/node@20.19.26)(lightningcss@1.33.0)(terser@5.51.2))
 
   examples/api-example:
     dependencies:
@@ -91,8 +91,8 @@ importers:
         specifier: ^6.4.4
         version: 6.4.4(@types/node@20.19.26)(lightningcss@1.33.0)(terser@5.51.2)
       vite-plugin-opal:
-        specifier: ^0.3.20
-        version: 0.3.20(vite@6.4.4(@types/node@20.19.26)(lightningcss@1.33.0)(terser@5.51.2))
+        specifier: ^0.4.0
+        version: 0.4.0(vite@6.4.4(@types/node@20.19.26)(lightningcss@1.33.0)(terser@5.51.2))
 
   examples/component-base-app:
     dependencies:
@@ -4611,8 +4611,9 @@ packages:
   vfile@6.0.3:
     resolution: {integrity: sha512-KzIbH/9tXat2u30jf+smMwFCsno4wHVdNmzFyL+T/L3UGqqk6JKfVqOFOZEpZSHADH1k40ab6NUIXZq422ov3Q==}
 
-  vite-plugin-opal@0.3.20:
-    resolution: {integrity: sha512-jI6uHzfNbOya8/7OHNpkIHdg0HbmK0btSjSXAKPoxMIVXwAv1Ds2jtl4lFj7zk/FuYpS2kCKrA6FQxEF6BJaIg==}
+  vite-plugin-opal@0.4.0:
+    resolution: {integrity: sha512-KKezs/2S+f4Cuf6tAUWZdZaaXWF4QmkoVbglftFNKSDZF20lEOAhzo1LgIO7n/6oOSod7MTUbSvOwt3aMvc0VA==}
+    engines: {node: '>=20.19.0'}
     peerDependencies:
       vite: '>=5.0.0 <9.0.0'
 
@@ -9399,7 +9400,7 @@ snapshots:
       '@types/unist': 3.0.3
       vfile-message: 4.0.3
 
-  vite-plugin-opal@0.3.20(vite@6.4.4(@types/node@20.19.26)(lightningcss@1.33.0)(terser@5.51.2)):
+  vite-plugin-opal@0.4.0(vite@6.4.4(@types/node@20.19.26)(lightningcss@1.33.0)(terser@5.51.2)):
     dependencies:
       cross-spawn: 7.0.6
       vite: 6.4.4(@types/node@20.19.26)(lightningcss@1.33.0)(terser@5.51.2)
